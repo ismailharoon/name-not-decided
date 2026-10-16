@@ -1,0 +1,7 @@
+{
+  "name": "client-build-bridge",
+  "private": true,
+  "scripts": {
+    "build": "cd .. && npx vite build && node -e \"const fs=require('fs');fs.cpSync('dist','client/dist',{recursive:true});\""
+  }
+}
