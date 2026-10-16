@@ -1,0 +1,10 @@
+node_modules/
+client/node_modules/
+server/node_modules/
+client/dist/
+server/data/db.json
+.env
+.env.*
+.DS_Store
+*.log
+.vercel
