@@ -170,7 +170,7 @@ export default function SegmentManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#331700]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
             Sector Legs, Pricing & IATA Manifests
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
@@ -179,7 +179,7 @@ export default function SegmentManagement() {
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add Flight Segment</span>
@@ -187,11 +187,11 @@ export default function SegmentManagement() {
       </div>
 
       {/* Segments Table */}
-      <div className="bg-white rounded-2xl border border-[#331700]/15 shadow-executive overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#EE8200]/15 shadow-executive overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#331700] text-white text-[11px] font-bold uppercase tracking-wider">
+              <tr className="bg-[#EE8200] text-white text-[11px] font-bold uppercase tracking-wider">
                 <th className="py-3.5 px-3">Flight No</th>
                 <th className="py-3.5 px-3">From (Departure)</th>
                 <th className="py-3.5 px-3">To (Arrival)</th>
@@ -204,9 +204,9 @@ export default function SegmentManagement() {
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {segments.map((seg) => (
-                <tr key={seg.AirGroupSegmentID} className="hover:bg-[#FAF6F2]/60 transition">
+                <tr key={seg.AirGroupSegmentID} className="hover:bg-[#FFF7ED]/60 transition">
                   <td className="py-4 px-3">
-                    <div className="font-mono font-extrabold text-sm text-[#331700]">
+                    <div className="font-mono font-extrabold text-sm text-[#EE8200]">
                       {seg.FlightNumber}
                     </div>
                     <div className="text-[11px] text-neutral-500">{seg.OperatingAirlineName}</div>
@@ -237,7 +237,7 @@ export default function SegmentManagement() {
                   </td>
                   <td className="py-4 px-3">
                     <div className="font-semibold text-[#0B0A09]">{seg.AirCraft}</div>
-                    <div className="text-[11px] text-[#331700] font-bold">
+                    <div className="text-[11px] text-[#EE8200] font-bold">
                       {seg.FlightClass} ({seg.FlightClassCode}) • {seg.BaggageCountADT}
                     </div>
                   </td>
@@ -245,7 +245,7 @@ export default function SegmentManagement() {
                     {seg.TotalSeats}
                   </td>
                   <td className="py-4 px-3 font-mono text-[11px]">
-                    <div className="font-bold text-[#331700]">
+                    <div className="font-bold text-[#EE8200]">
                       Pax: {formatCurrencyPKR(seg.AdultPrice)}
                     </div>
                     <div className="text-neutral-500">
@@ -256,14 +256,14 @@ export default function SegmentManagement() {
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => setDetailsSegment(seg)}
-                        className="px-3 py-1.5 rounded-lg bg-[#331700] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-[#EE8200] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Details & Manifest</span>
                       </button>
                       <button
                         onClick={() => openEditModal(seg)}
-                        className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#331700] text-neutral-700 hover:text-[#331700] cursor-pointer"
+                        className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] cursor-pointer"
                         title="Edit Segment"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -291,9 +291,9 @@ export default function SegmentManagement() {
       {/* FLIGHT SEGMENT DETAILS & MANIFEST EXPORT MODAL */}
       {detailsSegment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden">
             {/* Modal Header + 3 Manifest Export Buttons */}
-            <div className="bg-[#331700] text-white px-6 py-4 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex flex-wrap items-center justify-between gap-3 shrink-0">
               <div>
                 <h5 className="font-bold text-base">
                   Flight Segment Details — {detailsSegment.FlightNumber} ({detailsSegment.DepartureIata} &rarr;{' '}
@@ -321,9 +321,9 @@ export default function SegmentManagement() {
                     downloadExcelPassengersList(detailsSegment, pax);
                     addToast('Passenger List (Excel) downloaded.', 'success');
                   }}
-                  className="px-3 py-2 rounded-xl bg-white text-[#331700] hover:bg-[#FAF6F2] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3 py-2 rounded-xl bg-white text-[#EE8200] hover:bg-[#FFF7ED] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-[#331700]" />
+                  <FileSpreadsheet className="w-4 h-4 text-[#EE8200]" />
                   <span>Passenger List (Excel)</span>
                 </button>
                 <button
@@ -348,7 +348,7 @@ export default function SegmentManagement() {
 
             <div className="p-6 overflow-y-auto space-y-5 text-xs">
               {/* Flight Information Card */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/15">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
                 <div>
                   <b>Flight No:</b> {detailsSegment.FlightNumber}
                 </div>
@@ -378,8 +378,8 @@ export default function SegmentManagement() {
 
               {/* Departure & Arrival Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-[#331700]/15 overflow-hidden">
-                  <div className="bg-[#FAF6F2] px-4 py-2.5 font-bold text-[#331700] border-b border-[#331700]/10">
+                <div className="rounded-xl border border-[#EE8200]/15 overflow-hidden">
+                  <div className="bg-[#FFF7ED] px-4 py-2.5 font-bold text-[#EE8200] border-b border-[#EE8200]/10">
                     Departure
                   </div>
                   <div className="p-4 space-y-1">
@@ -397,8 +397,8 @@ export default function SegmentManagement() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-xl border border-[#331700]/15 overflow-hidden">
-                  <div className="bg-[#FAF6F2] px-4 py-2.5 font-bold text-[#331700] border-b border-[#331700]/10">
+                <div className="rounded-xl border border-[#EE8200]/15 overflow-hidden">
+                  <div className="bg-[#FFF7ED] px-4 py-2.5 font-bold text-[#EE8200] border-b border-[#EE8200]/10">
                     Arrival
                   </div>
                   <div className="p-4 space-y-1">
@@ -419,8 +419,8 @@ export default function SegmentManagement() {
               </div>
 
               {/* Fare Details Card */}
-              <div className="rounded-xl border border-[#331700]/15 overflow-hidden">
-                <div className="bg-[#FAF6F2] px-4 py-2.5 font-bold text-[#331700] border-b border-[#331700]/10">
+              <div className="rounded-xl border border-[#EE8200]/15 overflow-hidden">
+                <div className="bg-[#FFF7ED] px-4 py-2.5 font-bold text-[#EE8200] border-b border-[#EE8200]/10">
                   Fare Details (Customer & Supplier)
                 </div>
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -452,7 +452,7 @@ export default function SegmentManagement() {
 
               {/* Segment Passenger Manifest Table */}
               <div>
-                <h6 className="font-display font-bold text-sm text-[#331700] mb-2">
+                <h6 className="font-display font-bold text-sm text-[#EE8200] mb-2">
                   Passengers Booked on {detailsSegment.FlightNumber} (
                   {getPassengersForSegment(detailsSegment).length})
                 </h6>
@@ -481,7 +481,7 @@ export default function SegmentManagement() {
                           <td className="py-2 px-3">{p.PassengerType}</td>
                           <td className="py-2 px-3 font-mono">{p.PassportNumber}</td>
                           <td className="py-2 px-3 font-mono">{p.DOB}</td>
-                          <td className="py-2 px-3 font-mono font-bold text-[#331700]">{p.PNR}</td>
+                          <td className="py-2 px-3 font-mono font-bold text-[#EE8200]">{p.PNR}</td>
                           <td className="py-2 px-3 font-mono">{p.TicketNumber || 'PENDING'}</td>
                         </tr>
                       ))}
@@ -497,8 +497,8 @@ export default function SegmentManagement() {
       {/* ADD / EDIT SEGMENT MODAL */}
       {showEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between shrink-0">
               <h5 className="font-bold text-base">
                 {editingId ? `Edit Flight Segment — ${editingId}` : 'Add Flight Segment'}
               </h5>
@@ -611,9 +611,9 @@ export default function SegmentManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/15">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
                 <div>
-                  <label className="block font-bold text-[#331700] mb-1">
+                  <label className="block font-bold text-[#EE8200] mb-1">
                     Adult Price (Customer)
                   </label>
                   <input
@@ -624,7 +624,7 @@ export default function SegmentManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#331700] mb-1">
+                  <label className="block font-bold text-[#EE8200] mb-1">
                     Child Price (Customer)
                   </label>
                   <input
@@ -635,7 +635,7 @@ export default function SegmentManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#331700] mb-1">
+                  <label className="block font-bold text-[#EE8200] mb-1">
                     Infant Price (Customer)
                   </label>
                   <input
@@ -697,7 +697,7 @@ export default function SegmentManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#331700] hover:bg-black text-white font-bold transition"
+                  className="px-6 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
                 >
                   Save Segment
                 </button>

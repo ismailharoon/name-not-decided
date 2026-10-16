@@ -191,11 +191,11 @@ export function downloadWordManifest(segment, passengers = []) {
       <title>TABAN AIR :: Iata Manifest</title>
       <style>
         body { font-family: 'Courier New', monospace; font-size: 11pt; color: #0B0A09; padding: 24px; }
-        .header { background: #331700; color: #FFFFFF; padding: 12px 16px; font-family: Arial, sans-serif; font-weight: bold; font-size: 14pt; margin-bottom: 16px; }
-        .meta { font-family: Arial, sans-serif; font-size: 10pt; margin-bottom: 16px; border: 1px solid #331700; padding: 10px; }
-        pre { background: #FAF8F6; border: 1px solid #ccc; padding: 14px; font-family: 'Courier New', monospace; font-size: 10.5pt; line-height: 1.45; }
+        .header { background: #EE8200; color: #FFFFFF; padding: 12px 16px; font-family: Arial, sans-serif; font-weight: bold; font-size: 14pt; margin-bottom: 16px; }
+        .meta { font-family: Arial, sans-serif; font-size: 10pt; margin-bottom: 16px; border: 1px solid #EE8200; padding: 10px; }
+        pre { background: #FAFAFA; border: 1px solid #ccc; padding: 14px; font-family: 'Courier New', monospace; font-size: 10.5pt; line-height: 1.45; }
         table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9.5pt; margin-top: 20px; }
-        th { background: #331700; color: #ffffff; padding: 6px 8px; text-align: left; }
+        th { background: #EE8200; color: #ffffff; padding: 6px 8px; text-align: left; }
         td { border: 1px solid #d4d4d4; padding: 6px 8px; }
       </style>
     </head>

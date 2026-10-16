@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { initialSeedData } from '../data/seedData';
 
 const PortalContext = createContext(null);
-const STORAGE_KEY = 'taban_executive_db_v1';
+const STORAGE_KEY = 'taban_executive_db_v2';
 
 function formatNow() {
   const d = new Date();

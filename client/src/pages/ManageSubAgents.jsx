@@ -24,9 +24,9 @@ const INITIAL_AGENT_FORM = {
   Address: '',
   Email: '',
   CreditLimit: 5000000,
-  PrimaryColor: '#331700',
+  PrimaryColor: '#EE8200',
   SecondaryColor: '#0B0A09',
-  LightColor: '#FAF6F2',
+  LightColor: '#FFF7ED',
   SubDomain: '',
   FacebookLink: '',
   TwitterLink: '',
@@ -139,7 +139,7 @@ export default function ManageSubAgents() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#331700]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
             B2B Agency Network & White-Label Configuration
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
@@ -148,7 +148,7 @@ export default function ManageSubAgents() {
         </div>
         <button
           onClick={openCreateAgent}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Sub Agent</span>
@@ -156,11 +156,11 @@ export default function ManageSubAgents() {
       </div>
 
       {/* Sub Agents Master-Detail Grid */}
-      <div className="bg-white rounded-2xl border border-[#331700]/15 shadow-executive overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#EE8200]/15 shadow-executive overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#331700] text-white text-[11px] font-bold uppercase tracking-wider">
+              <tr className="bg-[#EE8200] text-white text-[11px] font-bold uppercase tracking-wider">
                 <th className="py-3.5 px-3 w-10"></th>
                 <th className="py-3.5 px-3">Company Name & Domain</th>
                 <th className="py-3.5 px-3">City / Country</th>
@@ -177,11 +177,11 @@ export default function ManageSubAgents() {
                 const isExpanded = Boolean(expandedRows[agent.SubCompanyID]);
                 return (
                   <React.Fragment key={agent.SubCompanyID}>
-                    <tr className="hover:bg-[#FAF6F2]/60 transition">
+                    <tr className="hover:bg-[#FFF7ED]/60 transition">
                       <td className="py-4 px-3 text-center">
                         <button
                           onClick={() => toggleExpand(agent.SubCompanyID)}
-                          className="p-1.5 rounded-lg bg-[#FAF6F2] hover:bg-[#331700] text-[#331700] hover:text-white transition"
+                          className="p-1.5 rounded-lg bg-[#FFF7ED] hover:bg-[#EE8200] text-[#EE8200] hover:text-white transition"
                           title="Expand Users"
                         >
                           {isExpanded ? (
@@ -193,7 +193,7 @@ export default function ManageSubAgents() {
                       </td>
                       <td className="py-4 px-3">
                         <div className="font-bold text-sm text-[#0B0A09]">{agent.CompanyName}</div>
-                        <div className="text-[11px] text-[#331700] font-mono">
+                        <div className="text-[11px] text-[#EE8200] font-mono">
                           {agent.SubDomain || 'taban.smartmovesl.com'}
                         </div>
                       </td>
@@ -206,7 +206,7 @@ export default function ManageSubAgents() {
                         <div className="text-[11px] text-neutral-500">{agent.Email}</div>
                       </td>
                       <td className="py-4 px-3 font-mono">
-                        <div className="font-bold text-[#331700]">
+                        <div className="font-bold text-[#EE8200]">
                           Lim: {formatCurrencyPKR(agent.CreditLimit)}
                         </div>
                         <div className="text-[11px] text-emerald-800 font-bold">
@@ -217,7 +217,7 @@ export default function ManageSubAgents() {
                         <div className="flex items-center gap-1.5">
                           <span
                             className="w-5 h-5 rounded-md border border-neutral-300"
-                            style={{ backgroundColor: agent.PrimaryColor || '#331700' }}
+                            style={{ backgroundColor: agent.PrimaryColor || '#EE8200' }}
                             title={`Primary: ${agent.PrimaryColor}`}
                           />
                           <span
@@ -227,7 +227,7 @@ export default function ManageSubAgents() {
                           />
                           <span
                             className="w-5 h-5 rounded-md border border-neutral-300"
-                            style={{ backgroundColor: agent.LightColor || '#FAF6F2' }}
+                            style={{ backgroundColor: agent.LightColor || '#FFF7ED' }}
                             title={`Light: ${agent.LightColor}`}
                           />
                         </div>
@@ -248,14 +248,14 @@ export default function ManageSubAgents() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => openAddUserModal(agent.SubCompanyID)}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#331700] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
                           >
                             <UserPlus className="w-3.5 h-3.5" />
                             <span>Add User</span>
                           </button>
                           <button
                             onClick={() => openEditAgent(agent)}
-                            className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#331700] text-neutral-700 hover:text-[#331700] cursor-pointer"
+                            className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] cursor-pointer"
                             title="Edit Sub Agent"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -277,17 +277,17 @@ export default function ManageSubAgents() {
 
                     {/* EXPANDED SUB AGENT USERS TABLE */}
                     {isExpanded && (
-                      <tr className="bg-[#FAF8F6]">
-                        <td colSpan={9} className="p-5 border-b-2 border-[#331700]/20">
-                          <div className="bg-white rounded-xl border border-[#331700]/15 overflow-hidden">
-                            <div className="px-4 py-3 bg-[#FAF6F2] border-b border-[#331700]/10 flex items-center justify-between">
-                              <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#331700] flex items-center gap-2">
+                      <tr className="bg-[#FAFAFA]">
+                        <td colSpan={9} className="p-5 border-b-2 border-[#EE8200]/20">
+                          <div className="bg-white rounded-xl border border-[#EE8200]/15 overflow-hidden">
+                            <div className="px-4 py-3 bg-[#FFF7ED] border-b border-[#EE8200]/10 flex items-center justify-between">
+                              <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#EE8200] flex items-center gap-2">
                                 <Users className="w-4 h-4" />
                                 Registered Users for {agent.CompanyName} ({(agent.Users || []).length})
                               </h5>
                               <button
                                 onClick={() => openAddUserModal(agent.SubCompanyID)}
-                                className="px-3 py-1.5 rounded-lg bg-[#331700] text-white font-bold text-[11px] hover:bg-black transition"
+                                className="px-3 py-1.5 rounded-lg bg-[#EE8200] text-white font-bold text-[11px] hover:bg-black transition"
                               >
                                 + Add New User
                               </button>
@@ -314,8 +314,8 @@ export default function ManageSubAgents() {
                                   </tr>
                                 ) : (
                                   (agent.Users || []).map((u) => (
-                                    <tr key={u.UserID} className="hover:bg-[#FAF8F6]">
-                                      <td className="py-2.5 px-3 font-mono font-bold text-[#331700]">
+                                    <tr key={u.UserID} className="hover:bg-[#FAFAFA]">
+                                      <td className="py-2.5 px-3 font-mono font-bold text-[#EE8200]">
                                         {u.LoginID}
                                       </td>
                                       <td className="py-2.5 px-3 font-bold text-[#0B0A09]">
@@ -325,7 +325,7 @@ export default function ManageSubAgents() {
                                       <td className="py-2.5 px-3">{u.Designation}</td>
                                       <td className="py-2.5 px-3 font-mono">{u.WhatsAppNumber}</td>
                                       <td className="py-2.5 px-3">
-                                        <span className="px-2 py-0.5 rounded bg-[#FAF6F2] text-[#331700] font-bold">
+                                        <span className="px-2 py-0.5 rounded bg-[#FFF7ED] text-[#EE8200] font-bold">
                                           {u.AccountType}
                                         </span>
                                       </td>
@@ -334,7 +334,7 @@ export default function ManageSubAgents() {
                                         <div className="flex items-center justify-end gap-1.5">
                                           <button
                                             onClick={() => openEditUserModal(agent.SubCompanyID, u)}
-                                            className="px-2.5 py-1 rounded-lg bg-[#331700] text-white text-[11px] font-bold hover:bg-black transition"
+                                            className="px-2.5 py-1 rounded-lg bg-[#EE8200] text-white text-[11px] font-bold hover:bg-black transition"
                                           >
                                             Edit
                                           </button>
@@ -370,8 +370,8 @@ export default function ManageSubAgents() {
       {/* ADD / EDIT SUB AGENT MODAL */}
       {showAgentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between shrink-0">
               <h5 className="font-bold text-base">
                 {editingAgentId ? 'Edit SubAgent' : 'Add SubAgent'}
               </h5>
@@ -469,12 +469,12 @@ export default function ManageSubAgents() {
               </div>
 
               {/* White-Label Colors & Domain */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/15">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
                 <div>
                   <label className="block font-bold mb-1">Primary Color</label>
                   <input
                     type="color"
-                    value={agentForm.PrimaryColor || '#331700'}
+                    value={agentForm.PrimaryColor || '#EE8200'}
                     onChange={(e) => setAgentForm({ ...agentForm, PrimaryColor: e.target.value })}
                     className="w-full h-10 rounded-lg border border-neutral-300 cursor-pointer"
                   />
@@ -492,7 +492,7 @@ export default function ManageSubAgents() {
                   <label className="block font-bold mb-1">Light Color</label>
                   <input
                     type="color"
-                    value={agentForm.LightColor || '#FAF6F2'}
+                    value={agentForm.LightColor || '#FFF7ED'}
                     onChange={(e) => setAgentForm({ ...agentForm, LightColor: e.target.value })}
                     className="w-full h-10 rounded-lg border border-neutral-300 cursor-pointer"
                   />
@@ -560,7 +560,7 @@ export default function ManageSubAgents() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#331700] hover:bg-black text-white font-bold transition"
+                  className="px-6 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
                 >
                   Save SubAgent
                 </button>
@@ -573,8 +573,8 @@ export default function ManageSubAgents() {
       {/* ADD / EDIT SUB AGENT USER MODAL */}
       {showUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-lg w-full overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-lg w-full overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between">
               <h5 className="font-bold text-base">
                 {editingUserId ? 'Edit User' : 'Add User'}
               </h5>
@@ -681,7 +681,7 @@ export default function ManageSubAgents() {
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 pt-2 cursor-pointer font-bold text-[#331700]">
+              <label className="flex items-center gap-2 pt-2 cursor-pointer font-bold text-[#EE8200]">
                 <input
                   type="checkbox"
                   checked={Boolean(userForm.Reset2FA)}
@@ -700,7 +700,7 @@ export default function ManageSubAgents() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-[#331700] hover:bg-black text-white font-bold transition"
+                  className="px-6 py-2 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
                 >
                   Save User
                 </button>

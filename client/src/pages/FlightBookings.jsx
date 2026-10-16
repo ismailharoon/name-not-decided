@@ -125,7 +125,7 @@ export default function FlightBookings() {
         );
       case 'Ticket Issued':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#331700] text-white">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EE8200] text-white">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             Ticket Issued
           </span>
@@ -218,7 +218,7 @@ export default function FlightBookings() {
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#331700]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
             PNR & E-Ticket Control Desk
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
@@ -236,14 +236,14 @@ export default function FlightBookings() {
                 onClick={() => setStatusFilter(tab.key)}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${
                   active
-                    ? 'bg-[#331700] text-white shadow-md'
-                    : 'bg-white text-[#0B0A09] border border-[#331700]/15 hover:bg-[#FAF6F2]'
+                    ? 'bg-[#EE8200] text-white shadow-md'
+                    : 'bg-white text-[#0B0A09] border border-[#EE8200]/15 hover:bg-[#FFF7ED]'
                 }`}
               >
                 <span>{tab.label}</span>
                 <span
                   className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono ${
-                    active ? 'bg-white/20 text-white' : 'bg-[#FAF6F2] text-[#331700]'
+                    active ? 'bg-white/20 text-white' : 'bg-[#FFF7ED] text-[#EE8200]'
                   }`}
                 >
                   {counts[tab.key] ?? 0}
@@ -255,23 +255,23 @@ export default function FlightBookings() {
       </div>
 
       {/* Search & Sub-Agent Filter Toolbar */}
-      <div className="bg-white rounded-2xl border border-[#331700]/15 p-4 shadow-executive flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl border border-[#EE8200]/15 p-4 shadow-executive flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#331700]/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#EE8200]/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Filter by Booking ID, PNR, Passenger Name, Passport #, Ticket #, or Route..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#FAF8F6] border border-[#331700]/15 text-xs sm:text-sm focus:outline-none focus:border-[#331700]"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15 text-xs sm:text-sm focus:outline-none focus:border-[#EE8200]"
           />
         </div>
         <div className="flex items-center gap-2.5">
-          <Filter className="w-4 h-4 text-[#331700]" />
+          <Filter className="w-4 h-4 text-[#EE8200]" />
           <select
             value={agentFilter}
             onChange={(e) => setAgentFilter(e.target.value)}
-            className="px-3.5 py-2.5 rounded-xl bg-[#FAF8F6] border border-[#331700]/15 text-xs font-bold text-[#0B0A09] focus:outline-none focus:border-[#331700]"
+            className="px-3.5 py-2.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15 text-xs font-bold text-[#0B0A09] focus:outline-none focus:border-[#EE8200]"
           >
             <option value="ALL">All Sub Agents ({subAgents.length})</option>
             {subAgents.map((a) => (
@@ -284,11 +284,11 @@ export default function FlightBookings() {
       </div>
 
       {/* Bookings Master-Detail Data Grid */}
-      <div className="bg-white rounded-2xl border border-[#331700]/15 shadow-executive overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#EE8200]/15 shadow-executive overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#331700] text-white text-[11px] font-bold uppercase tracking-wider">
+              <tr className="bg-[#EE8200] text-white text-[11px] font-bold uppercase tracking-wider">
                 <th className="py-3.5 px-3 w-10"></th>
                 <th className="py-3.5 px-3">Booking / PNR</th>
                 <th className="py-3.5 px-3">Sub Agent & Channel</th>
@@ -322,14 +322,14 @@ export default function FlightBookings() {
                     <React.Fragment key={booking.AirGroupBookingID}>
                       {/* Main Booking Row */}
                       <tr
-                        className={`transition hover:bg-[#FAF6F2]/70 ${
-                          isExpanded ? 'bg-[#FAF6F2]/50' : ''
+                        className={`transition hover:bg-[#FFF7ED]/70 ${
+                          isExpanded ? 'bg-[#FFF7ED]/50' : ''
                         }`}
                       >
                         <td className="py-4 px-3 text-center">
                           <button
                             onClick={() => toggleExpand(booking.AirGroupBookingID)}
-                            className="p-1.5 rounded-lg bg-[#FAF6F2] hover:bg-[#331700] text-[#331700] hover:text-white transition"
+                            className="p-1.5 rounded-lg bg-[#FFF7ED] hover:bg-[#EE8200] text-[#EE8200] hover:text-white transition"
                             title="Expand Passengers & Segments"
                           >
                             {isExpanded ? (
@@ -341,7 +341,7 @@ export default function FlightBookings() {
                         </td>
 
                         <td className="py-4 px-3">
-                          <div className="font-mono font-extrabold text-sm text-[#331700]">
+                          <div className="font-mono font-extrabold text-sm text-[#EE8200]">
                             {booking.PNR}
                           </div>
                           <div className="text-[11px] font-semibold text-neutral-600">
@@ -359,7 +359,7 @@ export default function FlightBookings() {
                           <div className="text-[11px] text-neutral-500">
                             {booking.BookingChannelName || 'B2B Agent Portal'}
                           </div>
-                          <div className="text-[11px] text-[#331700] font-medium">
+                          <div className="text-[11px] text-[#EE8200] font-medium">
                             {booking.EmailAddress}
                           </div>
                         </td>
@@ -388,7 +388,7 @@ export default function FlightBookings() {
                         </td>
 
                         <td className="py-4 px-3 text-center">
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF8F6] border border-neutral-200 font-mono font-bold">
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAFAFA] border border-neutral-200 font-mono font-bold">
                             <span title="Adults">{booking.AdultCount || 0}A</span> /
                             <span title="Children">{booking.ChildCount || 0}C</span> /
                             <span title="Infants">{booking.InfantCount || 0}I</span>
@@ -398,13 +398,13 @@ export default function FlightBookings() {
                           </div>
                         </td>
 
-                        <td className="py-4 px-3 font-mono font-bold text-sm text-[#331700]">
+                        <td className="py-4 px-3 font-mono font-bold text-sm text-[#EE8200]">
                           {formatCurrencyPKR(booking.TotalPrice)}
                         </td>
 
                         <td className="py-4 px-3">
                           <div className="flex items-center gap-1 text-[11px] font-semibold text-[#0B0A09]">
-                            <Clock className="w-3.5 h-3.5 text-[#331700]" />
+                            <Clock className="w-3.5 h-3.5 text-[#EE8200]" />
                             <span>{booking.BookingTimeLimit || '—'}</span>
                           </div>
                           <div className="text-[10px] text-neutral-400 mt-0.5">
@@ -439,7 +439,7 @@ export default function FlightBookings() {
                             {canIssue && (
                               <button
                                 onClick={() => issueTicket(booking.AirGroupBookingID)}
-                                className="px-2.5 py-1.5 rounded-lg bg-[#331700] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                                className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
                                 title="Issue E-Tickets"
                               >
                                 <Ticket className="w-3.5 h-3.5" />
@@ -463,7 +463,7 @@ export default function FlightBookings() {
 
                             <button
                               onClick={() => setPrintBooking(booking)}
-                              className="px-2.5 py-1.5 rounded-lg bg-[#FAF6F2] hover:bg-[#331700] text-[#331700] hover:text-white border border-[#331700]/20 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-[#FFF7ED] hover:bg-[#EE8200] text-[#EE8200] hover:text-white border border-[#EE8200]/20 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
                               title="Print Details / E-Ticket PDF"
                             >
                               <Printer className="w-3.5 h-3.5" />
@@ -474,7 +474,7 @@ export default function FlightBookings() {
 
                             <button
                               onClick={() => setEditingBooking({ ...booking })}
-                              className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#331700] text-neutral-700 hover:text-[#331700] transition cursor-pointer"
+                              className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] transition cursor-pointer"
                               title="Edit Booking"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -497,13 +497,13 @@ export default function FlightBookings() {
 
                       {/* EXPANDED DETAIL TEMPLATE: PASSENGERS & FLIGHT SEGMENTS */}
                       {isExpanded && (
-                        <tr className="bg-[#FAF8F6]">
-                          <td colSpan={9} className="p-5 border-b-2 border-[#331700]/20">
+                        <tr className="bg-[#FAFAFA]">
+                          <td colSpan={9} className="p-5 border-b-2 border-[#EE8200]/20">
                             <div className="space-y-5">
                               {/* 1. Flight Segments Box */}
-                              <div className="bg-white rounded-xl border border-[#331700]/15 p-4">
+                              <div className="bg-white rounded-xl border border-[#EE8200]/15 p-4">
                                 <div className="flex items-center justify-between mb-3">
-                                  <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#331700] flex items-center gap-2">
+                                  <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#EE8200] flex items-center gap-2">
                                     <Plane className="w-4 h-4" />
                                     Flight Segments ({(booking.Segments || []).length})
                                   </h5>
@@ -517,10 +517,10 @@ export default function FlightBookings() {
                                   {(booking.Segments || []).map((seg) => (
                                     <div
                                       key={seg.AirGroupSegmentID}
-                                      className="p-3.5 rounded-xl bg-[#FAF8F6] border border-[#331700]/15 flex items-center justify-between gap-4"
+                                      className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15 flex items-center justify-between gap-4"
                                     >
                                       <div>
-                                        <div className="font-bold text-sm text-[#331700]">
+                                        <div className="font-bold text-sm text-[#EE8200]">
                                           {seg.DepartureCity} ({seg.DepartureIata})
                                         </div>
                                         <div className="text-[11px] text-neutral-500">
@@ -528,7 +528,7 @@ export default function FlightBookings() {
                                         </div>
                                       </div>
                                       <div className="text-center px-2">
-                                        <div className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#331700] text-white">
+                                        <div className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#EE8200] text-white">
                                           {seg.FlightNumber}
                                         </div>
                                         <div className="text-[10px] text-neutral-500 mt-1">
@@ -549,9 +549,9 @@ export default function FlightBookings() {
                               </div>
 
                               {/* 2. Passengers Table */}
-                              <div className="bg-white rounded-xl border border-[#331700]/15 overflow-hidden">
-                                <div className="px-4 py-3 bg-[#FAF6F2] border-b border-[#331700]/10 flex items-center justify-between">
-                                  <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#331700] flex items-center gap-2">
+                              <div className="bg-white rounded-xl border border-[#EE8200]/15 overflow-hidden">
+                                <div className="px-4 py-3 bg-[#FFF7ED] border-b border-[#EE8200]/10 flex items-center justify-between">
+                                  <h5 className="font-display font-bold text-xs uppercase tracking-wider text-[#EE8200] flex items-center gap-2">
                                     <User className="w-4 h-4" />
                                     Passenger Information ({(booking.Passengers || []).length})
                                   </h5>
@@ -579,9 +579,9 @@ export default function FlightBookings() {
                                     </thead>
                                     <tbody className="divide-y divide-neutral-100">
                                       {(booking.Passengers || []).map((pax) => (
-                                        <tr key={pax.PassengerID} className="hover:bg-[#FAF8F6]">
+                                        <tr key={pax.PassengerID} className="hover:bg-[#FAFAFA]">
                                           <td className="py-2.5 px-3">
-                                            <span className="px-2 py-0.5 rounded bg-[#FAF6F2] text-[#331700] font-bold text-[11px]">
+                                            <span className="px-2 py-0.5 rounded bg-[#FFF7ED] text-[#EE8200] font-bold text-[11px]">
                                               {pax.PassengerType}
                                             </span>
                                           </td>
@@ -602,7 +602,7 @@ export default function FlightBookings() {
                                             <div>Iss: {pax.PassportIssueDate || '—'}</div>
                                             <div>Exp: {pax.PassportExpiryDate || '—'}</div>
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono font-bold text-[#331700]">
+                                          <td className="py-2.5 px-3 font-mono font-bold text-[#EE8200]">
                                             {pax.TicketNumber || 'Not Issued'}
                                           </td>
                                           <td className="py-2.5 px-3">
@@ -626,7 +626,7 @@ export default function FlightBookings() {
                                                     passenger: { ...pax }
                                                   })
                                                 }
-                                                className="px-2.5 py-1 rounded-lg bg-[#331700] text-white text-[11px] font-bold hover:bg-black transition"
+                                                className="px-2.5 py-1 rounded-lg bg-[#EE8200] text-white text-[11px] font-bold hover:bg-black transition"
                                               >
                                                 Edit Pax
                                               </button>
@@ -677,7 +677,7 @@ export default function FlightBookings() {
       {/* 2. CONFIRM VOID BOOKING MODAL (Matches Confirm Void Booking & Void Remarks *) */}
       {voidTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-md w-full overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-md w-full overflow-hidden">
             <div className="bg-[#0B0A09] text-white px-6 py-4 flex items-center justify-between">
               <h5 className="font-bold text-base flex items-center gap-2">
                 <Ban className="w-4 h-4 text-red-400" />
@@ -704,7 +704,7 @@ export default function FlightBookings() {
                   value={voidRemarks}
                   onChange={(e) => setVoidRemarks(e.target.value)}
                   placeholder="Enter reason for voiding the booking"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-xs"
                   required
                 />
               </div>
@@ -731,8 +731,8 @@ export default function FlightBookings() {
       {/* 3. EDIT BOOKING MODAL (Select Agent, Booking Time Limit, PNR, Contact, Remarks) */}
       {editingBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-lg w-full overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-lg w-full overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between">
               <h5 className="font-bold text-base">
                 Edit Booking — {editingBooking.AirGroupBookingID}
               </h5>
@@ -751,7 +751,7 @@ export default function FlightBookings() {
                   onChange={(e) =>
                     setEditingBooking({ ...editingBooking, SubCompanyID: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none font-semibold"
                 >
                   {subAgents.map((a) => (
                     <option key={a.SubCompanyID} value={a.SubCompanyID}>
@@ -772,7 +772,7 @@ export default function FlightBookings() {
                     onChange={(e) =>
                       setEditingBooking({ ...editingBooking, BookingTimeLimit: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -783,7 +783,7 @@ export default function FlightBookings() {
                     onChange={(e) =>
                       setEditingBooking({ ...editingBooking, PNR: e.target.value.toUpperCase() })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none font-mono font-bold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none font-mono font-bold"
                   />
                 </div>
               </div>
@@ -797,7 +797,7 @@ export default function FlightBookings() {
                     onChange={(e) =>
                       setEditingBooking({ ...editingBooking, EmailAddress: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -808,7 +808,7 @@ export default function FlightBookings() {
                     onChange={(e) =>
                       setEditingBooking({ ...editingBooking, MobileNumber: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none"
                   />
                 </div>
               </div>
@@ -821,7 +821,7 @@ export default function FlightBookings() {
                   onChange={(e) =>
                     setEditingBooking({ ...editingBooking, Remarks: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none"
                 />
               </div>
 
@@ -835,7 +835,7 @@ export default function FlightBookings() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#331700] hover:bg-black text-white font-bold transition"
+                  className="px-5 py-2 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
                 >
                   Update Booking
                 </button>
@@ -848,8 +848,8 @@ export default function FlightBookings() {
       {/* 4. EDIT PASSENGER DETAILS MODAL (Matches Edit Passenger Details & Upload/Download Passport) */}
       {editingPax && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-2xl w-full overflow-hidden my-8">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-2xl w-full overflow-hidden my-8">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between">
               <h5 className="font-bold text-base">
                 Edit Passenger Details — {editingPax.passenger.PassengerID}
               </h5>
@@ -1024,13 +1024,13 @@ export default function FlightBookings() {
                       })
                     }
                     placeholder="721-XXXXXXXXXX"
-                    className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 font-mono font-bold text-[#331700]"
+                    className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 font-mono font-bold text-[#EE8200]"
                   />
                 </div>
               </div>
 
               {/* Passport Scan Upload & Preview */}
-              <div className="p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/15">
+              <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="font-bold text-[#0B0A09]">Upload Passport Scan</div>
@@ -1040,7 +1040,7 @@ export default function FlightBookings() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#331700] text-white font-bold hover:bg-black transition">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#EE8200] text-white font-bold hover:bg-black transition">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Choose File</span>
                       <input
@@ -1083,7 +1083,7 @@ export default function FlightBookings() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-[#331700] hover:bg-black text-white font-bold transition"
+                  className="px-6 py-2 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
                 >
                   Update Passenger
                 </button>

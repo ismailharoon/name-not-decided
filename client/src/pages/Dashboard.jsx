@@ -68,7 +68,7 @@ export default function Dashboard() {
       {/* Page Title & Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#331700]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
             Executive Command Overview
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
@@ -78,13 +78,13 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/FlightBookings')}
-            className="px-4 py-2.5 rounded-xl bg-white border border-[#331700]/20 text-[#331700] text-xs font-bold hover:bg-[#FAF6F2] transition"
+            className="px-4 py-2.5 rounded-xl bg-white border border-[#EE8200]/20 text-[#EE8200] text-xs font-bold hover:bg-[#FFF7ED] transition"
           >
             View Flight Bookings
           </button>
           <button
             onClick={() => navigate('/FlightPOS')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#331700] text-white text-xs font-bold hover:bg-black transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-black transition shadow-sm"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>New POS Booking</span>
@@ -104,16 +104,16 @@ export default function Dashboard() {
               onClick={() => navigate(card.link)}
               className={`cursor-pointer rounded-2xl p-6 transition-all hover:-translate-y-0.5 shadow-executive border ${
                 isEspresso
-                  ? 'bg-[#331700] text-white border-[#331700]'
+                  ? 'bg-[#EE8200] text-white border-[#EE8200]'
                   : isBlack
                   ? 'bg-[#0B0A09] text-white border-black'
-                  : 'bg-white text-[#0B0A09] border-[#331700]/15'
+                  : 'bg-white text-[#0B0A09] border-[#EE8200]/15'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span
                   className={`text-xs font-bold uppercase tracking-wider ${
-                    isEspresso || isBlack ? 'text-white/75' : 'text-[#331700]'
+                    isEspresso || isBlack ? 'text-white/75' : 'text-[#EE8200]'
                   }`}
                 >
                   {card.title}
@@ -122,7 +122,7 @@ export default function Dashboard() {
                   className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                     isEspresso || isBlack
                       ? 'bg-white/10 text-white'
-                      : 'bg-[#331700] text-white'
+                      : 'bg-[#EE8200] text-white'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -147,7 +147,7 @@ export default function Dashboard() {
       {/* Booking Lifecycle Pipeline & Active Flight Seat Inventory */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Group Flight Seat Inventory */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-[#331700]/15 p-6 shadow-executive">
+        <div className="lg:col-span-7 bg-white rounded-2xl border border-[#EE8200]/15 p-6 shadow-executive">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="font-display font-bold text-lg text-[#0B0A09]">
@@ -159,7 +159,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => navigate('/FlightManagement')}
-              className="text-xs font-bold text-[#331700] hover:underline"
+              className="text-xs font-bold text-[#EE8200] hover:underline"
             >
               Manage Flights &rarr;
             </button>
@@ -174,11 +174,11 @@ export default function Dashboard() {
               return (
                 <div
                   key={f.AirGroupID}
-                  className="p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/10 hover:border-[#331700]/30 transition"
+                  className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/10 hover:border-[#EE8200]/30 transition"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#331700] text-white font-mono text-xs font-bold">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#EE8200] text-white font-mono text-xs font-bold">
                         {f.Airline}
                       </span>
                       <div>
@@ -189,7 +189,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono font-bold text-sm text-[#331700]">
+                      <div className="font-mono font-bold text-sm text-[#EE8200]">
                         {formatCurrencyPKR(f.AdultPrice)}
                       </div>
                       <div className="text-[11px] text-neutral-500">
@@ -199,7 +199,7 @@ export default function Dashboard() {
                   </div>
                   <div className="mt-3 w-full h-2 rounded-full bg-neutral-200 overflow-hidden">
                     <div
-                      className="h-full bg-[#331700] rounded-full transition-all"
+                      className="h-full bg-[#EE8200] rounded-full transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -211,13 +211,13 @@ export default function Dashboard() {
 
         {/* Right: Booking Status Breakdown & Sub-Agent Credit Standing */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl border border-[#331700]/15 p-6 shadow-executive">
+          <div className="bg-white rounded-2xl border border-[#EE8200]/15 p-6 shadow-executive">
             <h3 className="font-display font-bold text-lg text-[#0B0A09] mb-4">
               Booking Approval Pipeline
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-[#FAF6F2] border border-[#331700]/15">
-                <div className="flex items-center justify-between text-xs font-bold text-[#331700]">
+              <div className="p-3.5 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/15">
+                <div className="flex items-center justify-between text-xs font-bold text-[#EE8200]">
                   <span>Pending</span>
                   <Clock className="w-4 h-4" />
                 </div>
@@ -232,7 +232,7 @@ export default function Dashboard() {
                   {statusCounts.Approved}
                 </div>
               </div>
-              <div className="p-3.5 rounded-xl bg-[#331700] text-white">
+              <div className="p-3.5 rounded-xl bg-[#EE8200] text-white">
                 <div className="flex items-center justify-between text-xs font-bold text-white/80">
                   <span>Ticket Issued</span>
                   <PlaneTakeoff className="w-4 h-4" />
@@ -258,14 +258,14 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#331700]/15 p-6 shadow-executive">
+          <div className="bg-white rounded-2xl border border-[#EE8200]/15 p-6 shadow-executive">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-lg text-[#0B0A09]">
                 Sub-Agent Credit Balances
               </h3>
               <button
                 onClick={() => navigate('/ManageSubAgents')}
-                className="text-xs font-bold text-[#331700] hover:underline"
+                className="text-xs font-bold text-[#EE8200] hover:underline"
               >
                 All Agents &rarr;
               </button>
@@ -274,7 +274,7 @@ export default function Dashboard() {
               {subAgents.map((ag) => (
                 <div
                   key={ag.SubCompanyID}
-                  className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F6] border border-neutral-200/80"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#FAFAFA] border border-neutral-200/80"
                 >
                   <div className="min-w-0">
                     <div className="font-bold text-xs text-[#0B0A09] truncate">{ag.CompanyName}</div>
@@ -283,7 +283,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right shrink-0 ml-2">
-                    <div className="font-mono font-bold text-xs text-[#331700]">
+                    <div className="font-mono font-bold text-xs text-[#EE8200]">
                       {formatCurrencyPKR(ag.CreditLimitBalance)}
                     </div>
                     <span

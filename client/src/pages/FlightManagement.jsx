@@ -146,7 +146,7 @@ export default function FlightManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#331700]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
             Charter & Group Block Inventory
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
@@ -155,7 +155,7 @@ export default function FlightManagement() {
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Flight</span>
@@ -163,11 +163,11 @@ export default function FlightManagement() {
       </div>
 
       {/* Flights Grid */}
-      <div className="bg-white rounded-2xl border border-[#331700]/15 shadow-executive overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#EE8200]/15 shadow-executive overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#331700] text-white text-[11px] font-bold uppercase tracking-wider">
+              <tr className="bg-[#EE8200] text-white text-[11px] font-bold uppercase tracking-wider">
                 <th className="py-3.5 px-3">Enabled</th>
                 <th className="py-3.5 px-3">Title & PNR</th>
                 <th className="py-3.5 px-3">Category / Trip</th>
@@ -182,12 +182,12 @@ export default function FlightManagement() {
             </thead>
             <tbody className="divide-y divide-neutral-200">
               {flights.map((f) => (
-                <tr key={f.AirGroupID} className="hover:bg-[#FAF6F2]/60 transition">
+                <tr key={f.AirGroupID} className="hover:bg-[#FFF7ED]/60 transition">
                   <td className="py-4 px-3">
                     <button
                       onClick={() => handleToggleEnabled(f)}
                       className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center cursor-pointer ${
-                        f.isEnabled ? 'bg-[#331700] justify-end' : 'bg-neutral-300 justify-start'
+                        f.isEnabled ? 'bg-[#EE8200] justify-end' : 'bg-neutral-300 justify-start'
                       }`}
                       title="Toggle Enabled Status"
                     >
@@ -198,17 +198,17 @@ export default function FlightManagement() {
                     <div className="font-bold text-sm text-[#0B0A09] max-w-[240px] truncate" title={f.Title}>
                       {f.Title}
                     </div>
-                    <div className="text-[11px] font-mono text-[#331700] font-semibold">
+                    <div className="text-[11px] font-mono text-[#EE8200] font-semibold">
                       GDS: {f.PNR_GDS} • Air: {f.PNR_AIRLINE}
                     </div>
                   </td>
                   <td className="py-4 px-3">
-                    <span className="px-2 py-0.5 rounded bg-[#FAF6F2] text-[#331700] font-bold text-[11px] border border-[#331700]/15">
+                    <span className="px-2 py-0.5 rounded bg-[#FFF7ED] text-[#EE8200] font-bold text-[11px] border border-[#EE8200]/15">
                       {f.Category}
                     </span>
                     <div className="text-[11px] text-neutral-500 mt-1">{f.TripType}</div>
                   </td>
-                  <td className="py-4 px-3 font-mono font-bold text-[#331700]">
+                  <td className="py-4 px-3 font-mono font-bold text-[#EE8200]">
                     {f.Airline}
                     <div className="text-[10px] font-sans font-normal text-neutral-500">
                       {f.ValidatingCarrierName}
@@ -221,7 +221,7 @@ export default function FlightManagement() {
                     </div>
                   </td>
                   <td className="py-4 px-3 text-center">
-                    <span className="px-2.5 py-1 rounded-lg bg-[#FAF8F6] border border-neutral-200 font-mono font-bold text-[#331700]">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#FAFAFA] border border-neutral-200 font-mono font-bold text-[#EE8200]">
                       {f.SeatsLeft} / {f.TotalSeats}
                     </span>
                   </td>
@@ -234,7 +234,7 @@ export default function FlightManagement() {
                     )}
                   </td>
                   <td className="py-4 px-3 font-mono text-[11px]">
-                    <div className="font-bold text-[#331700]">
+                    <div className="font-bold text-[#EE8200]">
                       ADT: {formatCurrencyPKR(f.AdultPrice)}
                     </div>
                     <div className="text-neutral-600">CNN: {formatCurrencyPKR(f.ChildPrice)}</div>
@@ -250,7 +250,7 @@ export default function FlightManagement() {
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => setDetailsFlight(f)}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#331700] text-white font-bold text-[11px] hover:bg-black transition flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] text-white font-bold text-[11px] hover:bg-black transition flex items-center gap-1 cursor-pointer"
                         title="View Flight Details"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -258,7 +258,7 @@ export default function FlightManagement() {
                       </button>
                       <button
                         onClick={() => openEditModal(f)}
-                        className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#331700] text-neutral-700 hover:text-[#331700] cursor-pointer"
+                        className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] cursor-pointer"
                         title="Edit Flight"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -286,8 +286,8 @@ export default function FlightManagement() {
       {/* ADD / EDIT FLIGHT MODAL */}
       {showEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between shrink-0">
               <h5 className="font-bold text-base">
                 {editingId ? `Edit Flight — ${editingId}` : 'Add New Flight Group'}
               </h5>
@@ -461,8 +461,8 @@ export default function FlightManagement() {
               </div>
 
               {/* Group Pricing Breakdown */}
-              <div className="p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/15">
-                <h6 className="font-display font-bold text-xs uppercase tracking-wider text-[#331700] mb-3">
+              <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
+                <h6 className="font-display font-bold text-xs uppercase tracking-wider text-[#EE8200] mb-3">
                   Group Passenger Pricing (PKR)
                 </h6>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -499,12 +499,12 @@ export default function FlightManagement() {
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-[#331700] mb-1">Adult Total Price</label>
+                    <label className="block font-bold text-[#EE8200] mb-1">Adult Total Price</label>
                     <input
                       type="number"
                       value={form.AdultPrice}
                       onChange={(e) => setForm({ ...form, AdultPrice: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-xl border border-[#331700] bg-white font-mono font-bold text-[#331700]"
+                      className="w-full px-3 py-2 rounded-xl border border-[#EE8200] bg-white font-mono font-bold text-[#EE8200]"
                     />
                   </div>
 
@@ -541,12 +541,12 @@ export default function FlightManagement() {
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-[#331700] mb-1">Child Price</label>
+                    <label className="block font-bold text-[#EE8200] mb-1">Child Price</label>
                     <input
                       type="number"
                       value={form.ChildPrice}
                       onChange={(e) => setForm({ ...form, ChildPrice: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-xl border border-[#331700] bg-white font-mono font-bold text-[#331700]"
+                      className="w-full px-3 py-2 rounded-xl border border-[#EE8200] bg-white font-mono font-bold text-[#EE8200]"
                     />
                   </div>
 
@@ -583,20 +583,20 @@ export default function FlightManagement() {
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-[#331700] mb-1">Infant Price</label>
+                    <label className="block font-bold text-[#EE8200] mb-1">Infant Price</label>
                     <input
                       type="number"
                       value={form.InfantPrice}
                       onChange={(e) => setForm({ ...form, InfantPrice: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-xl border border-[#331700] bg-white font-mono font-bold text-[#331700]"
+                      className="w-full px-3 py-2 rounded-xl border border-[#EE8200] bg-white font-mono font-bold text-[#EE8200]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Flight Segments Builder */}
-              <div className="p-4 rounded-xl bg-white border border-[#331700]/20 space-y-3">
-                <h6 className="font-display font-bold text-xs uppercase tracking-wider text-[#331700]">
+              <div className="p-4 rounded-xl bg-white border border-[#EE8200]/20 space-y-3">
+                <h6 className="font-display font-bold text-xs uppercase tracking-wider text-[#EE8200]">
                   Flight Segments
                 </h6>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
@@ -607,7 +607,7 @@ export default function FlightManagement() {
                     <select
                       value={selectedSegToAdd}
                       onChange={(e) => setSelectedSegToAdd(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-[#FAF8F6]"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-[#FAFAFA]"
                     >
                       <option value="">-- Select Flight Segment to Attach --</option>
                       {matchingSegments.map((s) => (
@@ -621,7 +621,7 @@ export default function FlightManagement() {
                   <button
                     type="button"
                     onClick={handleAddSegmentToForm}
-                    className="px-4 py-2.5 rounded-xl bg-[#331700] text-white font-bold hover:bg-black transition"
+                    className="px-4 py-2.5 rounded-xl bg-[#EE8200] text-white font-bold hover:bg-black transition"
                   >
                     Add Segment
                   </button>
@@ -639,10 +639,10 @@ export default function FlightManagement() {
                       return (
                         <div
                           key={segId}
-                          className="p-3 rounded-xl bg-[#FAF6F2] border border-[#331700]/15 flex items-center justify-between"
+                          className="p-3 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/15 flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="px-2 py-1 rounded bg-[#331700] text-white font-mono font-bold">
+                            <span className="px-2 py-1 rounded bg-[#EE8200] text-white font-mono font-bold">
                               {seg.FlightNumber}
                             </span>
                             <div>
@@ -680,7 +680,7 @@ export default function FlightManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#331700] hover:bg-black text-white font-bold transition"
+                  className="px-6 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
                 >
                   Save Flight
                 </button>
@@ -693,8 +693,8 @@ export default function FlightManagement() {
       {/* FLIGHT DETAILS MODAL (Matches Flight Details modal with Summary, Flight Segments, and Flight Bookings) */}
       {detailsFlight && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#331700]/20 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between shrink-0">
               <h5 className="font-bold text-base">Flight Details — {detailsFlight.Title}</h5>
               <button
                 onClick={() => setDetailsFlight(null)}
@@ -705,7 +705,7 @@ export default function FlightManagement() {
             </div>
             <div className="p-6 overflow-y-auto space-y-6 text-xs">
               {/* Overview Summary Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-[#FAF8F6] border border-[#331700]/15">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
                 <div>
                   <span className="text-neutral-500 block">Category</span>
                   <strong className="text-sm text-[#0B0A09]">{detailsFlight.Category}</strong>
@@ -716,7 +716,7 @@ export default function FlightManagement() {
                 </div>
                 <div>
                   <span className="text-neutral-500 block">Airline</span>
-                  <strong className="text-sm text-[#331700]">{detailsFlight.Airline}</strong>
+                  <strong className="text-sm text-[#EE8200]">{detailsFlight.Airline}</strong>
                 </div>
                 <div>
                   <span className="text-neutral-500 block">Total Seats / Left</span>
@@ -726,7 +726,7 @@ export default function FlightManagement() {
                 </div>
                 <div>
                   <span className="text-neutral-500 block">Adult Price</span>
-                  <strong className="text-sm font-mono text-[#331700]">
+                  <strong className="text-sm font-mono text-[#EE8200]">
                     {formatCurrencyPKR(detailsFlight.AdultPrice)}
                   </strong>
                 </div>
@@ -734,23 +734,23 @@ export default function FlightManagement() {
 
               {/* Attached Segments */}
               <div>
-                <h6 className="font-display font-bold text-sm text-[#331700] mb-3">
+                <h6 className="font-display font-bold text-sm text-[#EE8200] mb-3">
                   Flight Segments ({(detailsFlight.Segments || []).length})
                 </h6>
                 <div className="space-y-2.5">
                   {(detailsFlight.Segments || []).map((seg) => (
                     <div
                       key={seg.AirGroupSegmentID}
-                      className="p-4 rounded-xl bg-[#FAF6F2] border border-[#331700]/15 flex flex-wrap items-center justify-between gap-4"
+                      className="p-4 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/15 flex flex-wrap items-center justify-between gap-4"
                     >
                       <div>
-                        <div className="font-bold text-sm text-[#331700]">
+                        <div className="font-bold text-sm text-[#EE8200]">
                           {seg.DepartureCity} ({seg.DepartureIata})
                         </div>
                         <div className="text-neutral-600">{formatDateTime(seg.DepartureDate)}</div>
                       </div>
                       <div className="text-center">
-                        <span className="px-2.5 py-1 rounded bg-[#331700] text-white font-mono font-bold">
+                        <span className="px-2.5 py-1 rounded bg-[#EE8200] text-white font-mono font-bold">
                           {seg.FlightNumber}
                         </span>
                         <div className="text-[11px] text-neutral-500 mt-1">
@@ -770,7 +770,7 @@ export default function FlightManagement() {
 
               {/* Associated Flight Bookings */}
               <div>
-                <h6 className="font-display font-bold text-sm text-[#331700] mb-3">
+                <h6 className="font-display font-bold text-sm text-[#EE8200] mb-3">
                   Flight Bookings for this Group (
                   {bookings.filter((b) => b.AirGroupID === detailsFlight.AirGroupID).length})
                 </h6>
@@ -794,7 +794,7 @@ export default function FlightManagement() {
                             <td className="py-2.5 px-3 font-mono font-bold">
                               {b.AirGroupBookingID}
                             </td>
-                            <td className="py-2.5 px-3 font-mono text-[#331700] font-bold">
+                            <td className="py-2.5 px-3 font-mono text-[#EE8200] font-bold">
                               {b.PNR}
                             </td>
                             <td className="py-2.5 px-3 font-semibold">{b.SubCompanyName}</td>

@@ -232,7 +232,7 @@ export default function FlightPOS() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#331700]">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
             Instant B2B Group Reservation Engine
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
@@ -245,7 +245,7 @@ export default function FlightPOS() {
         {/* LEFT 8 COLUMNS: Agent, Flight Selection, Segments, Passenger Forms */}
         <div className="lg:col-span-8 space-y-6">
           {/* Card 1: Select Sub Agent & Select Flight */}
-          <div className="bg-white rounded-2xl border border-[#331700]/15 p-6 shadow-executive space-y-5">
+          <div className="bg-white rounded-2xl border border-[#EE8200]/15 p-6 shadow-executive space-y-5">
             {/* Row 1: Agent Selection + Credit Limit & Balance */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
@@ -262,7 +262,7 @@ export default function FlightPOS() {
                       setMobile(ag.MobileNumber || '');
                     }
                   }}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F6] border border-[#331700]/20 text-xs font-bold focus:outline-none focus:border-[#331700]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/20 text-xs font-bold focus:outline-none focus:border-[#EE8200]"
                 >
                   {subAgents.map((a) => (
                     <option key={a.SubCompanyID} value={a.SubCompanyID}>
@@ -275,7 +275,7 @@ export default function FlightPOS() {
                 <label className="block text-xs font-bold text-neutral-500 mb-1.5">
                   Credit Limit:
                 </label>
-                <div className="px-3.5 py-2.5 rounded-xl bg-[#FAF6F2] border border-[#331700]/15 font-mono font-bold text-xs text-[#331700]">
+                <div className="px-3.5 py-2.5 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/15 font-mono font-bold text-xs text-[#EE8200]">
                   {formatCurrencyPKR(selectedAgent?.CreditLimit || 0)}
                 </div>
               </div>
@@ -283,7 +283,7 @@ export default function FlightPOS() {
                 <label className="block text-xs font-bold text-neutral-500 mb-1.5">
                   Account Balance:
                 </label>
-                <div className="px-3.5 py-2.5 rounded-xl bg-[#331700] text-white font-mono font-bold text-xs">
+                <div className="px-3.5 py-2.5 rounded-xl bg-[#EE8200] text-white font-mono font-bold text-xs">
                   {formatCurrencyPKR(selectedAgent?.CreditLimitBalance || 0)}
                 </div>
               </div>
@@ -298,7 +298,7 @@ export default function FlightPOS() {
                 <select
                   value={selectedFlightId}
                   onChange={(e) => setSelectedFlightId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F6] border border-[#331700]/20 text-xs font-bold focus:outline-none focus:border-[#331700]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/20 text-xs font-bold focus:outline-none focus:border-[#EE8200]"
                 >
                   {flights.map((f) => (
                     <option key={f.AirGroupID} value={f.AirGroupID}>
@@ -311,7 +311,7 @@ export default function FlightPOS() {
                 <label className="block text-xs font-bold text-neutral-500 mb-1.5">
                   Total Seats:
                 </label>
-                <div className="px-3.5 py-2.5 rounded-xl bg-[#FAF8F6] border border-neutral-200 font-mono font-bold text-xs">
+                <div className="px-3.5 py-2.5 rounded-xl bg-[#FAFAFA] border border-neutral-200 font-mono font-bold text-xs">
                   {selectedFlight?.TotalSeats || 0} Seats
                 </div>
               </div>
@@ -327,13 +327,13 @@ export default function FlightPOS() {
 
             {/* Selected Flight Segments Table */}
             <div>
-              <h6 className="font-display font-bold text-xs uppercase tracking-wider text-[#331700] mb-2">
+              <h6 className="font-display font-bold text-xs uppercase tracking-wider text-[#EE8200] mb-2">
                 Flight Segments
               </h6>
-              <div className="overflow-x-auto border border-[#331700]/15 rounded-xl">
+              <div className="overflow-x-auto border border-[#EE8200]/15 rounded-xl">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#331700] text-white font-bold">
+                    <tr className="bg-[#EE8200] text-white font-bold">
                       <th className="py-2.5 px-3">Departure IATA</th>
                       <th className="py-2.5 px-3">Departure Date</th>
                       <th className="py-2.5 px-3">Arrival IATA</th>
@@ -353,8 +353,8 @@ export default function FlightPOS() {
                       </tr>
                     ) : (
                       (selectedFlight?.Segments || []).map((seg) => (
-                        <tr key={seg.AirGroupSegmentID} className="hover:bg-[#FAF8F6]">
-                          <td className="py-2.5 px-3 font-bold text-[#331700]">
+                        <tr key={seg.AirGroupSegmentID} className="hover:bg-[#FAFAFA]">
+                          <td className="py-2.5 px-3 font-bold text-[#EE8200]">
                             {seg.DepartureIata} ({seg.DepartureCity})
                           </td>
                           <td className="py-2.5 px-3 font-mono">
@@ -368,7 +368,7 @@ export default function FlightPOS() {
                           </td>
                           <td className="py-2.5 px-3">{seg.FlightClass}</td>
                           <td className="py-2.5 px-3 font-mono font-bold">{seg.FlightClassCode}</td>
-                          <td className="py-2.5 px-3 font-mono font-bold text-[#331700]">
+                          <td className="py-2.5 px-3 font-mono font-bold text-[#EE8200]">
                             {seg.FlightNumber}
                           </td>
                           <td className="py-2.5 px-3">{seg.OperatingAirlineName}</td>
@@ -418,14 +418,14 @@ export default function FlightPOS() {
               <button
                 type="button"
                 onClick={() => handleGeneratePassengers(false)}
-                className="py-2.5 px-4 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-xs transition cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-xs transition cursor-pointer"
               >
                 Add Details
               </button>
               <button
                 type="button"
                 onClick={() => handleGeneratePassengers(true)}
-                className="py-2.5 px-4 rounded-xl bg-[#0B0A09] hover:bg-[#331700] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-[#0B0A09] hover:bg-[#EE8200] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                 title="Auto-fill NTBA & PAK placeholder details for rapid block booking"
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -481,10 +481,10 @@ export default function FlightPOS() {
                 return (
                   <div
                     key={pax.id || idx}
-                    className="bg-white rounded-2xl border border-[#331700]/20 p-5 shadow-xs space-y-4 text-xs"
+                    className="bg-white rounded-2xl border border-[#EE8200]/20 p-5 shadow-xs space-y-4 text-xs"
                   >
                     <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
-                      <span className="px-3 py-1 rounded-lg bg-[#331700] text-white font-bold text-xs">
+                      <span className="px-3 py-1 rounded-lg bg-[#EE8200] text-white font-bold text-xs">
                         Passenger #{idx + 1} — {pax.PassengerType}
                       </span>
                       {pax.PassportImageName && (
@@ -610,7 +610,7 @@ export default function FlightPOS() {
 
                     {/* Upload / Remove Passport */}
                     <div className="flex items-center gap-2 pt-1">
-                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF6F2] border border-[#331700]/20 text-[#331700] font-bold hover:bg-[#331700] hover:text-white transition">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFF7ED] border border-[#EE8200]/20 text-[#EE8200] font-bold hover:bg-[#EE8200] hover:text-white transition">
                         <Upload className="w-3.5 h-3.5" />
                         <span>Upload Passport</span>
                         <input
@@ -642,8 +642,8 @@ export default function FlightPOS() {
 
         {/* RIGHT 4 COLUMNS: Sticky Fare Summary Card (Matches Fare Summary in FlightPOS.razor) */}
         <div className="lg:col-span-4 sticky top-24">
-          <div className="bg-white rounded-2xl border border-[#331700]/20 shadow-executive overflow-hidden">
-            <div className="bg-[#331700] text-white px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-[#EE8200]/20 shadow-executive overflow-hidden">
+            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between">
               <h5 className="font-display font-bold text-base">Fare Summary</h5>
               <Calculator className="w-5 h-5 text-white/80" />
             </div>
@@ -651,7 +651,7 @@ export default function FlightPOS() {
             <div className="p-6 space-y-5 text-xs">
               {/* Adult Breakdown */}
               <div className="space-y-1.5 pb-4 border-b border-neutral-200">
-                <h6 className="font-bold text-sm text-[#331700]">Adult</h6>
+                <h6 className="font-bold text-sm text-[#EE8200]">Adult</h6>
                 <div className="flex justify-between text-neutral-600">
                   <span>Base Fare:</span>
                   <span className="font-mono">{formatCurrencyPKR(fareBreakdown.adtBasic)}</span>
@@ -672,7 +672,7 @@ export default function FlightPOS() {
                 </div>
                 <div className="flex justify-between font-bold text-[#0B0A09] pt-1">
                   <span>Total:</span>
-                  <span className="font-mono text-[#331700]">
+                  <span className="font-mono text-[#EE8200]">
                     {formatCurrencyPKR(fareBreakdown.adtTotal)}
                   </span>
                 </div>
@@ -681,7 +681,7 @@ export default function FlightPOS() {
               {/* Child Breakdown */}
               {childrenCount > 0 && (
                 <div className="space-y-1.5 pb-4 border-b border-neutral-200">
-                  <h6 className="font-bold text-sm text-[#331700]">Child</h6>
+                  <h6 className="font-bold text-sm text-[#EE8200]">Child</h6>
                   <div className="flex justify-between text-neutral-600">
                     <span>Base Fare:</span>
                     <span className="font-mono">{formatCurrencyPKR(fareBreakdown.cnnBasic)}</span>
@@ -696,7 +696,7 @@ export default function FlightPOS() {
                   </div>
                   <div className="flex justify-between font-bold text-[#0B0A09] pt-1">
                     <span>Total:</span>
-                    <span className="font-mono text-[#331700]">
+                    <span className="font-mono text-[#EE8200]">
                       {formatCurrencyPKR(fareBreakdown.cnnTotal)}
                     </span>
                   </div>
@@ -706,7 +706,7 @@ export default function FlightPOS() {
               {/* Infant Breakdown */}
               {infantsCount > 0 && (
                 <div className="space-y-1.5 pb-4 border-b border-neutral-200">
-                  <h6 className="font-bold text-sm text-[#331700]">Infant</h6>
+                  <h6 className="font-bold text-sm text-[#EE8200]">Infant</h6>
                   <div className="flex justify-between text-neutral-600">
                     <span>Base Fare:</span>
                     <span className="font-mono">{formatCurrencyPKR(fareBreakdown.infBasic)}</span>
@@ -721,7 +721,7 @@ export default function FlightPOS() {
                   </div>
                   <div className="flex justify-between font-bold text-[#0B0A09] pt-1">
                     <span>Total:</span>
-                    <span className="font-mono text-[#331700]">
+                    <span className="font-mono text-[#EE8200]">
                       {formatCurrencyPKR(fareBreakdown.infTotal)}
                     </span>
                   </div>
@@ -729,11 +729,11 @@ export default function FlightPOS() {
               )}
 
               {/* Grand Total */}
-              <div className="p-4 rounded-xl bg-[#FAF6F2] border border-[#331700]/20 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/20 flex items-center justify-between">
                 <span className="font-display font-extrabold text-base text-[#0B0A09]">
                   Grand Total:
                 </span>
-                <span className="font-mono font-extrabold text-lg text-[#331700]">
+                <span className="font-mono font-extrabold text-lg text-[#EE8200]">
                   {formatCurrencyPKR(fareBreakdown.grandTotal)}
                 </span>
               </div>
@@ -742,7 +742,7 @@ export default function FlightPOS() {
                 type="button"
                 disabled={submitting}
                 onClick={handleBookNow}
-                className="w-full py-3.5 px-6 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-sm transition shadow-lg cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-sm transition shadow-lg cursor-pointer"
               >
                 {submitting ? 'Creating PNR...' : 'Book Now'}
               </button>

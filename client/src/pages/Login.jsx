@@ -67,9 +67,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-12 bg-[#FAF8F6]">
-      {/* Left Hero Panel — Deep #331700 & Obsidian Architecture */}
-      <div className="hidden lg:flex lg:col-span-7 bg-[#331700] text-white p-12 flex-col justify-between relative overflow-hidden">
+    <div className="min-h-screen grid lg:grid-cols-12 bg-[#FAFAFA]">
+      {/* Left Hero Panel — Deep #EE8200 & Obsidian Architecture */}
+      <div className="hidden lg:flex lg:col-span-7 bg-[#EE8200] text-white p-12 flex-col justify-between relative overflow-hidden">
         <div
           className="absolute -right-24 -bottom-24 w-96 h-96 rounded-full border border-white/10 pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)' }}
@@ -107,7 +107,7 @@ export default function Login() {
 
         <div className="relative z-10 flex items-center justify-between text-xs text-white/60 border-t border-white/10 pt-6">
           <span>Taban Airline OTA Admin Portal</span>
-          <span className="font-mono">Theme #331700 • White • Black</span>
+          <span className="font-mono">Theme #EE8200 • White • Black</span>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Brand Header */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-[#331700] text-white flex items-center justify-center font-display font-extrabold text-xl shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-[#EE8200] text-white flex items-center justify-center font-display font-extrabold text-xl shadow-lg">
               TA
             </div>
             <div>
@@ -130,9 +130,9 @@ export default function Login() {
           {step === 'credentials' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-5">
               {/* Quick Fill Credentials Banner */}
-              <div className="p-3.5 rounded-xl bg-[#FAF6F2] border border-[#331700]/20 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/20 flex items-center justify-between">
                 <div className="text-xs">
-                  <div className="font-bold text-[#331700] flex items-center gap-1.5">
+                  <div className="font-bold text-[#EE8200] flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     Configured Admin Account
                   </div>
@@ -146,7 +146,7 @@ export default function Login() {
                     setLoginId('Atta');
                     setPassword('GhC@*589');
                   }}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#331700] text-white text-[11px] font-bold hover:bg-black transition"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] text-white text-[11px] font-bold hover:bg-black transition"
                 >
                   Auto-Fill
                 </button>
@@ -158,7 +158,7 @@ export default function Login() {
                   Login ID *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#331700]">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#EE8200]">
                     <User className="w-4 h-4" />
                   </span>
                   <input
@@ -166,7 +166,7 @@ export default function Login() {
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
                     placeholder="Enter Login ID (e.g. Atta)"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none text-sm font-medium bg-[#FAF8F6] focus:bg-white transition"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-medium bg-[#FAFAFA] focus:bg-white transition"
                     required
                   />
                 </div>
@@ -178,7 +178,7 @@ export default function Login() {
                   Password *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#331700]">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#EE8200]">
                     <Lock className="w-4 h-4" />
                   </span>
                   <input
@@ -186,13 +186,13 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter Password"
-                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none text-sm font-medium bg-[#FAF8F6] focus:bg-white transition"
+                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-medium bg-[#FAFAFA] focus:bg-white transition"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-[#331700]"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-[#EE8200]"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -207,7 +207,7 @@ export default function Login() {
                     type="checkbox"
                     checked={require2FA}
                     onChange={(e) => setRequire2FA(e.target.checked)}
-                    className="rounded border-neutral-300 text-[#331700] focus:ring-[#331700]"
+                    className="rounded border-neutral-300 text-[#EE8200] focus:ring-[#EE8200]"
                   />
                   <span>Preview 2FA / OTP & QR Authenticator Step</span>
                 </label>
@@ -216,7 +216,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3.5 px-6 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
               >
                 <span>{submitting ? 'Signing In...' : 'Login to Portal'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -225,8 +225,8 @@ export default function Login() {
           ) : (
             /* 2FA / OTP Verification Section (Matches Login.razor otp-section & qr-section) */
             <form onSubmit={handleOtpSubmit} className="space-y-5">
-              <div className="p-4 rounded-2xl bg-[#FAF6F2] border border-[#331700]/20 text-center">
-                <div className="w-12 h-12 rounded-xl bg-[#331700] text-white flex items-center justify-center mx-auto mb-2">
+              <div className="p-4 rounded-2xl bg-[#FFF7ED] border border-[#EE8200]/20 text-center">
+                <div className="w-12 h-12 rounded-xl bg-[#EE8200] text-white flex items-center justify-center mx-auto mb-2">
                   <QrCode className="w-6 h-6" />
                 </div>
                 <h5 className="font-bold text-sm text-[#0B0A09]">Scan QR Code / Enter OTP</h5>
@@ -235,7 +235,7 @@ export default function Login() {
                 </p>
                 <div className="mt-3 p-2.5 rounded-lg bg-white border border-neutral-200 text-xs">
                   Or enter this code manually:
-                  <div className="font-mono font-bold text-[#331700] mt-0.5">{manualKey}</div>
+                  <div className="font-mono font-bold text-[#EE8200] mt-0.5">{manualKey}</div>
                 </div>
               </div>
 
@@ -244,7 +244,7 @@ export default function Login() {
                   Enter 2FA Authentication Code / OTP
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#331700]">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#EE8200]">
                     <KeyRound className="w-4 h-4" />
                   </span>
                   <input
@@ -252,7 +252,7 @@ export default function Login() {
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
                     placeholder="Enter 6-digit OTP"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#331700] focus:outline-none text-sm font-mono font-bold tracking-widest bg-[#FAF8F6]"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-mono font-bold tracking-widest bg-[#FAFAFA]"
                     required
                   />
                 </div>
@@ -269,7 +269,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 px-6 rounded-xl bg-[#331700] hover:bg-black text-white font-bold text-sm transition"
+                  className="flex-1 py-3 px-6 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-sm transition"
                 >
                   Verify OTP
                 </button>
