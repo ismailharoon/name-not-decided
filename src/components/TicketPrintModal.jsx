@@ -138,10 +138,10 @@ export default function TicketPrintModal({ booking, onClose }) {
             >
               <div>
                 <div style={{ fontSize: '20px', fontWeight: 800, color: '#EE8200', letterSpacing: '-0.5px' }}>
-                  {booking.SubCompanyName || 'GROUP TICKETING DESK'}
+                  {booking.SubCompanyName || 'BOOKLY'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#555', fontWeight: 600 }}>
-                  {booking.ValidatingCarrierName || 'Airline Charter & Group Consolidation'}
+                  {booking.ValidatingCarrierName || 'Bookly Group & Charter Ticketing'}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>

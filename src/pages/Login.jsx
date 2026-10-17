@@ -76,7 +76,7 @@ export default function Login() {
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#EE8200] text-white">
             <Plane className="w-5 h-5" />
             <span className="font-display font-bold text-sm tracking-wider uppercase">
-              FLIGHT OTA • ADMIN & SUB-AGENT PORTAL
+              BOOKLY • ADMIN & SUB-AGENT PORTAL
             </span>
           </div>
 
@@ -104,7 +104,7 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 flex items-center justify-between text-xs text-white/60 border-t border-white/10 pt-6">
-          <span>OTA Admin Portal</span>
+          <span>Bookly Admin Portal</span>
           <span className="font-mono">B2B Aviation Suite</span>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function Login() {
               <Plane className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-display font-extrabold text-2xl text-[#0B0A09]">Sign In</h2>
+              <h2 className="font-display font-extrabold text-2xl text-[#0B0A09]">Bookly Sign In</h2>
               <p className="text-xs text-neutral-500">
                 Enter your Login ID and Password to continue
               </p>

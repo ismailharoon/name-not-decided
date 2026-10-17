@@ -197,7 +197,7 @@ export function downloadWordManifest(segment, passengers = []) {
       </style>
     </head>
     <body>
-      <div class="header">IATA MANIFEST | PASSENGER SERVICE SYSTEM</div>
+      <div class="header">BOOKLY | IATA PASSENGER MANIFEST</div>
       <div class="meta">
         <b>Flight:</b> ${segment.FlightNumber} &nbsp;|&nbsp;
         <b>Sector:</b> ${segment.DepartureCity} (${segment.DepartureIata}) &rarr; ${segment.ArrivalCity} (${segment.ArrivalIata}) &nbsp;|&nbsp;

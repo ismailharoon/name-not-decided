@@ -189,7 +189,7 @@ export function PortalProvider({ children }) {
         UserID: 'USR-ADMIN',
         LoginID: 'test',
         FullName: 'Test Admin',
-        Email: 'admin@portal.com',
+        Email: 'admin@bookly.com',
         Designation: 'Administrator',
         AccountType: 'Administrator',
         AccountStatus: 'Enable'
@@ -211,7 +211,7 @@ export function PortalProvider({ children }) {
       Designation: matchedUser.Designation,
       AccountType: matchedUser.AccountType,
       SubCompanyID: matchedAgent?.SubCompanyID || 'ADMIN',
-      SubCompanyName: matchedAgent?.CompanyName || 'Admin Portal'
+      SubCompanyName: matchedAgent?.CompanyName || 'Bookly'
     };
 
     if (require2FA) {

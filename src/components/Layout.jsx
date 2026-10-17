@@ -134,7 +134,7 @@ export default function Layout({ children }) {
             {!sidebarCollapsed && (
               <div className="leading-tight">
                 <div className="font-display font-extrabold text-base tracking-wider text-white flex items-center gap-1.5">
-                  FLIGHT <span className="text-xs px-1.5 py-0.5 rounded bg-[#EE8200] text-white font-mono">OTA</span>
+                  BOOKLY <span className="text-xs px-1.5 py-0.5 rounded bg-[#EE8200] text-white font-mono">OTA</span>
                 </div>
                 <p className="text-[11px] text-white/65 truncate">Group Booking Portal</p>
               </div>
@@ -455,9 +455,9 @@ export default function Layout({ children }) {
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
                   <div className="p-4 bg-[#0B0A09] text-white">
                     <div className="font-bold text-sm">{user?.FullName || 'Test Admin'}</div>
-                    <div className="text-xs text-white/75">{user?.Email || 'admin@portal.com'}</div>
+                    <div className="text-xs text-white/75">{user?.Email || 'admin@bookly.com'}</div>
                     <div className="mt-2 inline-block px-2 py-0.5 rounded bg-[#EE8200] text-white text-[10px] font-mono font-bold">
-                      {user?.SubCompanyName || 'Admin Portal'}
+                      {user?.SubCompanyName || 'Bookly'}
                     </div>
                   </div>
                   <div className="p-2">
@@ -492,12 +492,12 @@ export default function Layout({ children }) {
         {/* FOOTER */}
         <footer className="bg-white border-t border-neutral-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-600">
           <div className="font-medium">
-            <span className="font-bold text-[#EE8200]">FLIGHT PORTAL</span> • Group OTA & Booking Management System
+            <span className="font-bold text-[#EE8200]">BOOKLY</span> • Group OTA & Booking Management System
           </div>
           <div className="flex items-center gap-4 mt-2 sm:mt-0">
             <span className="flex items-center gap-1.5 text-[11px]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#EE8200]" />
-              B2B Executive Suite
+              Bookly B2B Aviation Suite
             </span>
           </div>
         </footer>

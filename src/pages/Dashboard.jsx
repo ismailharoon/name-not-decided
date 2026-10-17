@@ -70,10 +70,10 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
-            Executive Command Overview
+            Bookly • Executive Command Overview
           </span>
           <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
-            Aviation & Group Ticketing Dashboard
+            Bookly Aviation & Group Ticketing Dashboard
           </h1>
         </div>
         <div className="flex items-center gap-3">
