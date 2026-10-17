@@ -19,7 +19,8 @@ import {
   UserCheck,
   CheckCircle2,
   AlertTriangle,
-  Info
+  Info,
+  Plane
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR } from '../utils/exporters';
@@ -128,14 +129,14 @@ export default function Layout({ children }) {
         <div className="h-20 px-5 flex items-center justify-between border-b border-white/10 bg-black">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-10 h-10 rounded-xl bg-[#EE8200] text-white flex items-center justify-center font-extrabold text-lg shadow-md shrink-0">
-              TA
+              <Plane className="w-5 h-5" />
             </div>
             {!sidebarCollapsed && (
               <div className="leading-tight">
                 <div className="font-display font-extrabold text-base tracking-wider text-white flex items-center gap-1.5">
-                  TABAN <span className="text-xs px-1.5 py-0.5 rounded bg-[#EE8200] text-white font-mono">OTA</span>
+                  FLIGHT <span className="text-xs px-1.5 py-0.5 rounded bg-[#EE8200] text-white font-mono">OTA</span>
                 </div>
-                <p className="text-[11px] text-white/65 truncate">Group Consolidation Suite</p>
+                <p className="text-[11px] text-white/65 truncate">Group Booking Portal</p>
               </div>
             )}
           </div>
@@ -155,7 +156,7 @@ export default function Layout({ children }) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-bold text-white truncate">
-                {user?.FullName || 'Atta Ur Rehman'}
+                {user?.FullName || 'Atta'}
               </div>
               <div className="text-[11px] text-white/65 truncate flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#EE8200] inline-block" />
@@ -233,10 +234,10 @@ export default function Layout({ children }) {
           <button
             onClick={resetDemoData}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/75 hover:text-white hover:bg-white/10 transition"
-            title="Reset Demo Data to Default Seed"
+            title="Clear All Records"
           >
             <RotateCcw className="w-4 h-4 text-[#EE8200] shrink-0" />
-            {!sidebarCollapsed && <span>Reset Demo Database</span>}
+            {!sidebarCollapsed && <span>Clear All Data</span>}
           </button>
           <button
             onClick={logout}
@@ -370,29 +371,15 @@ export default function Layout({ children }) {
                 title="Messages"
               >
                 <Mail className="w-4 h-4" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#EE8200] text-white text-[10px] font-bold flex items-center justify-center">
-                  1
-                </span>
               </button>
               {openDropdown === 'messages' && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
                   <div className="bg-[#EE8200] text-white px-4 py-3 flex items-center justify-between text-xs font-bold">
-                    <span>1 New Message</span>
+                    <span>Messages</span>
                     <span className="px-2 py-0.5 rounded-full bg-black text-white">Inbox</span>
                   </div>
-                  <div className="p-4 hover:bg-orange-50/40 transition">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#0B0A09] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                        AD
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-[#0B0A09]">Admin Command Desk</div>
-                        <div className="text-[11px] text-neutral-500">01 Hour ago</div>
-                        <p className="text-xs text-neutral-700 mt-1">
-                          Welcome to Taban Airlines Group OTA Portal. {pendingCount} group booking(s) await approval.
-                        </p>
-                      </div>
-                    </div>
+                  <div className="p-5 text-center text-xs text-neutral-500">
+                    No new messages.
                   </div>
                 </div>
               )}
@@ -417,32 +404,30 @@ export default function Layout({ children }) {
               {openDropdown === 'notifications' && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
                   <div className="bg-[#0B0A09] text-white px-4 py-3 flex items-center justify-between text-xs font-bold">
-                    <span>System Notifications</span>
+                    <span>Notifications</span>
                     <span className="px-2 py-0.5 rounded-full bg-[#EE8200] text-white">Live</span>
                   </div>
                   <div className="divide-y divide-neutral-100 max-h-64 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setOpenDropdown(null);
-                        navigate('/FlightBookings');
-                      }}
-                      className="p-3.5 hover:bg-orange-50/50 cursor-pointer transition"
-                    >
-                      <div className="text-xs font-bold text-[#EE8200]">
-                        {pendingCount} Pending Group Booking(s)
+                    {pendingCount > 0 ? (
+                      <div
+                        onClick={() => {
+                          setOpenDropdown(null);
+                          navigate('/FlightBookings');
+                        }}
+                        className="p-3.5 hover:bg-orange-50/50 cursor-pointer transition"
+                      >
+                        <div className="text-xs font-bold text-[#EE8200]">
+                          {pendingCount} Pending Group Booking(s)
+                        </div>
+                        <div className="text-[11px] text-neutral-600 mt-0.5">
+                          Click to review, approve, or issue e-tickets.
+                        </div>
                       </div>
-                      <div className="text-[11px] text-neutral-600 mt-0.5">
-                        Click to review, approve, or issue e-tickets.
+                    ) : (
+                      <div className="p-5 text-center text-xs text-neutral-500">
+                        No pending notifications.
                       </div>
-                    </div>
-                    <div className="p-3.5">
-                      <div className="text-xs font-bold text-[#0B0A09]">
-                        Flight HH-7212 KHI-IKA Manifest Ready
-                      </div>
-                      <div className="text-[11px] text-neutral-500 mt-0.5">
-                        Excel & Word IATA PNL export active.
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -469,10 +454,10 @@ export default function Layout({ children }) {
               {openDropdown === 'profile' && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
                   <div className="p-4 bg-[#0B0A09] text-white">
-                    <div className="font-bold text-sm">{user?.FullName || 'Atta Ur Rehman'}</div>
-                    <div className="text-xs text-white/75">{user?.Email || 'atta@smartmovesl.com'}</div>
+                    <div className="font-bold text-sm">{user?.FullName || 'Atta'}</div>
+                    <div className="text-xs text-white/75">{user?.Email || 'admin@portal.com'}</div>
                     <div className="mt-2 inline-block px-2 py-0.5 rounded bg-[#EE8200] text-white text-[10px] font-mono font-bold">
-                      {user?.SubCompanyName || 'Taban Executive HQ'}
+                      {user?.SubCompanyName || 'Admin Portal'}
                     </div>
                   </div>
                   <div className="p-2">
@@ -507,12 +492,12 @@ export default function Layout({ children }) {
         {/* FOOTER */}
         <footer className="bg-white border-t border-neutral-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-600">
           <div className="font-medium">
-            <span className="font-bold text-[#EE8200]">TABAN AIRLINES</span> • Group OTA & Charter Management System
+            <span className="font-bold text-[#EE8200]">FLIGHT PORTAL</span> • Group OTA & Booking Management System
           </div>
           <div className="flex items-center gap-4 mt-2 sm:mt-0">
             <span className="flex items-center gap-1.5 text-[11px]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#EE8200]" />
-              Theme: <code className="font-mono font-bold text-[#EE8200]">#EE8200</code> • White • Black
+              B2B Executive Suite
             </span>
           </div>
         </footer>
@@ -528,7 +513,7 @@ export default function Layout({ children }) {
             </div>
             <div className="p-6 text-center">
               <p className="text-sm text-neutral-700 font-medium">
-                Your executive session has been idle. Would you like to continue working or sign out?
+                Your session has been idle. Would you like to continue working or sign out?
               </p>
               <p className="text-base font-bold text-[#EE8200] mt-2">Continue?</p>
               <div className="flex items-center justify-center gap-3 mt-6">

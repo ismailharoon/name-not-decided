@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 import {
   Plus,
-  PlaneTakeoff,
   Eye,
   Edit3,
   Trash2,
-  X,
-  Search,
-  Plane,
-  CheckCircle2,
-  Users
+  X
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR, formatDateTime, formatShortDate } from '../utils/exporters';
@@ -18,26 +13,26 @@ const INITIAL_FLIGHT_FORM = {
   Title: '',
   Category: 'Tourism',
   TripType: 'Round',
-  SupplierName: 'Taban Aviation Charter Desk',
-  ValidatingCarrier: 'HH',
-  ValidatingCarrierName: 'Taban Air (HH-721)',
+  SupplierName: 'Direct Airline Inventory',
+  ValidatingCarrier: 'PK',
+  ValidatingCarrierName: 'PIA (PK)',
   isDomestic: false,
   isSOTO: false,
   isEnabled: true,
-  PNR_GDS: 'TB8K2M',
-  PNR_AIRLINE: 'HH910PK',
-  TimeLimit: '2026-12-01T18:00:00',
+  PNR_GDS: '',
+  PNR_AIRLINE: '',
+  TimeLimit: '',
   TotalSeats: 160,
-  AdultPrice: 184000,
-  AdultBasicFare: 151000,
-  AdultTax: 33000,
-  ChildPrice: 148000,
-  ChildBasicFare: 120000,
-  ChildTax: 28000,
-  InfantPrice: 48500,
-  InfantBasicFare: 39500,
-  InfantTax: 9000,
-  SegmentIDs: ['SEG-1001']
+  AdultPrice: 0,
+  AdultBasicFare: 0,
+  AdultTax: 0,
+  ChildPrice: 0,
+  ChildBasicFare: 0,
+  ChildTax: 0,
+  InfantPrice: 0,
+  InfantBasicFare: 0,
+  InfantTax: 0,
+  SegmentIDs: []
 };
 
 export default function FlightManagement() {
@@ -56,7 +51,6 @@ export default function FlightManagement() {
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(INITIAL_FLIGHT_FORM);
-  const [segmentSearch, setSegmentSearch] = useState('');
   const [selectedSegToAdd, setSelectedSegToAdd] = useState('');
   const [detailsFlight, setDetailsFlight] = useState(null);
 
@@ -64,7 +58,7 @@ export default function FlightManagement() {
     setEditingId(null);
     setForm({
       ...INITIAL_FLIGHT_FORM,
-      SegmentIDs: segments[0] ? [segments[0].AirGroupSegmentID] : []
+      SegmentIDs: []
     });
     setShowEditor(true);
   };
@@ -128,19 +122,6 @@ export default function FlightManagement() {
     }
   };
 
-  const matchingSegments = segments.filter((s) => {
-    const q = segmentSearch.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      s.FlightNumber?.toLowerCase().includes(q) ||
-      s.DepartureIata?.toLowerCase().includes(q) ||
-      s.ArrivalIata?.toLowerCase().includes(q) ||
-      s.DepartureCity?.toLowerCase().includes(q) ||
-      s.ArrivalCity?.toLowerCase().includes(q) ||
-      s.OperatingAirlineName?.toLowerCase().includes(q)
-    );
-  });
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -181,103 +162,111 @@ export default function FlightManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {flights.map((f) => (
-                <tr key={f.AirGroupID} className="hover:bg-[#FFF7ED]/60 transition">
-                  <td className="py-4 px-3">
-                    <button
-                      onClick={() => handleToggleEnabled(f)}
-                      className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center cursor-pointer ${
-                        f.isEnabled ? 'bg-[#EE8200] justify-end' : 'bg-neutral-300 justify-start'
-                      }`}
-                      title="Toggle Enabled Status"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-white shadow-xs" />
-                    </button>
-                  </td>
-                  <td className="py-4 px-3">
-                    <div className="font-bold text-sm text-[#0B0A09] max-w-[240px] truncate" title={f.Title}>
-                      {f.Title}
-                    </div>
-                    <div className="text-[11px] font-mono text-[#EE8200] font-semibold">
-                      GDS: {f.PNR_GDS} • Air: {f.PNR_AIRLINE}
-                    </div>
-                  </td>
-                  <td className="py-4 px-3">
-                    <span className="px-2 py-0.5 rounded bg-[#FFF7ED] text-[#EE8200] font-bold text-[11px] border border-[#EE8200]/15">
-                      {f.Category}
-                    </span>
-                    <div className="text-[11px] text-neutral-500 mt-1">{f.TripType}</div>
-                  </td>
-                  <td className="py-4 px-3 font-mono font-bold text-[#EE8200]">
-                    {f.Airline}
-                    <div className="text-[10px] font-sans font-normal text-neutral-500">
-                      {f.ValidatingCarrierName}
-                    </div>
-                  </td>
-                  <td className="py-4 px-3">
-                    <div className="font-bold text-[#0B0A09]">{f.GroupDepartureIata}</div>
-                    <div className="text-[11px] text-neutral-500">
-                      {formatShortDate(f.GroupDepartureDate)}
-                    </div>
-                  </td>
-                  <td className="py-4 px-3 text-center">
-                    <span className="px-2.5 py-1 rounded-lg bg-[#FAFAFA] border border-neutral-200 font-mono font-bold text-[#EE8200]">
-                      {f.SeatsLeft} / {f.TotalSeats}
-                    </span>
-                  </td>
-                  <td className="py-4 px-3 text-center">
-                    <div className="font-bold text-[#0B0A09]">{f.TotalBookings || 0} Bookings</div>
-                    {f.ApprovalPending > 0 && (
-                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px]">
-                        {f.ApprovalPending} Pending
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-4 px-3 font-mono text-[11px]">
-                    <div className="font-bold text-[#EE8200]">
-                      ADT: {formatCurrencyPKR(f.AdultPrice)}
-                    </div>
-                    <div className="text-neutral-600">CNN: {formatCurrencyPKR(f.ChildPrice)}</div>
-                    <div className="text-neutral-500">INF: {formatCurrencyPKR(f.InfantPrice)}</div>
-                  </td>
-                  <td className="py-4 px-3">
-                    <div className="font-semibold text-[#0B0A09] max-w-[140px] truncate">
-                      {f.SupplierName}
-                    </div>
-                    <div className="text-[10px] text-neutral-400">{f.Timestamp}</div>
-                  </td>
-                  <td className="py-4 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => setDetailsFlight(f)}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] text-white font-bold text-[11px] hover:bg-black transition flex items-center gap-1 cursor-pointer"
-                        title="View Flight Details"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Details
-                      </button>
-                      <button
-                        onClick={() => openEditModal(f)}
-                        className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] cursor-pointer"
-                        title="Edit Flight"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Delete flight group "${f.Title}"?`)) {
-                            deleteFlight(f.AirGroupID);
-                          }
-                        }}
-                        className="p-1.5 rounded-lg border border-neutral-200 hover:border-red-600 text-neutral-500 hover:text-red-600 cursor-pointer"
-                        title="Delete Flight"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+              {flights.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-12 text-center text-neutral-500">
+                    No flights added yet. Click &ldquo;Add New Flight&rdquo; to create your first flight group.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                flights.map((f) => (
+                  <tr key={f.AirGroupID} className="hover:bg-[#FFF7ED]/60 transition">
+                    <td className="py-4 px-3">
+                      <button
+                        onClick={() => handleToggleEnabled(f)}
+                        className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center cursor-pointer ${
+                          f.isEnabled ? 'bg-[#EE8200] justify-end' : 'bg-neutral-300 justify-start'
+                        }`}
+                        title="Toggle Enabled Status"
+                      >
+                        <span className="w-5 h-5 rounded-full bg-white shadow-xs" />
+                      </button>
+                    </td>
+                    <td className="py-4 px-3">
+                      <div className="font-bold text-sm text-[#0B0A09] max-w-[240px] truncate" title={f.Title}>
+                        {f.Title}
+                      </div>
+                      <div className="text-[11px] font-mono text-[#EE8200] font-semibold">
+                        GDS: {f.PNR_GDS} • Air: {f.PNR_AIRLINE}
+                      </div>
+                    </td>
+                    <td className="py-4 px-3">
+                      <span className="px-2 py-0.5 rounded bg-[#FFF7ED] text-[#EE8200] font-bold text-[11px] border border-[#EE8200]/15">
+                        {f.Category}
+                      </span>
+                      <div className="text-[11px] text-neutral-500 mt-1">{f.TripType}</div>
+                    </td>
+                    <td className="py-4 px-3 font-mono font-bold text-[#EE8200]">
+                      {f.Airline}
+                      <div className="text-[10px] font-sans font-normal text-neutral-500">
+                        {f.ValidatingCarrierName}
+                      </div>
+                    </td>
+                    <td className="py-4 px-3">
+                      <div className="font-bold text-[#0B0A09]">{f.GroupDepartureIata}</div>
+                      <div className="text-[11px] text-neutral-500">
+                        {formatShortDate(f.GroupDepartureDate)}
+                      </div>
+                    </td>
+                    <td className="py-4 px-3 text-center">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FAFAFA] border border-neutral-200 font-mono font-bold text-[#EE8200]">
+                        {f.SeatsLeft} / {f.TotalSeats}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3 text-center">
+                      <div className="font-bold text-[#0B0A09]">{f.TotalBookings || 0} Bookings</div>
+                      {f.ApprovalPending > 0 && (
+                        <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px]">
+                          {f.ApprovalPending} Pending
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-3 font-mono text-[11px]">
+                      <div className="font-bold text-[#EE8200]">
+                        ADT: {formatCurrencyPKR(f.AdultPrice)}
+                      </div>
+                      <div className="text-neutral-600">CNN: {formatCurrencyPKR(f.ChildPrice)}</div>
+                      <div className="text-neutral-500">INF: {formatCurrencyPKR(f.InfantPrice)}</div>
+                    </td>
+                    <td className="py-4 px-3">
+                      <div className="font-semibold text-[#0B0A09] max-w-[140px] truncate">
+                        {f.SupplierName}
+                      </div>
+                      <div className="text-[10px] text-neutral-400">{f.Timestamp}</div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setDetailsFlight(f)}
+                          className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] text-white font-bold text-[11px] hover:bg-black transition flex items-center gap-1 cursor-pointer"
+                          title="View Flight Details"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Details
+                        </button>
+                        <button
+                          onClick={() => openEditModal(f)}
+                          className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] cursor-pointer"
+                          title="Edit Flight"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Delete flight group "${f.Title}"?`)) {
+                              deleteFlight(f.AirGroupID);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg border border-neutral-200 hover:border-red-600 text-neutral-500 hover:text-red-600 cursor-pointer"
+                          title="Delete Flight"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -305,7 +294,7 @@ export default function FlightManagement() {
                     type="text"
                     value={form.Title}
                     onChange={(e) => setForm({ ...form, Title: e.target.value })}
-                    placeholder="e.g., KHI - IKA / MHD - KHI Special Ziyarat Group"
+                    placeholder="Enter Flight Group Title"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 font-bold"
                     required
                   />
@@ -340,17 +329,19 @@ export default function FlightManagement() {
                 </div>
                 <div>
                   <label className="block font-bold text-[#0B0A09] mb-1">Supplier</label>
-                  <select
+                  <input
+                    type="text"
+                    list="suppliers-list"
                     value={form.SupplierName}
                     onChange={(e) => setForm({ ...form, SupplierName: e.target.value })}
+                    placeholder="Enter or select Supplier"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300"
-                  >
+                  />
+                  <datalist id="suppliers-list">
                     {suppliers.map((s) => (
-                      <option key={s.SupplierID} value={s.Supplier_Name}>
-                        {s.Supplier_Name}
-                      </option>
+                      <option key={s.SupplierID} value={s.Supplier_Name} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-[#0B0A09] mb-1">Validating Carrier</label>
@@ -363,16 +354,14 @@ export default function FlightManagement() {
                         ...form,
                         Airline: code,
                         ValidatingCarrier: code,
-                        ValidatingCarrierName: found
-                          ? `${found.AirlineName} (${found.AirlineCode})`
-                          : code
+                        ValidatingCarrierName: found ? found.AirlineName : code
                       });
                     }}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300"
                   >
                     {airlines.map((a) => (
                       <option key={a.AirlineCode} value={a.AirlineCode}>
-                        {a.AirlineCode} — {a.AirlineName}
+                        {a.AirlineName}
                       </option>
                     ))}
                   </select>
@@ -395,6 +384,7 @@ export default function FlightManagement() {
                     type="text"
                     value={form.PNR_GDS}
                     onChange={(e) => setForm({ ...form, PNR_GDS: e.target.value.toUpperCase() })}
+                    placeholder="Optional"
                     className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 font-mono"
                   />
                 </div>
@@ -404,6 +394,7 @@ export default function FlightManagement() {
                     type="text"
                     value={form.PNR_AIRLINE}
                     onChange={(e) => setForm({ ...form, PNR_AIRLINE: e.target.value.toUpperCase() })}
+                    placeholder="Optional"
                     className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 font-mono"
                   />
                 </div>
@@ -602,7 +593,7 @@ export default function FlightManagement() {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
                   <div className="flex-1">
                     <label className="block font-bold text-[#0B0A09] mb-1">
-                      Search Segment (Type flight number, airport, airline...)
+                      Search Segment (Select from created segments in Segment Management)
                     </label>
                     <select
                       value={selectedSegToAdd}
@@ -610,7 +601,7 @@ export default function FlightManagement() {
                       className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-[#FAFAFA]"
                     >
                       <option value="">-- Select Flight Segment to Attach --</option>
-                      {matchingSegments.map((s) => (
+                      {segments.map((s) => (
                         <option key={s.AirGroupSegmentID} value={s.AirGroupSegmentID}>
                           {s.FlightNumber} | {s.DepartureIata} &rarr; {s.ArrivalIata} (
                           {formatDateTime(s.DepartureDate)}) — {s.OperatingAirlineName}
@@ -690,7 +681,7 @@ export default function FlightManagement() {
         </div>
       )}
 
-      {/* FLIGHT DETAILS MODAL (Matches Flight Details modal with Summary, Flight Segments, and Flight Bookings) */}
+      {/* FLIGHT DETAILS MODAL */}
       {detailsFlight && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -704,7 +695,6 @@ export default function FlightManagement() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto space-y-6 text-xs">
-              {/* Overview Summary Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
                 <div>
                   <span className="text-neutral-500 block">Category</span>
@@ -732,7 +722,6 @@ export default function FlightManagement() {
                 </div>
               </div>
 
-              {/* Attached Segments */}
               <div>
                 <h6 className="font-display font-bold text-sm text-[#EE8200] mb-3">
                   Flight Segments ({(detailsFlight.Segments || []).length})
@@ -768,7 +757,6 @@ export default function FlightManagement() {
                 </div>
               </div>
 
-              {/* Associated Flight Bookings */}
               <div>
                 <h6 className="font-display font-bold text-sm text-[#EE8200] mb-3">
                   Flight Bookings for this Group (

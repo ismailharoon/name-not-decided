@@ -6,11 +6,9 @@ import {
   Eye,
   EyeOff,
   Plane,
-  ShieldCheck,
   QrCode,
   KeyRound,
-  ArrowRight,
-  Sparkles
+  ArrowRight
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 
@@ -18,16 +16,16 @@ export default function Login() {
   const { login, verifyOtpAndFinishLogin, addToast } = usePortal();
   const navigate = useNavigate();
 
-  const [loginId, setLoginId] = useState('Atta');
-  const [password, setPassword] = useState('GhC@*589');
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [require2FA, setRequire2FA] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // 2FA Step state
-  const [step, setStep] = useState('credentials'); // 'credentials' | 'otp'
+  const [step, setStep] = useState('credentials');
   const [pendingUser, setPendingUser] = useState(null);
-  const [otpCode, setOtpCode] = useState('482910');
+  const [otpCode, setOtpCode] = useState('');
   const [manualKey, setManualKey] = useState('JBSWY3DPEHPK3PXP');
 
   const handleLoginSubmit = async (e) => {
@@ -68,17 +66,17 @@ export default function Login() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-12 bg-[#FAFAFA]">
-      {/* Left Hero Panel — Deep #EE8200 & Obsidian Architecture */}
-      <div className="hidden lg:flex lg:col-span-7 bg-[#EE8200] text-white p-12 flex-col justify-between relative overflow-hidden">
+      {/* Left Hero Panel */}
+      <div className="hidden lg:flex lg:col-span-7 bg-[#0B0A09] text-white p-12 flex-col justify-between relative overflow-hidden">
         <div
-          className="absolute -right-24 -bottom-24 w-96 h-96 rounded-full border border-white/10 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)' }}
+          className="absolute -right-24 -bottom-24 w-96 h-96 rounded-full border border-[#EE8200]/20 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(238,130,0,0.12) 0%, transparent 70%)' }}
         />
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-black/40 border border-white/15">
-            <Plane className="w-5 h-5 text-white" />
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#EE8200] text-white">
+            <Plane className="w-5 h-5" />
             <span className="font-display font-bold text-sm tracking-wider uppercase">
-              TABAN AIRLINES • EXECUTIVE OTA COMMAND
+              FLIGHT OTA • ADMIN & SUB-AGENT PORTAL
             </span>
           </div>
 
@@ -90,68 +88,44 @@ export default function Login() {
           </p>
 
           <div className="grid grid-cols-3 gap-4 mt-10 max-w-xl">
-            <div className="p-4 rounded-2xl bg-black/35 border border-white/10">
-              <div className="text-2xl font-extrabold font-display">6 Modules</div>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-extrabold font-display text-[#EE8200]">6 Modules</div>
               <div className="text-xs text-white/70 mt-1">Bookings, POS, Flights, Segments, Agents, Analytics</div>
             </div>
-            <div className="p-4 rounded-2xl bg-black/35 border border-white/10">
-              <div className="text-2xl font-extrabold font-display">IATA PNL</div>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-extrabold font-display text-[#EE8200]">IATA PNL</div>
               <div className="text-xs text-white/70 mt-1">1-Click Excel, Word & A4 E-Ticket PDF Exports</div>
             </div>
-            <div className="p-4 rounded-2xl bg-black/35 border border-white/10">
-              <div className="text-2xl font-extrabold font-display">2FA Ready</div>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-extrabold font-display text-[#EE8200]">2FA Ready</div>
               <div className="text-xs text-white/70 mt-1">Role-based Sub-Agent & Operator Access Control</div>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 flex items-center justify-between text-xs text-white/60 border-t border-white/10 pt-6">
-          <span>Taban Airline OTA Admin Portal</span>
-          <span className="font-mono">Theme #EE8200 • White • Black</span>
+          <span>OTA Admin Portal</span>
+          <span className="font-mono">B2B Aviation Suite</span>
         </div>
       </div>
 
       {/* Right Login Card */}
       <div className="lg:col-span-5 flex items-center justify-center p-6 sm:p-12 bg-white">
         <div className="w-full max-w-md">
-          {/* Brand Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-[#EE8200] text-white flex items-center justify-center font-display font-extrabold text-xl shadow-lg">
-              TA
+              <Plane className="w-6 h-6" />
             </div>
             <div>
               <h2 className="font-display font-extrabold text-2xl text-[#0B0A09]">Sign In</h2>
               <p className="text-xs text-neutral-500">
-                Taban Airline OTA Admin & Sub-Agent Portal
+                Enter your Login ID and Password to continue
               </p>
             </div>
           </div>
 
           {step === 'credentials' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-5">
-              {/* Quick Fill Credentials Banner */}
-              <div className="p-3.5 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/20 flex items-center justify-between">
-                <div className="text-xs">
-                  <div className="font-bold text-[#EE8200] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Configured Admin Account
-                  </div>
-                  <div className="text-neutral-700 font-mono mt-0.5">
-                    ID: <b>Atta</b> &nbsp;|&nbsp; Pass: <b>GhC@*589</b>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginId('Atta');
-                    setPassword('GhC@*589');
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#EE8200] text-white text-[11px] font-bold hover:bg-black transition"
-                >
-                  Auto-Fill
-                </button>
-              </div>
-
               {/* Login ID */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#0B0A09] mb-2">
@@ -165,7 +139,7 @@ export default function Login() {
                     type="text"
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
-                    placeholder="Enter Login ID (e.g. Atta)"
+                    placeholder="Enter Login ID"
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-medium bg-[#FAFAFA] focus:bg-white transition"
                     required
                   />
@@ -209,7 +183,7 @@ export default function Login() {
                     onChange={(e) => setRequire2FA(e.target.checked)}
                     className="rounded border-neutral-300 text-[#EE8200] focus:ring-[#EE8200]"
                   />
-                  <span>Preview 2FA / OTP & QR Authenticator Step</span>
+                  <span>Enable 2FA / OTP Verification</span>
                 </label>
               </div>
 
@@ -218,12 +192,11 @@ export default function Login() {
                 disabled={submitting}
                 className="w-full py-3.5 px-6 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
               >
-                <span>{submitting ? 'Signing In...' : 'Login to Portal'}</span>
+                <span>{submitting ? 'Signing In...' : 'Login'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           ) : (
-            /* 2FA / OTP Verification Section (Matches Login.razor otp-section & qr-section) */
             <form onSubmit={handleOtpSubmit} className="space-y-5">
               <div className="p-4 rounded-2xl bg-[#FFF7ED] border border-[#EE8200]/20 text-center">
                 <div className="w-12 h-12 rounded-xl bg-[#EE8200] text-white flex items-center justify-center mx-auto mb-2">

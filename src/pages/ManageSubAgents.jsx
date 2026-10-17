@@ -62,7 +62,7 @@ export default function ManageSubAgents() {
     addToast
   } = usePortal();
 
-  const [expandedRows, setExpandedRows] = useState({ 'SUB-201': true });
+  const [expandedRows, setExpandedRows] = useState({});
   const [showAgentModal, setShowAgentModal] = useState(false);
   const [editingAgentId, setEditingAgentId] = useState(null);
   const [agentForm, setAgentForm] = useState(INITIAL_AGENT_FORM);
@@ -173,30 +173,37 @@ export default function ManageSubAgents() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {subAgents.map((agent) => {
-                const isExpanded = Boolean(expandedRows[agent.SubCompanyID]);
-                return (
-                  <React.Fragment key={agent.SubCompanyID}>
-                    <tr className="hover:bg-[#FFF7ED]/60 transition">
-                      <td className="py-4 px-3 text-center">
-                        <button
-                          onClick={() => toggleExpand(agent.SubCompanyID)}
-                          className="p-1.5 rounded-lg bg-[#FFF7ED] hover:bg-[#EE8200] text-[#EE8200] hover:text-white transition"
-                          title="Expand Users"
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                        </button>
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="font-bold text-sm text-[#0B0A09]">{agent.CompanyName}</div>
-                        <div className="text-[11px] text-[#EE8200] font-mono">
-                          {agent.SubDomain || 'taban.smartmovesl.com'}
-                        </div>
-                      </td>
+              {subAgents.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-neutral-400">
+                    No sub agents added yet. Click &ldquo;Add New Sub Agent&rdquo; to register your first B2B agency.
+                  </td>
+                </tr>
+              ) : (
+                subAgents.map((agent) => {
+                  const isExpanded = Boolean(expandedRows[agent.SubCompanyID]);
+                  return (
+                    <React.Fragment key={agent.SubCompanyID}>
+                      <tr className="hover:bg-[#FFF7ED]/60 transition">
+                        <td className="py-4 px-3 text-center">
+                          <button
+                            onClick={() => toggleExpand(agent.SubCompanyID)}
+                            className="p-1.5 rounded-lg bg-[#FFF7ED] hover:bg-[#EE8200] text-[#EE8200] hover:text-white transition"
+                            title="Expand Users"
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </button>
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="font-bold text-sm text-[#0B0A09]">{agent.CompanyName}</div>
+                          <div className="text-[11px] text-[#EE8200] font-mono">
+                            {agent.SubDomain || '—'}
+                          </div>
+                        </td>
                       <td className="py-4 px-3">
                         <div className="font-semibold text-[#0B0A09]">{agent.City}</div>
                         <div className="text-[11px] text-neutral-500">{agent.Country}</div>
@@ -361,7 +368,8 @@ export default function ManageSubAgents() {
                     )}
                   </React.Fragment>
                 );
-              })}
+              })
+              )}
             </tbody>
           </table>
         </div>
@@ -503,7 +511,7 @@ export default function ManageSubAgents() {
                     type="text"
                     value={agentForm.SubDomain}
                     onChange={(e) => setAgentForm({ ...agentForm, SubDomain: e.target.value })}
-                    placeholder="agency.smartmovesl.com"
+                    placeholder="sub.domain.com"
                     className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 bg-white font-mono"
                   />
                 </div>

@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   XCircle,
   Ban,
-  ShoppingBag
+  ShoppingBag,
+  Plus
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR, formatShortDate } from '../utils/exporters';
@@ -92,7 +93,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 4 Core KPI Cards (Sub Agents, Bookings, User Registrations, Sales) */}
+      {/* 4 Core KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {kpiCards.map((card) => {
           const Icon = card.icon;
@@ -154,7 +155,7 @@ export default function Dashboard() {
                 Active Group Flight Blocks & Seat Occupancy
               </h3>
               <p className="text-xs text-neutral-500">
-                Real-time inventory across Ziyarat, Umrah, and UAE sectors
+                Real-time inventory across active flight groups
               </p>
             </div>
             <button
@@ -165,48 +166,63 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="space-y-4">
-            {flights.map((f) => {
-              const total = Number(f.TotalSeats) || 160;
-              const left = Number(f.SeatsLeft) || 0;
-              const sold = Math.max(0, total - left);
-              const pct = Math.min(100, Math.round((sold / total) * 100));
-              return (
-                <div
-                  key={f.AirGroupID}
-                  className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/10 hover:border-[#EE8200]/30 transition"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#EE8200] text-white font-mono text-xs font-bold">
-                        {f.Airline}
-                      </span>
-                      <div>
-                        <div className="font-bold text-sm text-[#0B0A09]">{f.Title}</div>
-                        <div className="text-xs text-neutral-500">
-                          Dep: {formatShortDate(f.GroupDepartureDate)} • Category: {f.Category} ({f.TripType})
+          {flights.length === 0 ? (
+            <div className="py-12 text-center border border-dashed border-neutral-200 rounded-xl">
+              <p className="text-xs text-neutral-500 mb-3">
+                No flight groups created yet. Add segments and flight groups to begin.
+              </p>
+              <button
+                onClick={() => navigate('/FlightManagement')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-black transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Flight Group</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {flights.map((f) => {
+                const total = Number(f.TotalSeats) || 160;
+                const left = Number(f.SeatsLeft) || 0;
+                const sold = Math.max(0, total - left);
+                const pct = Math.min(100, Math.round((sold / total) * 100));
+                return (
+                  <div
+                    key={f.AirGroupID}
+                    className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/10 hover:border-[#EE8200]/30 transition"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#EE8200] text-white font-mono text-xs font-bold">
+                          {f.Airline}
+                        </span>
+                        <div>
+                          <div className="font-bold text-sm text-[#0B0A09]">{f.Title}</div>
+                          <div className="text-xs text-neutral-500">
+                            Dep: {formatShortDate(f.GroupDepartureDate)} • Category: {f.Category} ({f.TripType})
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono font-bold text-sm text-[#EE8200]">
+                          {formatCurrencyPKR(f.AdultPrice)}
+                        </div>
+                        <div className="text-[11px] text-neutral-500">
+                          {left} of {total} seats left
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-mono font-bold text-sm text-[#EE8200]">
-                        {formatCurrencyPKR(f.AdultPrice)}
-                      </div>
-                      <div className="text-[11px] text-neutral-500">
-                        {left} of {total} seats left
-                      </div>
+                    <div className="mt-3 w-full h-2 rounded-full bg-neutral-200 overflow-hidden">
+                      <div
+                        className="h-full bg-[#EE8200] rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="mt-3 w-full h-2 rounded-full bg-neutral-200 overflow-hidden">
-                    <div
-                      className="h-full bg-[#EE8200] rounded-full transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Right: Booking Status Breakdown & Sub-Agent Credit Standing */}
@@ -267,38 +283,51 @@ export default function Dashboard() {
                 onClick={() => navigate('/ManageSubAgents')}
                 className="text-xs font-bold text-[#EE8200] hover:underline"
               >
-                All Agents &rarr;
+                Manage Agents &rarr;
               </button>
             </div>
-            <div className="space-y-3">
-              {subAgents.map((ag) => (
-                <div
-                  key={ag.SubCompanyID}
-                  className="flex items-center justify-between p-3 rounded-xl bg-[#FAFAFA] border border-neutral-200/80"
+            {subAgents.length === 0 ? (
+              <div className="py-8 text-center border border-dashed border-neutral-200 rounded-xl">
+                <p className="text-xs text-neutral-500 mb-3">No Sub Agents added yet.</p>
+                <button
+                  onClick={() => navigate('/ManageSubAgents')}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-black transition"
                 >
-                  <div className="min-w-0">
-                    <div className="font-bold text-xs text-[#0B0A09] truncate">{ag.CompanyName}</div>
-                    <div className="text-[11px] text-neutral-500">
-                      {ag.City} • Limit: {formatCurrencyPKR(ag.CreditLimit)}
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Sub Agent</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {subAgents.map((ag) => (
+                  <div
+                    key={ag.SubCompanyID}
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#FAFAFA] border border-neutral-200/80"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs text-[#0B0A09] truncate">{ag.CompanyName}</div>
+                      <div className="text-[11px] text-neutral-500">
+                        {ag.City} • Limit: {formatCurrencyPKR(ag.CreditLimit)}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 ml-2">
+                      <div className="font-mono font-bold text-xs text-[#EE8200]">
+                        {formatCurrencyPKR(ag.CreditLimitBalance)}
+                      </div>
+                      <span
+                        className={`inline-block text-[10px] px-2 py-0.5 rounded font-bold ${
+                          ag.AccountStatus === 'Enable'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-neutral-200 text-neutral-700'
+                        }`}
+                      >
+                        {ag.AccountStatus}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0 ml-2">
-                    <div className="font-mono font-bold text-xs text-[#EE8200]">
-                      {formatCurrencyPKR(ag.CreditLimitBalance)}
-                    </div>
-                    <span
-                      className={`inline-block text-[10px] px-2 py-0.5 rounded font-bold ${
-                        ag.AccountStatus === 'Enable'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-neutral-200 text-neutral-700'
-                      }`}
-                    >
-                      {ag.AccountStatus}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -51,7 +51,7 @@ export default function FlightBookings() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [agentFilter, setAgentFilter] = useState('ALL');
   const [searchText, setSearchText] = useState('');
-  const [expandedRows, setExpandedRows] = useState(() => ({ 'BK-90841': true, 'BK-90842': true }));
+  const [expandedRows, setExpandedRows] = useState({});
 
   // Modals state
   const [printBooking, setPrintBooking] = useState(null);

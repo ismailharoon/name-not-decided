@@ -1,14 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ShoppingBag,
-  Users,
   Sparkles,
-  Plane,
   Upload,
-  Trash2,
   AlertTriangle,
-  CheckCircle2,
   Calculator
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
@@ -18,42 +13,54 @@ export default function FlightPOS() {
   const { subAgents, flights, createBooking, addToast } = usePortal();
   const navigate = useNavigate();
 
-  const [selectedAgentId, setSelectedAgentId] = useState(() => subAgents[0]?.SubCompanyID || 'SUB-201');
-  const [selectedFlightId, setSelectedFlightId] = useState(() => flights[0]?.AirGroupID || 'AG-501');
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+  const [selectedFlightId, setSelectedFlightId] = useState('');
 
-  const [adultsCount, setAdultsCount] = useState(2);
+  useEffect(() => {
+    if (!selectedAgentId && subAgents.length > 0) {
+      setSelectedAgentId(subAgents[0].SubCompanyID);
+    }
+  }, [subAgents, selectedAgentId]);
+
+  useEffect(() => {
+    if (!selectedFlightId && flights.length > 0) {
+      setSelectedFlightId(flights[0].AirGroupID);
+    }
+  }, [flights, selectedFlightId]);
+
+  const [adultsCount, setAdultsCount] = useState(1);
   const [childrenCount, setChildrenCount] = useState(0);
   const [infantsCount, setInfantsCount] = useState(0);
 
   const [passengers, setPassengers] = useState([]);
-  const [email, setEmail] = useState('ops@alharamaintravel.pk');
-  const [mobile, setMobile] = useState('+92 300 8214490');
+  const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
   const [remarks, setRemarks] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const selectedAgent = useMemo(
-    () => subAgents.find((a) => a.SubCompanyID === selectedAgentId) || subAgents[0],
+    () => subAgents.find((a) => a.SubCompanyID === selectedAgentId) || null,
     [subAgents, selectedAgentId]
   );
 
   const selectedFlight = useMemo(
-    () => flights.find((f) => f.AirGroupID === selectedFlightId) || flights[0],
+    () => flights.find((f) => f.AirGroupID === selectedFlightId) || null,
     [flights, selectedFlightId]
   );
 
   const lastSegmentArrivalDate = useMemo(() => {
     const segs = selectedFlight?.Segments || [];
-    if (!segs.length) return selectedFlight?.GroupDepartureDate || '2026-12-01';
+    if (!segs.length) return selectedFlight?.GroupDepartureDate || '';
     return segs[segs.length - 1].ArrivalDate;
   }, [selectedFlight]);
 
   const handleGeneratePassengers = (autoFillNTBA = false) => {
     if (!selectedAgent) {
-      addToast('Please Select Agent.', 'warning');
+      addToast('Please Select Agent first (create one in Manage Sub Agents if list is empty).', 'warning');
       return;
     }
     if (!selectedFlight) {
-      addToast('Please Select Group.', 'warning');
+      addToast('Please Select Flight Group first (create one in Flight Management if list is empty).', 'warning');
       return;
     }
     const totalPax = Number(adultsCount) + Number(childrenCount) + Number(infantsCount);
@@ -78,10 +85,10 @@ export default function FlightPOS() {
         LastName: autoFillNTBA ? `PAX${i + 1}` : '',
         Gender: 'Male',
         Nationality: 'PAK',
-        DOB: '1988-05-15',
+        DOB: '1990-01-01',
         PassportNumber: autoFillNTBA ? `NTBA00${i + 1}` : '',
-        PassportIssueDate: '2024-01-10',
-        PassportExpiryDate: '2029-01-09',
+        PassportIssueDate: '2024-01-01',
+        PassportExpiryDate: '2029-01-01',
         PassportImageName: '',
         PassportFileData: ''
       });
@@ -95,10 +102,10 @@ export default function FlightPOS() {
         LastName: autoFillNTBA ? `CHILD${i + 1}` : '',
         Gender: 'Male',
         Nationality: 'PAK',
-        DOB: '2018-06-20',
+        DOB: '2018-01-01',
         PassportNumber: autoFillNTBA ? `NTBAC0${i + 1}` : '',
-        PassportIssueDate: '2024-03-10',
-        PassportExpiryDate: '2029-03-09',
+        PassportIssueDate: '2024-01-01',
+        PassportExpiryDate: '2029-01-01',
         PassportImageName: '',
         PassportFileData: ''
       });
@@ -112,10 +119,10 @@ export default function FlightPOS() {
         LastName: autoFillNTBA ? `INFANT${i + 1}` : '',
         Gender: 'Female',
         Nationality: 'PAK',
-        DOB: '2025-07-01',
+        DOB: '2025-01-01',
         PassportNumber: autoFillNTBA ? `NTBAI0${i + 1}` : '',
-        PassportIssueDate: '2025-08-01',
-        PassportExpiryDate: '2030-07-31',
+        PassportIssueDate: '2025-01-01',
+        PassportExpiryDate: '2030-01-01',
         PassportImageName: '',
         PassportFileData: ''
       });
@@ -157,7 +164,6 @@ export default function FlightPOS() {
     reader.readAsDataURL(file);
   };
 
-  // Fare Summary Calculations
   const fareBreakdown = useMemo(() => {
     const f = selectedFlight || {};
     const adtBasic = Number(f.AdultBasicFare) || 0;
@@ -200,7 +206,6 @@ export default function FlightPOS() {
       return;
     }
 
-    // Check required names
     for (const p of passengers) {
       if (!p.FirstName.trim() || !p.LastName.trim() || !p.PassportNumber.trim()) {
         addToast('Please enter all passenger First Name, Last Name, and Passport Number (or click NTBA).', 'error');
@@ -215,7 +220,7 @@ export default function FlightPOS() {
         SubCompanyID: selectedAgent.SubCompanyID,
         EmailAddress: email,
         MobileNumber: mobile,
-        Remarks: remarks || 'POS Instant Group Booking',
+        Remarks: remarks,
         Passengers: passengers,
         BookingChannelName: 'Flight POS Desk'
       });
@@ -242,9 +247,7 @@ export default function FlightPOS() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT 8 COLUMNS: Agent, Flight Selection, Segments, Passenger Forms */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Card 1: Select Sub Agent & Select Flight */}
           <div className="bg-white rounded-2xl border border-[#EE8200]/15 p-6 shadow-executive space-y-5">
             {/* Row 1: Agent Selection + Credit Limit & Balance */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -264,6 +267,7 @@ export default function FlightPOS() {
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/20 text-xs font-bold focus:outline-none focus:border-[#EE8200]"
                 >
+                  <option value="">-- Select Sub Agent --</option>
                   {subAgents.map((a) => (
                     <option key={a.SubCompanyID} value={a.SubCompanyID}>
                       {a.CompanyName} ({a.City})
@@ -300,6 +304,7 @@ export default function FlightPOS() {
                   onChange={(e) => setSelectedFlightId(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/20 text-xs font-bold focus:outline-none focus:border-[#EE8200]"
                 >
+                  <option value="">-- Select Flight Group --</option>
                   {flights.map((f) => (
                     <option key={f.AirGroupID} value={f.AirGroupID}>
                       {f.Title} ({f.Airline} • {f.SeatsLeft} Seats Left)
@@ -426,7 +431,7 @@ export default function FlightPOS() {
                 type="button"
                 onClick={() => handleGeneratePassengers(true)}
                 className="py-2.5 px-4 rounded-xl bg-[#0B0A09] hover:bg-[#EE8200] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
-                title="Auto-fill NTBA & PAK placeholder details for rapid block booking"
+                title="Auto-fill NTBA & PAK placeholder details"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>NTBA</span>
@@ -441,6 +446,7 @@ export default function FlightPOS() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter Email"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-xs"
                 />
               </div>
@@ -450,6 +456,7 @@ export default function FlightPOS() {
                   type="text"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
+                  placeholder="Enter Mobile No"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-xs"
                 />
               </div>
@@ -459,7 +466,7 @@ export default function FlightPOS() {
                   type="text"
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Optional group notes..."
+                  placeholder="Optional remarks..."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-xs"
                 />
               </div>
@@ -608,7 +615,6 @@ export default function FlightPOS() {
                       </div>
                     )}
 
-                    {/* Upload / Remove Passport */}
                     <div className="flex items-center gap-2 pt-1">
                       <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFF7ED] border border-[#EE8200]/20 text-[#EE8200] font-bold hover:bg-[#EE8200] hover:text-white transition">
                         <Upload className="w-3.5 h-3.5" />
@@ -640,7 +646,7 @@ export default function FlightPOS() {
           )}
         </div>
 
-        {/* RIGHT 4 COLUMNS: Sticky Fare Summary Card (Matches Fare Summary in FlightPOS.razor) */}
+        {/* RIGHT 4 COLUMNS: Sticky Fare Summary Card */}
         <div className="lg:col-span-4 sticky top-24">
           <div className="bg-white rounded-2xl border border-[#EE8200]/20 shadow-executive overflow-hidden">
             <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between">
@@ -649,7 +655,6 @@ export default function FlightPOS() {
             </div>
 
             <div className="p-6 space-y-5 text-xs">
-              {/* Adult Breakdown */}
               <div className="space-y-1.5 pb-4 border-b border-neutral-200">
                 <h6 className="font-bold text-sm text-[#EE8200]">Adult</h6>
                 <div className="flex justify-between text-neutral-600">
@@ -678,7 +683,6 @@ export default function FlightPOS() {
                 </div>
               </div>
 
-              {/* Child Breakdown */}
               {childrenCount > 0 && (
                 <div className="space-y-1.5 pb-4 border-b border-neutral-200">
                   <h6 className="font-bold text-sm text-[#EE8200]">Child</h6>
@@ -703,7 +707,6 @@ export default function FlightPOS() {
                 </div>
               )}
 
-              {/* Infant Breakdown */}
               {infantsCount > 0 && (
                 <div className="space-y-1.5 pb-4 border-b border-neutral-200">
                   <h6 className="font-bold text-sm text-[#EE8200]">Infant</h6>
@@ -728,7 +731,6 @@ export default function FlightPOS() {
                 </div>
               )}
 
-              {/* Grand Total */}
               <div className="p-4 rounded-xl bg-[#FFF7ED] border border-[#EE8200]/20 flex items-center justify-between">
                 <span className="font-display font-extrabold text-base text-[#0B0A09]">
                   Grand Total:

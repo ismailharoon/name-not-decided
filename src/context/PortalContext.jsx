@@ -1,8 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { initialSeedData } from '../data/seedData';
 
 const PortalContext = createContext(null);
-const STORAGE_KEY = 'taban_executive_db_v2';
+const STORAGE_KEY = 'ota_portal_clean_v1';
+
+// Purge any old demo storage keys so existing browsers immediately see a fresh state
+try {
+  localStorage.removeItem('taban_executive_db_v1');
+  localStorage.removeItem('taban_executive_db_v2');
+} catch {}
 
 function formatNow() {
   const d = new Date();
@@ -16,9 +22,9 @@ function formatNow() {
   });
 }
 
-function generatePNR(prefix = 'TB') {
+function generatePNR(prefix = 'PN') {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let out = prefix;
+  let out = (prefix || 'PN').slice(0, 2).toUpperCase();
   for (let i = 0; i < 4; i++) {
     out += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -33,7 +39,7 @@ function loadLocalDb() {
       if (parsed && Array.isArray(parsed.bookings)) return parsed;
     }
   } catch (e) {
-    console.warn('Failed to parse local DB, seeding default:', e);
+    console.warn('Failed to parse local DB, seeding fresh state:', e);
   }
   const fresh = JSON.parse(JSON.stringify(initialSeedData));
   try {
@@ -76,7 +82,7 @@ function computeEnriched(db) {
     const flight = flightsById[b.AirGroupID];
     return {
       ...b,
-      FlightTitle: flight ? flight.Title : 'Custom Charter Block',
+      FlightTitle: flight ? flight.Title : b.FlightTitle || 'Group Flight Block',
       FlightCategory: flight ? flight.Category : 'Tourism',
       TripType: flight ? flight.TripType : 'One Way',
       Segments: flight ? flight.Segments : []
@@ -112,7 +118,7 @@ function computeEnriched(db) {
 export function PortalProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('taban_exec_user');
+      const saved = localStorage.getItem('ota_portal_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -120,7 +126,7 @@ export function PortalProvider({ children }) {
   });
 
   const [dbState, setDbState] = useState(() => loadLocalDb());
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [language, setLanguage] = useState('English');
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -135,40 +141,14 @@ export function PortalProvider({ children }) {
 
   const updateLocalDb = useCallback((updater) => {
     setDbState((prev) => {
-      const next = typeof updater === 'function' ? updater(JSON.parse(JSON.stringify(prev))) : updater;
+      const next =
+        typeof updater === 'function' ? updater(JSON.parse(JSON.stringify(prev))) : updater;
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {}
       return next;
     });
   }, []);
-
-  // Optional background sync with Express API when running locally
-  const fetchBootstrap = useCallback(async () => {
-    try {
-      const res = await fetch('/api/bootstrap');
-      if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
-        const data = await res.json();
-        if (data && Array.isArray(data.bookings) && !localStorage.getItem(STORAGE_KEY)) {
-          updateLocalDb({
-            airports: data.airports,
-            airlines: data.airlines,
-            suppliers: data.suppliers,
-            segments: data.segments,
-            flights: data.flights,
-            bookings: data.bookings,
-            subAgents: data.subAgents
-          });
-        }
-      }
-    } catch {
-      // Running in standalone / Vercel static mode — local DB is already active
-    }
-  }, [updateLocalDb]);
-
-  useEffect(() => {
-    fetchBootstrap();
-  }, [fetchBootstrap]);
 
   const enriched = React.useMemo(() => computeEnriched(dbState), [dbState]);
 
@@ -199,13 +179,12 @@ export function PortalProvider({ children }) {
       String(loginId).trim().toLowerCase() === 'atta' &&
       password === 'GhC@*589'
     ) {
-      matchedAgent = (dbState.subAgents || [])[0];
       matchedUser = {
-        UserID: 'USR-101',
+        UserID: 'USR-ADMIN',
         LoginID: 'Atta',
-        FullName: 'Atta Ur Rehman',
-        Email: 'atta@smartmovesl.com',
-        Designation: 'Director Group Operations',
+        FullName: 'Atta',
+        Email: 'admin@portal.com',
+        Designation: 'Administrator',
         AccountType: 'Administrator',
         AccountStatus: 'Enable'
       };
@@ -225,8 +204,8 @@ export function PortalProvider({ children }) {
       Email: matchedUser.Email,
       Designation: matchedUser.Designation,
       AccountType: matchedUser.AccountType,
-      SubCompanyID: matchedAgent?.SubCompanyID || 'SUB-201',
-      SubCompanyName: matchedAgent?.CompanyName || 'Taban Executive HQ'
+      SubCompanyID: matchedAgent?.SubCompanyID || 'ADMIN',
+      SubCompanyName: matchedAgent?.CompanyName || 'Admin Portal'
     };
 
     if (require2FA) {
@@ -239,8 +218,8 @@ export function PortalProvider({ children }) {
     }
 
     setUser(userObj);
-    localStorage.setItem('taban_exec_user', JSON.stringify(userObj));
-    addToast(`Welcome back, ${userObj.FullName || userObj.LoginID}`, 'success');
+    localStorage.setItem('ota_portal_user', JSON.stringify(userObj));
+    addToast(`Welcome, ${userObj.FullName || userObj.LoginID}`, 'success');
     return { status: 'authenticated', user: userObj };
   };
 
@@ -249,7 +228,7 @@ export function PortalProvider({ children }) {
       throw new Error('Please enter a valid OTP or 2FA authentication code.');
     }
     setUser(pendingUser);
-    localStorage.setItem('taban_exec_user', JSON.stringify(pendingUser));
+    localStorage.setItem('ota_portal_user', JSON.stringify(pendingUser));
     addToast(`2FA Verified. Welcome, ${pendingUser.FullName}`, 'success');
     return { status: 'authenticated' };
   };
@@ -257,17 +236,14 @@ export function PortalProvider({ children }) {
   const logout = () => {
     setUser(null);
     setShowTimeoutModal(false);
-    localStorage.removeItem('taban_exec_user');
+    localStorage.removeItem('ota_portal_user');
     addToast('Signed out successfully.', 'info');
   };
 
   const resetDemoData = async () => {
     const fresh = JSON.parse(JSON.stringify(initialSeedData));
     updateLocalDb(fresh);
-    try {
-      await fetch('/api/reset-demo', { method: 'POST' });
-    } catch {}
-    addToast('Demo database restored to initial state.', 'info');
+    addToast('All portal records cleared (Fresh state).', 'info');
   };
 
   // --- Booking mutations ---
@@ -297,7 +273,7 @@ export function PortalProvider({ children }) {
       children * (Number(flight.ChildPrice) || 0) +
       infants * (Number(flight.InfantPrice) || 0);
 
-    const pnr = generatePNR(flight.Airline || 'TB');
+    const pnr = generatePNR(flight.Airline || 'PN');
     const bookingId = `BK-${Math.floor(10000 + Math.random() * 90000)}`;
 
     const formattedPassengers = Passengers.map((p, idx) => ({
@@ -331,14 +307,14 @@ export function PortalProvider({ children }) {
       SubCompanyName: agent.CompanyName,
       BookingChannelName,
       PNR: pnr,
-      PNR_AIRLINE: flight.PNR_AIRLINE || `${flight.Airline || 'HH'}882MX`,
-      ValidatingCarrierName: flight.ValidatingCarrierName || `${flight.Airline || 'HH'} Airlines`,
+      PNR_AIRLINE: flight.PNR_AIRLINE || pnr,
+      ValidatingCarrierName: flight.ValidatingCarrierName || flight.Airline || 'Airline',
       ApprovalStatus: 'Pending',
       AdultCount: adults,
       ChildCount: children,
       InfantCount: infants,
       TotalPrice: totalPrice,
-      BookingTimeLimit: flight.TimeLimit ? flight.TimeLimit.replace('T', ' ') : '2026-11-25 18:00',
+      BookingTimeLimit: flight.TimeLimit ? flight.TimeLimit.replace('T', ' ') : '—',
       ApprovalLoginID: '',
       ApprovalDateTime: '',
       VoidLoginID: '',
@@ -346,7 +322,7 @@ export function PortalProvider({ children }) {
       VoidReason: '',
       EmailAddress: EmailAddress || agent.Email,
       MobileNumber: MobileNumber || agent.MobileNumber,
-      Remarks: Remarks || 'Booked via Flight POS',
+      Remarks: Remarks || '',
       TimeStamp: formatNow(),
       Passengers: formattedPassengers
     };
@@ -359,12 +335,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-
-    fetch('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bookingPayload)
-    }).catch(() => {});
 
     addToast(`Booking Created Successfully. PNR : ${pnr}`, 'success');
     return newBooking;
@@ -389,11 +359,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/bookings/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
     addToast('Booking Updated Successfully.', 'success');
   };
 
@@ -408,11 +373,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/bookings/${id}/approve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ loginId })
-    }).catch(() => {});
     addToast(`Booking ${id} approved successfully.`, 'success');
   };
 
@@ -427,11 +387,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/bookings/${id}/reject`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ loginId })
-    }).catch(() => {});
     addToast(`Booking ${id} rejected successfully.`, 'warning');
   };
 
@@ -449,16 +404,11 @@ export function PortalProvider({ children }) {
           TicketNumber:
             pax.TicketNumber && pax.TicketNumber.trim()
               ? pax.TicketNumber
-              : `721-${baseTicket + i}`
+              : `214-${baseTicket + i}`
         }));
       }
       return draft;
     });
-    fetch(`/api/bookings/${id}/issue`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ loginId })
-    }).catch(() => {});
     addToast('Booking Issued Successfully.', 'success');
   };
 
@@ -477,11 +427,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/bookings/${id}/void`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ loginId, reason })
-    }).catch(() => {});
     addToast('Booking Void Successfully.', 'warning');
   };
 
@@ -490,7 +435,6 @@ export function PortalProvider({ children }) {
       draft.bookings = draft.bookings.filter((b) => b.AirGroupBookingID !== id);
       return draft;
     });
-    fetch(`/api/bookings/${id}`, { method: 'DELETE' }).catch(() => {});
     addToast('Booking Deleted Successfully.', 'info');
   };
 
@@ -505,11 +449,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/bookings/${bookingId}/passengers/${passengerId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(paxData)
-    }).catch(() => {});
     addToast('Passenger Updated Successfully.', 'success');
   };
 
@@ -524,7 +463,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/bookings/${bookingId}/passengers/${passengerId}`, { method: 'DELETE' }).catch(() => {});
     addToast('Passenger Deleted Successfully.', 'info');
   };
 
@@ -532,20 +470,20 @@ export function PortalProvider({ children }) {
   const createFlight = async (payload) => {
     const newFlight = {
       AirGroupID: payload.AirGroupID || `AG-${Math.floor(500 + Math.random() * 9000)}`,
-      Title: payload.Title || 'New Group Charter Block',
+      Title: payload.Title || 'Group Flight',
       Category: payload.Category || 'Tourism',
       TripType: payload.TripType || 'Round',
-      Airline: payload.Airline || payload.ValidatingCarrier || 'HH',
-      ValidatingCarrier: payload.ValidatingCarrier || 'HH',
-      ValidatingCarrierName: payload.ValidatingCarrierName || 'Taban Air (HH-721)',
-      SupplierName: payload.SupplierName || 'Taban Aviation Charter Desk',
+      Airline: payload.Airline || payload.ValidatingCarrier || 'PK',
+      ValidatingCarrier: payload.ValidatingCarrier || 'PK',
+      ValidatingCarrierName: payload.ValidatingCarrierName || payload.ValidatingCarrier || 'PK',
+      SupplierName: payload.SupplierName || 'Direct Airline Inventory',
       isDomestic: Boolean(payload.isDomestic),
       isSOTO: Boolean(payload.isSOTO),
       isEnabled: payload.isEnabled !== undefined ? Boolean(payload.isEnabled) : true,
       PNR_GDS: payload.PNR_GDS || generatePNR('GD'),
-      PNR_AIRLINE: payload.PNR_AIRLINE || generatePNR('HH'),
-      TimeLimit: payload.TimeLimit || '2026-12-01T18:00:00',
-      GroupDepartureDate: payload.GroupDepartureDate || '2026-12-05T08:00:00',
+      PNR_AIRLINE: payload.PNR_AIRLINE || generatePNR('AR'),
+      TimeLimit: payload.TimeLimit || '',
+      GroupDepartureDate: payload.GroupDepartureDate || '',
       GroupDepartureIata: payload.GroupDepartureIata || 'KHI',
       TotalSeats: Number(payload.TotalSeats) || 160,
       SeatsLeft: Number(payload.TotalSeats) || 160,
@@ -565,11 +503,6 @@ export function PortalProvider({ children }) {
       draft.flights.unshift(newFlight);
       return draft;
     });
-    fetch('/api/flights', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
     addToast('Flight Saved Successfully.', 'success');
   };
 
@@ -581,11 +514,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/flights/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
     addToast('Flight Updated Successfully.', 'success');
   };
 
@@ -594,7 +522,6 @@ export function PortalProvider({ children }) {
       draft.flights = draft.flights.filter((f) => f.AirGroupID !== id);
       return draft;
     });
-    fetch(`/api/flights/${id}`, { method: 'DELETE' }).catch(() => {});
     addToast('Flight Deleted Successfully.', 'info');
   };
 
@@ -610,11 +537,6 @@ export function PortalProvider({ children }) {
       draft.segments.unshift(newSeg);
       return draft;
     });
-    fetch('/api/segments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(p)
-    }).catch(() => {});
     addToast('Segment saved successfully.', 'success');
   };
 
@@ -626,11 +548,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/segments/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
     addToast('Segment saved successfully.', 'success');
   };
 
@@ -639,7 +556,6 @@ export function PortalProvider({ children }) {
       draft.segments = draft.segments.filter((s) => s.AirGroupSegmentID !== id);
       return draft;
     });
-    fetch(`/api/segments/${id}`, { method: 'DELETE' }).catch(() => {});
     addToast('Segment Deleted Successfully.', 'info');
   };
 
@@ -649,8 +565,8 @@ export function PortalProvider({ children }) {
     const newAgent = {
       ...p,
       SubCompanyID: `SUB-${Math.floor(205 + Math.random() * 800)}`,
-      CreditLimit: Number(p.CreditLimit) || 5000000,
-      CreditLimitBalance: Number(p.CreditLimitBalance ?? p.CreditLimit) || 5000000,
+      CreditLimit: Number(p.CreditLimit) || 0,
+      CreditLimitBalance: Number(p.CreditLimitBalance ?? p.CreditLimit) || 0,
       Created: new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
@@ -662,11 +578,6 @@ export function PortalProvider({ children }) {
       draft.subAgents.unshift(newAgent);
       return draft;
     });
-    fetch('/api/subagents', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(p)
-    }).catch(() => {});
     addToast('SubAgent created successfully.', 'success');
   };
 
@@ -678,11 +589,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/subagents/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
     addToast('SubAgent updated successfully.', 'success');
   };
 
@@ -691,7 +597,6 @@ export function PortalProvider({ children }) {
       draft.subAgents = draft.subAgents.filter((a) => a.SubCompanyID !== id);
       return draft;
     });
-    fetch(`/api/subagents/${id}`, { method: 'DELETE' }).catch(() => {});
     addToast('SubAgent Deleted Successfully.', 'info');
   };
 
@@ -709,7 +614,7 @@ export function PortalProvider({ children }) {
       Designation: u.Designation || 'Ticketing Executive',
       WhatsAppNumber: u.WhatsAppNumber || '',
       AccountType: u.AccountType || 'Operator',
-      AccountStatus: u.AccountStatus || 'Enable',
+      AccountStatus: u.AccountType ? u.AccountStatus || 'Enable' : 'Enable',
       Reset2FA: Boolean(u.Reset2FA)
     };
     updateLocalDb((draft) => {
@@ -720,11 +625,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/subagents/${subCompanyId}/users`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(u)
-    }).catch(() => {});
     addToast('User created successfully.', 'success');
   };
 
@@ -739,11 +639,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/subagents/${subCompanyId}/users/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
     addToast('User updated successfully.', 'success');
   };
 
@@ -755,7 +650,6 @@ export function PortalProvider({ children }) {
       }
       return draft;
     });
-    fetch(`/api/subagents/${subCompanyId}/users/${userId}`, { method: 'DELETE' }).catch(() => {});
     addToast('User Deleted Successfully.', 'info');
   };
 
@@ -778,7 +672,6 @@ export function PortalProvider({ children }) {
         flights: enriched.flights,
         bookings: enriched.bookings,
         subAgents: enriched.subAgents,
-        fetchBootstrap,
         login,
         verifyOtpAndFinishLogin,
         logout,

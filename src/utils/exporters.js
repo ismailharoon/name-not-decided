@@ -32,12 +32,11 @@ export function formatShortDate(dtStr) {
 
 /**
  * 1. Manifest (Excel) — Passenger_Manifest_<FlightNo>.xlsx
- * Matches original window.downloadExcelManifest
  */
 export function downloadExcelManifest(segment, passengers = []) {
   const flightClean = (segment.FlightNumber || 'FLIGHT').replace(/[^a-zA-Z0-9]/g, '');
   const filename = `Passenger_Manifest_${flightClean}.xlsx`;
-  const title = `TABAN AIR :: Manifest — ${segment.FlightNumber} (${segment.DepartureIata} to ${segment.ArrivalIata})`;
+  const title = `FLIGHT MANIFEST — ${segment.FlightNumber} (${segment.DepartureIata} to ${segment.ArrivalIata})`;
 
   const headers = [
     'Sr #',
@@ -89,12 +88,11 @@ export function downloadExcelManifest(segment, passengers = []) {
 
 /**
  * 2. Passenger List (Excel) — Passenger_List_<FlightNo>.xlsx
- * Matches original window.downloadExcelPassengersList with all 15 columns
  */
 export function downloadExcelPassengersList(segment, passengers = []) {
   const flightClean = (segment.FlightNumber || 'FLIGHT').replace(/[^a-zA-Z0-9]/g, '');
   const filename = `Passenger_List_${flightClean}.xlsx`;
-  const title = `TABAN AIR :: Passengers List — ${segment.FlightNumber} (${formatShortDate(segment.DepartureDate)})`;
+  const title = `PASSENGERS LIST — ${segment.FlightNumber} (${formatShortDate(segment.DepartureDate)})`;
 
   const headers = [
     'Age Type (A,C,I)',
@@ -157,10 +155,9 @@ export function downloadExcelPassengersList(segment, passengers = []) {
 
 /**
  * 3. Manifest (Word / IATA PNL) — Manifest-<FlightNo>.doc
- * Matches original TABAN AIR :: Iata Manifest | Passenger Service System (PNL / ENDPNL)
  */
 export function downloadWordManifest(segment, passengers = []) {
-  const flightClean = (segment.FlightNumber || 'HH7212').replace(/[^a-zA-Z0-9]/g, '');
+  const flightClean = (segment.FlightNumber || 'FLIGHT').replace(/[^a-zA-Z0-9]/g, '');
   const d = new Date(segment.DepartureDate || Date.now());
   const dayStr = String(d.getDate()).padStart(2, '0');
   const monStr = d.toLocaleString('en-US', { month: 'short' });
@@ -169,15 +166,15 @@ export function downloadWordManifest(segment, passengers = []) {
   const pnlLines = [
     'PNL',
     `${flightClean}/${dateToken} ${segment.DepartureIata || 'KHI'} PART1`,
-    `-${segment.ArrivalIata || 'IKA'}${segment.TotalSeats || 160}${segment.FlightClassCode || 'Y'}`
+    `-${segment.ArrivalIata || 'DXB'}${segment.TotalSeats || 160}${segment.FlightClassCode || 'Y'}`
   ];
 
   passengers.forEach((p, idx) => {
     const surname = (p.LastName || 'PAX').toUpperCase();
     const firstname = (p.FirstName || 'GUEST').toUpperCase();
     const title = (p.Title || 'MR').toUpperCase();
-    const tkt = p.TicketNumber || `7210000000${idx + 1}`;
-    pnlLines.push(`1${surname}/${firstname} ${title} .L/${p.PNR || 'TB9K4L'}`);
+    const tkt = p.TicketNumber || `2140000000${idx + 1}`;
+    pnlLines.push(`1${surname}/${firstname} ${title} .L/${p.PNR || 'PNR001'}`);
     pnlLines.push(`.R/${p.SSRCode || 'TKNE'} HK1 ${tkt}-1`);
     pnlLines.push(`.R/DOCS HK1/P/${p.Nationality || 'PAK'}/${p.PassportNumber || 'NA'}/${p.Nationality || 'PAK'}/${p.DOB || ''}/${p.Gender === 'Female' ? 'F' : 'M'}/${p.PassportExpiryDate || ''}/${surname}/${firstname}`);
   });
@@ -188,7 +185,7 @@ export function downloadWordManifest(segment, passengers = []) {
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
       <meta charset="utf-8">
-      <title>TABAN AIR :: Iata Manifest</title>
+      <title>IATA Manifest</title>
       <style>
         body { font-family: 'Courier New', monospace; font-size: 11pt; color: #0B0A09; padding: 24px; }
         .header { background: #EE8200; color: #FFFFFF; padding: 12px 16px; font-family: Arial, sans-serif; font-weight: bold; font-size: 14pt; margin-bottom: 16px; }
@@ -200,12 +197,12 @@ export function downloadWordManifest(segment, passengers = []) {
       </style>
     </head>
     <body>
-      <div class="header">TABAN AIR :: IATA MANIFEST | PASSENGER SERVICE SYSTEM</div>
+      <div class="header">IATA MANIFEST | PASSENGER SERVICE SYSTEM</div>
       <div class="meta">
         <b>Flight:</b> ${segment.FlightNumber} &nbsp;|&nbsp;
         <b>Sector:</b> ${segment.DepartureCity} (${segment.DepartureIata}) &rarr; ${segment.ArrivalCity} (${segment.ArrivalIata}) &nbsp;|&nbsp;
         <b>Date:</b> ${formatDateTime(segment.DepartureDate)} &nbsp;|&nbsp;
-        <b>Aircraft:</b> ${segment.AirCraft || 'Boeing 737'} &nbsp;|&nbsp;
+        <b>Aircraft:</b> ${segment.AirCraft || '—'} &nbsp;|&nbsp;
         <b>Total Pax:</b> ${passengers.length}
       </div>
       <h3>IATA PNL TELETYPE MESSAGE</h3>

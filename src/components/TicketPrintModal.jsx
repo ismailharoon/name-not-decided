@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Printer, X, Plane, ShieldCheck, Download } from 'lucide-react';
+import { Printer, X, Plane } from 'lucide-react';
 import { formatDateTime } from '../utils/exporters';
 
 export default function TicketPrintModal({ booking, onClose }) {
@@ -22,7 +22,7 @@ export default function TicketPrintModal({ booking, onClose }) {
       <html>
       <head>
         <meta charset="utf-8" />
-        <title>TABAN AIRLINES BOOKING — ${booking.PNR}</title>
+        <title>FLIGHT BOOKING — ${booking.PNR}</title>
         <style>
           * { box-sizing: border-box; }
           body {
@@ -77,7 +77,7 @@ export default function TicketPrintModal({ booking, onClose }) {
           <div className="flex items-center gap-2.5">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#EE8200] hover:bg-espresso-50 font-semibold text-xs transition shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#EE8200] hover:bg-orange-50 font-semibold text-xs transition shadow-sm"
             >
               <Printer className="w-4 h-4" />
               Print / Save PDF
@@ -119,7 +119,7 @@ export default function TicketPrintModal({ booking, onClose }) {
                 borderRadius: '6px'
               }}
             >
-              <span>TABAN AIRLINES BOOKING {statusSubtitle}</span>
+              <span>FLIGHT BOOKING CONFIRMATION {statusSubtitle}</span>
               <span style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '1px' }}>
                 PNR: {booking.PNR}
               </span>
@@ -137,11 +137,11 @@ export default function TicketPrintModal({ booking, onClose }) {
               }}
             >
               <div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: '#EE8200', letterSpacing: '-0.5px' }}>
-                  TABAN AIRLINES
+                <div style={{ fontSize: '20px', fontWeight: 800, color: '#EE8200', letterSpacing: '-0.5px' }}>
+                  {booking.SubCompanyName || 'GROUP TICKETING DESK'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#555', fontWeight: 600 }}>
-                  Executive Charter & Group Consolidation Division
+                  {booking.ValidatingCarrierName || 'Airline Charter & Group Consolidation'}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -183,7 +183,7 @@ export default function TicketPrintModal({ booking, onClose }) {
               </div>
               <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
                 <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>ISSUING AIRLINE</span>
-                <span>{booking.ValidatingCarrierName || 'Taban Air (HH-721)'}</span>
+                <span>{booking.ValidatingCarrierName || '—'}</span>
               </div>
               <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
                 <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>BOOKING TIMELIMIT</span>
@@ -228,7 +228,7 @@ export default function TicketPrintModal({ booking, onClose }) {
 
               {segments.length === 0 ? (
                 <div style={{ fontSize: '13px', color: '#666', padding: '8px 0' }}>
-                  {booking.FlightTitle || 'Direct Group Charter Sector'}
+                  {booking.FlightTitle || 'Group Flight Sector'}
                 </div>
               ) : (
                 segments.map((seg, idx) => (
@@ -266,7 +266,7 @@ export default function TicketPrintModal({ booking, onClose }) {
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 6px', verticalAlign: 'top', fontWeight: 'bold' }}>
-                            <div>{seg.MarketingAirline || 'HH'}</div>
+                            <div>{seg.MarketingAirline || ''}</div>
                             <div style={{ fontSize: '14px', color: '#EE8200' }}>{seg.FlightNumber}</div>
                             <div style={{ fontSize: '11px', color: '#666' }}>{seg.OperatingAirlineName}</div>
                           </td>
@@ -297,7 +297,7 @@ export default function TicketPrintModal({ booking, onClose }) {
                               {seg.BaggageCountCNN || '20 KG'}, Infant={seg.BaggageCountINF || '10 KG'}
                             </div>
                             <div>
-                              <b>Aircraft:</b> {seg.AirCraft || 'Boeing 737'}
+                              <b>Aircraft:</b> {seg.AirCraft || '—'}
                             </div>
                           </td>
                         </tr>
@@ -392,20 +392,6 @@ export default function TicketPrintModal({ booking, onClose }) {
                 Disclaimer & Conditions of Carriage
               </h4>
               <div style={{ padding: '6px', fontSize: '11.5px', lineHeight: '1.55', color: '#222' }}>
-                <div
-                  dir="rtl"
-                  style={{
-                    marginBottom: '10px',
-                    fontWeight: 'bold',
-                    background: '#FFF7ED',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    color: '#EE8200',
-                    fontSize: '12.5px'
-                  }}
-                >
-                  مسافران گرامی لطفاً حداقل ۳ ساعت قبل از زمان پرواز در فرودگاه حضور داشته باشید و اصل گذرنامه، ویزا و ۴ نسخه کپی ویزا را به همراه داشته باشید.
-                </div>
                 <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#0B0A09' }}>
                   Ticket Terms and Conditions
                 </div>
@@ -428,29 +414,10 @@ export default function TicketPrintModal({ booking, onClose }) {
                     All known taxes are collected at booking; additional taxes may be payable at departure.
                   </li>
                   <li>Valid passport and visa must be presented at check-in and boarding.</li>
-                  <li>
-                    In cases of Force Majeure (including war, security or operational disruptions, or flight
-                    cancellation), Taban Airline may, at its sole discretion, re-accommodate the passenger or issue a
-                    travel voucher for unused sectors.
-                  </li>
-                  <li>
-                    If re-accommodation involves a higher fare, the passenger shall pay the difference; no refund shall
-                    apply for lower fare alternatives.
-                  </li>
                   <li>No refund shall be due in cases of no-show or offload.</li>
-                  <li>
-                    Passengers must carry a minimum of USD 350 and present it upon request at check-in.
-                  </li>
                   <li>
                     Purchase of this ticket constitutes acceptance of the Airline&apos;s Conditions of Carriage and
                     liability limitations.
-                  </li>
-                  <li>
-                    In case of force majeure, war, flight cancellation, or any changes initiated by Taban Airline or CAA
-                    Iran, tickets will be non-refundable.
-                  </li>
-                  <li>
-                    Each passenger is required to submit four (4) copies of their visa at the boarding counter.
                   </li>
                 </ul>
                 <div
