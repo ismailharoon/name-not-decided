@@ -14,7 +14,6 @@ import {
   formatCurrencyPKR,
   formatDateTime,
   downloadExcelManifest,
-  downloadExcelPassengersList,
   downloadWordManifest
 } from '../utils/exporters';
 
@@ -185,6 +184,7 @@ export default function SegmentManagement() {
           ...p,
           PNR: b.PNR,
           MobileNumber: b.MobileNumber,
+          EmailAddress: b.EmailAddress,
           BookingStatus: b.ApprovalStatus
         });
       });
@@ -300,11 +300,31 @@ export default function SegmentManagement() {
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            onClick={() =>
+                              downloadExcelManifest(seg, getPassengersForSegment(seg))
+                            }
+                            className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px] flex items-center gap-1 transition cursor-pointer"
+                            title="Download Excel Manifest (.xlsx)"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5" />
+                            <span>Excel</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              downloadWordManifest(seg, getPassengersForSegment(seg))
+                            }
+                            className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-950 text-white font-medium text-[11px] flex items-center gap-1 transition cursor-pointer"
+                            title="Download Word IATA Manifest (.docx)"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Word</span>
+                          </button>
+                          <button
                             onClick={() => setDetailsSegment(seg)}
                             className="px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white font-medium text-[11px] flex items-center gap-1 transition cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            <span>Details & Manifest</span>
+                            <span>Details</span>
                           </button>
                           <button
                             onClick={() => openEditModal(seg)}
@@ -354,22 +374,10 @@ export default function SegmentManagement() {
                   onClick={() =>
                     downloadExcelManifest(detailsSegment, getPassengersForSegment(detailsSegment))
                   }
-                  className="px-3 py-1.5 rounded-lg bg-white text-[#1D314F] hover:bg-slate-100 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Manifest (Excel)</span>
-                </button>
-                <button
-                  onClick={() =>
-                    downloadExcelPassengersList(
-                      detailsSegment,
-                      getPassengersForSegment(detailsSegment)
-                    )
-                  }
                   className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Passenger List (Excel)</span>
+                  <span>Excel Manifest (.xlsx)</span>
                 </button>
                 <button
                   onClick={() =>
@@ -378,7 +386,7 @@ export default function SegmentManagement() {
                   className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>Manifest (Word / PNL)</span>
+                  <span>Word IATA Manifest (.docx)</span>
                 </button>
                 <button
                   onClick={() => setDetailsSegment(null)}
