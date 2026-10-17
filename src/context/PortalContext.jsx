@@ -165,7 +165,7 @@ export function PortalProvider({ children }) {
 
   useEffect(() => {
     fetchRemoteDb();
-    const interval = setInterval(fetchRemoteDb, 5000);
+    const interval = setInterval(fetchRemoteDb, 4000);
     const handleFocus = () => fetchRemoteDb();
     window.addEventListener('focus', handleFocus);
     return () => {
