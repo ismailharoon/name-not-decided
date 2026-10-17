@@ -3,7 +3,6 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Ticket,
-  PlaneTakeoff,
   ShoppingBag,
   Layers,
   Users,
@@ -19,15 +18,14 @@ import {
   UserCheck,
   CheckCircle2,
   AlertTriangle,
-  Info,
-  Plane
+  Info
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR } from '../utils/exporters';
 
 const navSections = [
   {
-    group: 'Executive Overview',
+    group: 'Overview',
     items: [
       { to: '/Dashboard', label: 'Dashboard', urdu: 'ڈیش بورڈ', icon: LayoutDashboard }
     ]
@@ -41,7 +39,7 @@ const navSections = [
     ]
   },
   {
-    group: 'Partner Network',
+    group: 'Agency Network',
     items: [
       { to: '/ManageSubAgents', label: 'Manage Sub Agents', urdu: 'سب ایجنٹس', icon: Users }
     ]
@@ -111,56 +109,58 @@ export default function Layout({ children }) {
   }, [searchQuery, bookings, segments, subAgents]);
 
   return (
-    <div className="min-h-screen flex bg-[#FAFAFA] text-[#0B0A09]">
+    <div className="min-h-screen flex bg-[#F8FAFC] text-slate-800">
       {/* Mobile Sidebar Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* SIDEBAR — Jet Black #0B0A09 with #EE8200 Orange & White Accents */}
+      {/* SIDEBAR — Deep Royal Navy #0F172A / #1B3664 */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col bg-[#0B0A09] text-white border-r border-white/10 transition-all duration-300 ${
-          sidebarCollapsed ? 'w-20' : 'w-72'
+        className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col bg-[#0F172A] text-white border-r border-slate-800 transition-all duration-200 ${
+          sidebarCollapsed ? 'w-16' : 'w-60'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        {/* Brand Header */}
-        <div className="h-20 px-5 flex items-center justify-between border-b border-white/10 bg-black">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-xl bg-[#EE8200] text-white flex items-center justify-center font-extrabold text-lg shadow-md shrink-0">
-              <Plane className="w-5 h-5" />
-            </div>
+        {/* Brand Header with Taban Air Logo */}
+        <div className="h-14 px-4 flex items-center justify-between border-b border-slate-800 bg-[#0B1221]">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <img
+              src="/images/Taban Air Gradient Airline Logo.png"
+              alt="Taban Air"
+              className="w-8 h-8 rounded-lg bg-white p-0.5 object-contain shrink-0 shadow-xs"
+            />
             {!sidebarCollapsed && (
               <div className="leading-tight">
-                <div className="font-display font-extrabold text-base tracking-wider text-white flex items-center gap-1.5">
-                  BOOKLY <span className="text-xs px-1.5 py-0.5 rounded bg-[#EE8200] text-white font-mono">OTA</span>
+                <div className="font-display font-semibold text-sm tracking-wide text-white flex items-center gap-1.5">
+                  BOOKLY <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1B3664] text-white font-mono">OTA</span>
                 </div>
-                <p className="text-[11px] text-white/65 truncate">Group Booking Portal</p>
+                <p className="text-[10px] text-slate-400 truncate">Taban Air Booking System</p>
               </div>
             )}
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10"
+            className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Active Operator Card */}
         {!sidebarCollapsed && (
-          <div className="mx-4 mt-4 p-3.5 rounded-xl bg-white/5 border border-[#EE8200]/30 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#EE8200] flex items-center justify-center font-bold text-sm text-white shrink-0">
+          <div className="mx-3 mt-3 p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/70 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#1B3664] flex items-center justify-center font-semibold text-xs text-white shrink-0">
               {(user?.LoginID || 'TE').slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-white truncate">
+              <div className="text-xs font-semibold text-white truncate">
                 {user?.FullName || 'Test Admin'}
               </div>
-              <div className="text-[11px] text-white/65 truncate flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#EE8200] inline-block" />
+              <div className="text-[10px] text-slate-400 truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                 {user?.AccountType || 'Administrator'} • @{user?.LoginID || 'test'}
               </div>
             </div>
@@ -168,11 +168,11 @@ export default function Layout({ children }) {
         )}
 
         {/* Navigation Links */}
-        <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
+        <nav className="flex-1 px-2.5 py-4 space-y-5 overflow-y-auto">
           {navSections.map((sec) => (
             <div key={sec.group}>
               {!sidebarCollapsed && (
-                <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-[#EE8200]">
+                <div className="px-2.5 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   {sec.group}
                 </div>
               )}
@@ -185,16 +185,16 @@ export default function Layout({ children }) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setMobileOpen(false)}
-                      className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      className={`group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                         isActive
-                          ? 'bg-[#EE8200] text-white font-bold shadow-md'
-                          : 'text-white/80 hover:bg-white/10 hover:text-white'
+                          ? 'bg-[#1B3664] text-white shadow-xs'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <Icon
-                          className={`w-4.5 h-4.5 shrink-0 ${
-                            isActive ? 'text-white' : 'text-[#EE8200] group-hover:text-white'
+                          className={`w-4 h-4 shrink-0 ${
+                            isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
                           }`}
                         />
                         {!sidebarCollapsed && (
@@ -205,10 +205,10 @@ export default function Layout({ children }) {
                       </div>
                       {!sidebarCollapsed && item.badgeKey === 'pending' && pendingCount > 0 && (
                         <span
-                          className={`px-2 py-0.5 text-[11px] font-bold rounded-full ${
+                          className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
                             isActive
-                              ? 'bg-black text-white'
-                              : 'bg-[#EE8200] text-white'
+                              ? 'bg-white text-[#1B3664]'
+                              : 'bg-[#1B3664] text-white'
                           }`}
                         >
                           {pendingCount}
@@ -223,28 +223,26 @@ export default function Layout({ children }) {
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-3 border-t border-white/10 bg-black space-y-1.5">
+        <div className="p-2.5 border-t border-slate-800 bg-[#0B1221] space-y-1">
           <button
             onClick={() => setShowTimeoutModal(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/75 hover:text-white hover:bg-white/10 transition"
-            title="Test Session Timeout Dialog"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
           >
-            <Clock className="w-4 h-4 text-[#EE8200] shrink-0" />
-            {!sidebarCollapsed && <span>Session Guard (Active)</span>}
+            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            {!sidebarCollapsed && <span>Session Guard</span>}
           </button>
           <button
             onClick={resetDemoData}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/75 hover:text-white hover:bg-white/10 transition"
-            title="Clear All Records"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4 text-[#EE8200] shrink-0" />
+            <RotateCcw className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             {!sidebarCollapsed && <span>Clear All Data</span>}
           </button>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-[#EE8200] text-white hover:bg-[#d47100] transition"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium bg-[#1B3664] text-white hover:bg-[#152a4f] transition cursor-pointer"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
+            <LogOut className="w-3.5 h-3.5 shrink-0" />
             {!sidebarCollapsed && <span>Sign Out ({user?.LoginID || 'test'})</span>}
           </button>
         </div>
@@ -253,9 +251,9 @@ export default function Layout({ children }) {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* TOP HEADER */}
-        <header className="h-20 bg-white border-b border-neutral-200 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+        <header className="h-14 bg-white border-b border-slate-200 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Hamburger + Global Search */}
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
+          <div className="flex items-center gap-3 flex-1 max-w-lg">
             <button
               onClick={() => {
                 if (window.innerWidth < 1024) {
@@ -264,15 +262,15 @@ export default function Layout({ children }) {
                   setSidebarCollapsed((prev) => !prev);
                 }
               }}
-              className="p-2.5 rounded-xl border border-neutral-200 text-[#0B0A09] hover:bg-[#EE8200] hover:text-white hover:border-[#EE8200] transition"
+              className="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               title="Toggle Navigation"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </button>
 
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[#EE8200] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
                 value={searchQuery}
@@ -281,15 +279,15 @@ export default function Layout({ children }) {
                   setOpenDropdown('search');
                 }}
                 onFocus={() => setOpenDropdown('search')}
-                placeholder="Search PNR, Booking ID, Passenger, Flight, or Sub Agent..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#FAFAFA] border border-neutral-200 text-sm focus:outline-none focus:border-[#EE8200] focus:bg-white transition"
+                placeholder="Search PNR, Booking ID, Passenger, Flight Segment, or Agent..."
+                className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-[#1B3664] focus:bg-white transition"
               />
               {openDropdown === 'search' && searchQuery.trim().length > 0 && (
                 <div
-                  className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-neutral-200 p-3 z-50 max-h-96 overflow-y-auto"
+                  className="absolute left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-slate-200 p-2.5 z-50 max-h-80 overflow-y-auto"
                   onMouseLeave={() => setOpenDropdown(null)}
                 >
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#EE8200] px-2 py-1">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#1B3664] px-2 py-1">
                     Bookings ({searchResults.bookings.length})
                   </div>
                   {searchResults.bookings.map((b) => (
@@ -300,19 +298,19 @@ export default function Layout({ children }) {
                         setSearchQuery('');
                         navigate('/FlightBookings');
                       }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-orange-50 flex items-center justify-between text-xs"
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-between text-xs"
                     >
                       <div>
-                        <span className="font-bold text-[#EE8200] font-mono">{b.PNR}</span> •{' '}
-                        <span className="font-semibold">{b.SubCompanyName}</span>
+                        <span className="font-semibold text-[#1B3664] font-mono">{b.PNR}</span> •{' '}
+                        <span className="font-medium">{b.SubCompanyName}</span>
                       </div>
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-[#0B0A09] text-white">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                         {b.ApprovalStatus}
                       </span>
                     </button>
                   ))}
 
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#EE8200] px-2 py-1 mt-2">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#1B3664] px-2 py-1 mt-1.5">
                     Flight Segments ({searchResults.segments.length})
                   </div>
                   {searchResults.segments.map((s) => (
@@ -323,12 +321,12 @@ export default function Layout({ children }) {
                         setSearchQuery('');
                         navigate('/FlightPOS');
                       }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-orange-50 flex items-center justify-between text-xs"
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-between text-xs"
                     >
-                      <span className="font-semibold truncate">
+                      <span className="font-medium truncate">
                         {s.FlightNumber} • {s.DepartureIata} &rarr; {s.ArrivalIata}
                       </span>
-                      <span className="font-mono text-[#EE8200] font-bold">
+                      <span className="font-mono text-[#1B3664] font-semibold">
                         {formatCurrencyPKR(s.AdultPrice)}
                       </span>
                     </button>
@@ -337,7 +335,7 @@ export default function Layout({ children }) {
                   {searchResults.bookings.length === 0 &&
                     searchResults.segments.length === 0 &&
                     searchResults.agents.length === 0 && (
-                      <div className="text-xs text-neutral-500 py-4 text-center">
+                      <div className="text-xs text-slate-500 py-3 text-center">
                         No matching records found for &ldquo;{searchQuery}&rdquo;
                       </div>
                     )}
@@ -346,88 +344,62 @@ export default function Layout({ children }) {
             </div>
           </div>
 
-          {/* Right: Quick POS Button, Messages, Notifications, Language, User Profile */}
-          <div className="flex items-center gap-2.5">
+          {/* Right: Quick POS Button, Language, Notifications, Profile */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/FlightPOS')}
-              className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#EE8200] text-white hover:bg-[#0B0A09] text-xs font-bold tracking-wide transition shadow-sm"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1B3664] text-white hover:bg-[#0F172A] text-xs font-medium transition cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Quick POS Booking</span>
+              <span>POS Flight Search</span>
             </button>
 
-            {/* Language Selector (English / Urdu) */}
             <button
               onClick={() => setLanguage((l) => (l === 'English' ? 'Urdu' : 'English'))}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-neutral-200 bg-[#FAFAFA] hover:bg-[#EE8200] hover:text-white text-xs font-semibold transition"
-              title="Switch Language (English / Urdu)"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium transition cursor-pointer"
             >
-              <Globe className="w-3.5 h-3.5" />
+              <Globe className="w-3.5 h-3.5 text-[#1B3664]" />
               <span>{language}</span>
             </button>
 
-            {/* Messages Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setOpenDropdown(openDropdown === 'messages' ? null : 'messages')}
-                className="relative p-2.5 rounded-xl border border-neutral-200 bg-[#FAFAFA] hover:bg-[#EE8200] hover:text-white transition"
-                title="Messages"
-              >
-                <Mail className="w-4 h-4" />
-              </button>
-              {openDropdown === 'messages' && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
-                  <div className="bg-[#EE8200] text-white px-4 py-3 flex items-center justify-between text-xs font-bold">
-                    <span>Messages</span>
-                    <span className="px-2 py-0.5 rounded-full bg-black text-white">Inbox</span>
-                  </div>
-                  <div className="p-5 text-center text-xs text-neutral-500">
-                    No new messages.
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Notifications Dropdown */}
             <div className="relative">
               <button
                 onClick={() =>
                   setOpenDropdown(openDropdown === 'notifications' ? null : 'notifications')
                 }
-                className="relative p-2.5 rounded-xl border border-neutral-200 bg-[#FAFAFA] hover:bg-[#EE8200] hover:text-white transition"
-                title="Notifications"
+                className="relative p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-3.5 h-3.5 text-slate-700" />
                 {pendingCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0B0A09] text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#1B3664] text-white text-[10px] font-semibold flex items-center justify-center">
                     {pendingCount}
                   </span>
                 )}
               </button>
               {openDropdown === 'notifications' && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
-                  <div className="bg-[#0B0A09] text-white px-4 py-3 flex items-center justify-between text-xs font-bold">
+                <div className="absolute right-0 mt-1.5 w-72 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50">
+                  <div className="bg-[#1D314F] text-white px-3.5 py-2.5 flex items-center justify-between text-xs font-semibold">
                     <span>Notifications</span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#EE8200] text-white">Live</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white/15 text-white text-[10px]">Live</span>
                   </div>
-                  <div className="divide-y divide-neutral-100 max-h-64 overflow-y-auto">
+                  <div className="divide-y divide-slate-100 max-h-60 overflow-y-auto">
                     {pendingCount > 0 ? (
                       <div
                         onClick={() => {
                           setOpenDropdown(null);
                           navigate('/FlightBookings');
                         }}
-                        className="p-3.5 hover:bg-orange-50/50 cursor-pointer transition"
+                        className="p-3 hover:bg-slate-50 cursor-pointer transition"
                       >
-                        <div className="text-xs font-bold text-[#EE8200]">
-                          {pendingCount} Pending Group Booking(s)
+                        <div className="text-xs font-semibold text-[#1B3664]">
+                          {pendingCount} Pending Booking(s)
                         </div>
-                        <div className="text-[11px] text-neutral-600 mt-0.5">
+                        <div className="text-[11px] text-slate-500 mt-0.5">
                           Click to review, approve, or issue e-tickets.
                         </div>
                       </div>
                     ) : (
-                      <div className="p-5 text-center text-xs text-neutral-500">
+                      <div className="p-4 text-center text-xs text-slate-500">
                         No pending notifications.
                       </div>
                     )}
@@ -440,46 +412,43 @@ export default function Layout({ children }) {
             <div className="relative">
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'profile' ? null : 'profile')}
-                className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl border border-neutral-200 bg-white hover:bg-orange-50/40 transition"
+                className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-lg bg-[#EE8200] text-white flex items-center justify-center font-bold text-xs">
+                <div className="w-7 h-7 rounded-md bg-[#1B3664] text-white flex items-center justify-center font-semibold text-xs">
                   {(user?.LoginID || 'TE').slice(0, 2).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-[#0B0A09] leading-none">
+                  <div className="text-xs font-semibold text-slate-800 leading-none">
                     {user?.LoginID || 'test'}
                   </div>
-                  <div className="text-[10px] text-[#EE8200] font-semibold mt-0.5">
+                  <div className="text-[10px] text-slate-500 mt-0.5">
                     {user?.AccountType || 'Administrator'}
                   </div>
                 </div>
               </button>
               {openDropdown === 'profile' && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
-                  <div className="p-4 bg-[#0B0A09] text-white">
-                    <div className="font-bold text-sm">{user?.FullName || 'Test Admin'}</div>
-                    <div className="text-xs text-white/75">{user?.Email || 'admin@bookly.com'}</div>
-                    <div className="mt-2 inline-block px-2 py-0.5 rounded bg-[#EE8200] text-white text-[10px] font-mono font-bold">
-                      {user?.SubCompanyName || 'Bookly'}
-                    </div>
+                <div className="absolute right-0 mt-1.5 w-60 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50">
+                  <div className="p-3.5 bg-[#1D314F] text-white">
+                    <div className="font-semibold text-xs">{user?.FullName || 'Test Admin'}</div>
+                    <div className="text-[11px] text-white/75">{user?.Email || 'admin@bookly.com'}</div>
                   </div>
-                  <div className="p-2">
+                  <div className="p-1.5">
                     <button
                       onClick={() => {
                         setOpenDropdown(null);
                         navigate('/ManageSubAgents');
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-orange-50 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-slate-50 text-left cursor-pointer"
                     >
-                      <UserCheck className="w-4 h-4 text-[#EE8200]" />
+                      <UserCheck className="w-3.5 h-3.5 text-[#1B3664]" />
                       <span>Sub Agent & Profile Settings</span>
                     </button>
-                    <hr className="my-1.5 border-neutral-100" />
+                    <hr className="my-1 border-slate-100" />
                     <button
                       onClick={logout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-red-700 hover:bg-red-50 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 text-left cursor-pointer"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-3.5 h-3.5" />
                       <span>Logout</span>
                     </button>
                   </div>
@@ -490,45 +459,49 @@ export default function Layout({ children }) {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">{children}</main>
+        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">{children}</main>
 
         {/* FOOTER */}
-        <footer className="bg-white border-t border-neutral-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-600">
-          <div className="font-medium">
-            <span className="font-bold text-[#EE8200]">BOOKLY</span> • Group OTA & Booking Management System
-          </div>
-          <div className="flex items-center gap-4 mt-2 sm:mt-0">
-            <span className="flex items-center gap-1.5 text-[11px]">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#EE8200]" />
-              Bookly B2B Aviation Suite
+        <footer className="bg-white border-t border-slate-200 px-6 py-3 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            <img
+              src="/images/Taban Air Gradient Airline Logo.png"
+              alt="Taban Air"
+              className="w-5 h-5 object-contain"
+            />
+            <span>
+              <b className="text-[#1B3664]">BOOKLY</b> • Taban Air B2B Booking & Inventory System
             </span>
+          </div>
+          <div className="flex items-center gap-3 mt-1 sm:mt-0 text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-[#1B3664]" />
+            <span>Taban Air Portal</span>
           </div>
         </footer>
       </div>
 
       {/* SESSION TIMEOUT MODAL */}
       {showTimeoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/30 max-w-md w-full overflow-hidden">
-            <div className="bg-[#0B0A09] text-white px-6 py-4 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-[#EE8200]" />
-              <h4 className="font-bold text-base">Time Out</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-sm w-full overflow-hidden">
+            <div className="bg-[#1D314F] text-white px-5 py-3 flex items-center gap-2.5">
+              <Clock className="w-4 h-4" />
+              <h4 className="font-semibold text-sm">Session Timeout</h4>
             </div>
-            <div className="p-6 text-center">
-              <p className="text-sm text-neutral-700 font-medium">
+            <div className="p-5 text-center">
+              <p className="text-xs text-slate-600">
                 Your session has been idle. Would you like to continue working or sign out?
               </p>
-              <p className="text-base font-bold text-[#EE8200] mt-2">Continue?</p>
-              <div className="flex items-center justify-center gap-3 mt-6">
+              <div className="flex items-center justify-center gap-2.5 mt-5">
                 <button
                   onClick={logout}
-                  className="px-5 py-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition"
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-medium hover:bg-slate-50 transition"
                 >
                   Logout
                 </button>
                 <button
                   onClick={() => setShowTimeoutModal(false)}
-                  className="px-6 py-2.5 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-[#d47100] transition"
+                  className="px-5 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition"
                 >
                   Continue
                 </button>
@@ -539,24 +512,22 @@ export default function Layout({ children }) {
       )}
 
       {/* TOAST NOTIFICATIONS */}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-xl border text-xs font-semibold transition-all ${
+            className={`pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg shadow-lg border text-xs font-medium transition-all ${
               t.type === 'error'
-                ? 'bg-[#0B0A09] text-white border-red-500'
-                : t.type === 'warning'
-                ? 'bg-[#0B0A09] text-white border-[#EE8200]'
-                : 'bg-[#0B0A09] text-white border-[#EE8200]'
+                ? 'bg-[#0F172A] text-white border-red-500'
+                : 'bg-[#0F172A] text-white border-[#1B3664]'
             }`}
           >
             {t.type === 'error' ? (
               <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
             ) : t.type === 'warning' ? (
-              <Info className="w-4 h-4 text-[#EE8200] shrink-0" />
+              <Info className="w-4 h-4 text-amber-400 shrink-0" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 text-[#EE8200] shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             )}
             <span className="flex-1">{t.message}</span>
           </div>

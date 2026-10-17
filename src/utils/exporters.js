@@ -173,7 +173,7 @@ export function downloadWordManifest(segment, passengers = []) {
     const surname = (p.LastName || 'PAX').toUpperCase();
     const firstname = (p.FirstName || 'GUEST').toUpperCase();
     const title = (p.Title || 'MR').toUpperCase();
-    const tkt = p.TicketNumber || `2140000000${idx + 1}`;
+    const tkt = p.TicketNumber || `740000000${String(idx + 1).padStart(4, '0')}`;
     pnlLines.push(`1${surname}/${firstname} ${title} .L/${p.PNR || 'PNR001'}`);
     pnlLines.push(`.R/${p.SSRCode || 'TKNE'} HK1 ${tkt}-1`);
     pnlLines.push(`.R/DOCS HK1/P/${p.Nationality || 'PAK'}/${p.PassportNumber || 'NA'}/${p.Nationality || 'PAK'}/${p.DOB || ''}/${p.Gender === 'Female' ? 'F' : 'M'}/${p.PassportExpiryDate || ''}/${surname}/${firstname}`);
@@ -187,17 +187,17 @@ export function downloadWordManifest(segment, passengers = []) {
       <meta charset="utf-8">
       <title>IATA Manifest</title>
       <style>
-        body { font-family: 'Courier New', monospace; font-size: 11pt; color: #0B0A09; padding: 24px; }
-        .header { background: #EE8200; color: #FFFFFF; padding: 12px 16px; font-family: Arial, sans-serif; font-weight: bold; font-size: 14pt; margin-bottom: 16px; }
-        .meta { font-family: Arial, sans-serif; font-size: 10pt; margin-bottom: 16px; border: 1px solid #EE8200; padding: 10px; }
-        pre { background: #FAFAFA; border: 1px solid #ccc; padding: 14px; font-family: 'Courier New', monospace; font-size: 10.5pt; line-height: 1.45; }
+        body { font-family: 'Courier New', monospace; font-size: 11pt; color: #0F172A; padding: 24px; }
+        .header { background: #1D314F; color: #FFFFFF; padding: 12px 16px; font-family: Arial, sans-serif; font-weight: bold; font-size: 14pt; margin-bottom: 16px; }
+        .meta { font-family: Arial, sans-serif; font-size: 10pt; margin-bottom: 16px; border: 1px solid #1D314F; padding: 10px; }
+        pre { background: #F8FAFC; border: 1px solid #cbd5e1; padding: 14px; font-family: 'Courier New', monospace; font-size: 10.5pt; line-height: 1.45; }
         table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9.5pt; margin-top: 20px; }
-        th { background: #EE8200; color: #ffffff; padding: 6px 8px; text-align: left; }
-        td { border: 1px solid #d4d4d4; padding: 6px 8px; }
+        th { background: #1D314F; color: #ffffff; padding: 6px 8px; text-align: left; }
+        td { border: 1px solid #cbd5e1; padding: 6px 8px; }
       </style>
     </head>
     <body>
-      <div class="header">BOOKLY | IATA PASSENGER MANIFEST</div>
+      <div class="header">TABAN AIRLINES | IATA PASSENGER MANIFEST</div>
       <div class="meta">
         <b>Flight:</b> ${segment.FlightNumber} &nbsp;|&nbsp;
         <b>Sector:</b> ${segment.DepartureCity} (${segment.DepartureIata}) &rarr; ${segment.ArrivalCity} (${segment.ArrivalIata}) &nbsp;|&nbsp;

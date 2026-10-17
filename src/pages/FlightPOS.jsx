@@ -25,7 +25,6 @@ export default function FlightPOS() {
   const { segments, subAgents, airports, createBooking, addToast } = usePortal();
   const navigate = useNavigate();
 
-  // Search Widget State (matching reference screenshots)
   const [tripType, setTripType] = useState('One Way'); // 'Round Trip' | 'One Way' | 'Multi City'
   const [fromIata, setFromIata] = useState('ALL');
   const [toIata, setToIata] = useState('ALL');
@@ -36,22 +35,19 @@ export default function FlightPOS() {
   const [childrenCount, setChildrenCount] = useState(0);
   const [infantsCount, setInfantsCount] = useState(0);
 
-  const [cabinClass, setCabinClass] = useState('All'); // 'All' | 'Economy' | 'Business' | 'First'
+  const [cabinClass, setCabinClass] = useState('All');
   const [selectedAgentId, setSelectedAgentId] = useState('DIRECT');
   const [showPromo, setShowPromo] = useState(false);
   const [promoCode, setPromoCode] = useState('');
 
-  // Selected Segment IDs (1 for One Way, up to 2 for Round Trip, multiple for Multi City)
   const [selectedSegmentIds, setSelectedSegmentIds] = useState([]);
 
-  // Passenger & Contact State
   const [passengers, setPassengers] = useState([]);
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [remarks, setRemarks] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Auto-select first sub-agent if available, otherwise keep DIRECT
   useEffect(() => {
     if (selectedAgentId === 'DIRECT' && subAgents.length > 0) {
       setSelectedAgentId(subAgents[0].SubCompanyID);
@@ -63,7 +59,6 @@ export default function FlightPOS() {
     [subAgents, selectedAgentId]
   );
 
-  // Build airport options combining standard airports + any custom airport codes used in segments
   const airportOptions = useMemo(() => {
     const map = new Map();
     (airports || []).forEach((a) => {
@@ -110,10 +105,8 @@ export default function FlightPOS() {
     setToIata(fromIata);
   };
 
-  // Filter segments directly from Segment Management
   const matchingSegments = useMemo(() => {
     return (segments || []).filter((seg) => {
-      // Cabin filter
       if (
         cabinClass !== 'All' &&
         (seg.FlightClass || 'Economy').toLowerCase() !== cabinClass.toLowerCase()
@@ -122,7 +115,6 @@ export default function FlightPOS() {
       }
 
       if (tripType === 'Multi City') {
-        // In Multi City mode, show all matching date/cabin or route segments
         if (fromIata !== 'ALL' && seg.DepartureIata !== fromIata) return false;
         if (toIata !== 'ALL' && seg.ArrivalIata !== toIata) return false;
         if (departDate && !(seg.DepartureDate || '').startsWith(departDate)) return false;
@@ -130,7 +122,6 @@ export default function FlightPOS() {
       }
 
       if (tripType === 'Round Trip') {
-        // Outbound matches From -> To; Return matches To -> From
         const isOutbound =
           (fromIata === 'ALL' || seg.DepartureIata === fromIata) &&
           (toIata === 'ALL' || seg.ArrivalIata === toIata) &&
@@ -146,7 +137,6 @@ export default function FlightPOS() {
         return isOutbound || isReturn;
       }
 
-      // One Way
       if (fromIata !== 'ALL' && seg.DepartureIata !== fromIata) return false;
       if (toIata !== 'ALL' && seg.ArrivalIata !== toIata) return false;
       if (departDate && !(seg.DepartureDate || '').startsWith(departDate)) return false;
@@ -162,7 +152,6 @@ export default function FlightPOS() {
     [selectedSegmentIds, segments]
   );
 
-  // Sync passenger rows automatically whenever selected segments or passenger counts change
   const buildPassengerRows = (autoFillNTBA = false) => {
     const list = [];
     for (let i = 0; i < Number(adultsCount); i++) {
@@ -234,17 +223,16 @@ export default function FlightPOS() {
     }
 
     setSelectedSegmentIds((prev) => {
-      let next;
       if (prev.includes(segId)) {
-        next = prev.filter((id) => id !== segId);
-      } else if (tripType === 'One Way') {
-        next = [segId];
-      } else if (tripType === 'Round Trip') {
-        next = prev.length >= 2 ? [prev[1], segId] : [...prev, segId];
-      } else {
-        next = [...prev, segId];
+        return prev.filter((id) => id !== segId);
       }
-      return next;
+      if (tripType === 'One Way') {
+        return [segId];
+      }
+      if (tripType === 'Round Trip') {
+        return prev.length >= 2 ? [prev[1], segId] : [...prev, segId];
+      }
+      return [...prev, segId];
     });
 
     if (passengers.length === 0) {
@@ -252,7 +240,6 @@ export default function FlightPOS() {
     }
   };
 
-  // Keep passenger rows in sync with count steppers when a segment is already selected
   useEffect(() => {
     if (selectedSegmentIds.length > 0) {
       buildPassengerRows(false);
@@ -307,7 +294,6 @@ export default function FlightPOS() {
     reader.readAsDataURL(file);
   };
 
-  // Calculate live fare across all selected segments
   const fareBreakdown = useMemo(() => {
     const adt = Number(adultsCount) || 0;
     const cnn = Number(childrenCount) || 0;
@@ -383,21 +369,12 @@ export default function FlightPOS() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* HERO SEARCH BANNER (Inspired by Reference Screenshot 1 & 2 in Bookly #EE8200 / #0B0A09 / #FFFFFF Theme) */}
-      <div className="rounded-3xl bg-gradient-to-b from-[#0B0A09] via-[#141210] to-[#0B0A09] p-5 sm:p-8 lg:p-10 shadow-2xl border border-[#EE8200]/25 relative overflow-hidden">
-        {/* Decorative subtle pattern */}
-        <div
-          className="absolute inset-0 opacity-15 pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(#EE8200 1.5px, transparent 1.5px)',
-            backgroundSize: '28px 28px'
-          }}
-        />
-
-        {/* Top Trip Type Pills (Round Trip | One Way | Multi City) */}
-        <div className="relative z-10 flex flex-col items-center text-center mb-6">
-          <div className="inline-flex items-center p-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs">
+    <div className="space-y-5">
+      {/* COMPACT HERO SEARCH BANNER — Taban Air Royal Navy */}
+      <div className="rounded-2xl bg-gradient-to-b from-[#0F172A] via-[#172847] to-[#1D314F] p-4 sm:p-6 shadow-md border border-slate-800 relative overflow-hidden">
+        {/* Top Trip Type Pills */}
+        <div className="relative z-10 flex flex-col items-center text-center mb-4">
+          <div className="inline-flex items-center p-1 rounded-full bg-white/10 border border-white/15">
             {['Round Trip', 'One Way', 'Multi City'].map((t) => {
               const active = tripType === t;
               return (
@@ -410,9 +387,9 @@ export default function FlightPOS() {
                       setSelectedSegmentIds([selectedSegmentIds[0]]);
                     }
                   }}
-                  className={`px-5 sm:px-7 py-2 rounded-full text-xs sm:text-sm font-bold transition cursor-pointer ${
+                  className={`px-4 sm:px-5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
                     active
-                      ? 'bg-white text-[#EE8200] shadow-md'
+                      ? 'bg-white text-[#1B3664] shadow-xs font-semibold'
                       : 'text-white/80 hover:text-white'
                   }`}
                 >
@@ -421,34 +398,34 @@ export default function FlightPOS() {
               );
             })}
           </div>
-          <p className="text-xs sm:text-sm text-white/75 mt-3 font-medium">
-            Search & book directly from your Flight Segments — no separate Flight Group setup required
+          <p className="text-[11px] text-white/70 mt-2">
+            Search & book directly across your active flight segments
           </p>
         </div>
 
         {/* MAIN WHITE SEARCH CARD */}
         <form
           onSubmit={handleSearchClick}
-          className="relative z-10 bg-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-neutral-100 max-w-5xl mx-auto space-y-5 text-[#0B0A09]"
+          className="relative z-10 bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100 max-w-4xl mx-auto space-y-3.5 text-slate-800"
         >
           {/* ROW 1: FROM & TO AIRPORT BOXES WITH CENTER SWAP BUTTON */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 relative">
             {/* FROM BOX */}
-            <div className="p-4 sm:p-5 rounded-2xl border border-neutral-200 hover:border-[#EE8200] bg-[#FAFAFA]/60 transition">
+            <div className="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B3664] bg-slate-50/50 transition">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">
-                  FROM (DEPARTURE)
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  FROM
                 </span>
-                <span className="text-[11px] font-semibold text-[#EE8200]">Origin Sector</span>
+                <span className="text-[10px] text-[#1B3664] font-medium">Departure</span>
               </div>
-              <div className="mt-1 flex items-baseline gap-3">
-                <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#EE8200] tracking-tight">
+              <div className="mt-1 flex items-baseline gap-2.5">
+                <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
                   {fromIata === 'ALL' ? 'ANY' : fromIata}
                 </span>
                 <select
                   value={fromIata}
                   onChange={(e) => setFromIata(e.target.value)}
-                  className="flex-1 bg-transparent font-bold text-sm text-[#0B0A09] focus:outline-none cursor-pointer border-b border-dashed border-neutral-300 pb-1"
+                  className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
                 >
                   <option value="ALL">All Departure Cities (Show All)</option>
                   {airportOptions.map((a) => (
@@ -458,10 +435,10 @@ export default function FlightPOS() {
                   ))}
                 </select>
               </div>
-              <div className="text-xs text-neutral-500 mt-1.5 truncate">
+              <div className="text-[11px] text-slate-500 mt-1 truncate">
                 {fromAirportObj
                   ? `${fromAirportObj.name} • ${fromAirportObj.city}`
-                  : 'Searching across all departure airports'}
+                  : 'All departure airports'}
               </div>
             </div>
 
@@ -470,27 +447,27 @@ export default function FlightPOS() {
               type="button"
               onClick={handleSwapAirports}
               title="Swap From & To Airports"
-              className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white border-2 border-neutral-200 hover:border-[#EE8200] text-[#EE8200] hover:bg-[#EE8200] hover:text-white items-center justify-center shadow-md transition cursor-pointer"
+              className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-[#1B3664] text-[#1B3664] hover:bg-[#1B3664] hover:text-white items-center justify-center shadow-xs transition cursor-pointer"
             >
-              <ArrowLeftRight className="w-4 h-4" />
+              <ArrowLeftRight className="w-3.5 h-3.5" />
             </button>
 
             {/* TO BOX */}
-            <div className="p-4 sm:p-5 rounded-2xl border border-neutral-200 hover:border-[#EE8200] bg-[#FAFAFA]/60 transition">
+            <div className="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B3664] bg-slate-50/50 transition">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">
-                  TO (ARRIVAL)
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  TO
                 </span>
-                <span className="text-[11px] font-semibold text-[#EE8200]">Destination Sector</span>
+                <span className="text-[10px] text-[#1B3664] font-medium">Arrival</span>
               </div>
-              <div className="mt-1 flex items-baseline gap-3">
-                <span className="font-display font-extrabold text-3xl sm:text-4xl text-[#EE8200] tracking-tight">
+              <div className="mt-1 flex items-baseline gap-2.5">
+                <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
                   {toIata === 'ALL' ? 'ANY' : toIata}
                 </span>
                 <select
                   value={toIata}
                   onChange={(e) => setToIata(e.target.value)}
-                  className="flex-1 bg-transparent font-bold text-sm text-[#0B0A09] focus:outline-none cursor-pointer border-b border-dashed border-neutral-300 pb-1"
+                  className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
                 >
                   <option value="ALL">All Arrival Cities (Show All)</option>
                   {airportOptions.map((a) => (
@@ -500,28 +477,28 @@ export default function FlightPOS() {
                   ))}
                 </select>
               </div>
-              <div className="text-xs text-neutral-500 mt-1.5 truncate">
+              <div className="text-[11px] text-slate-500 mt-1 truncate">
                 {toAirportObj
                   ? `${toAirportObj.name} • ${toAirportObj.city}`
-                  : 'Searching across all arrival airports'}
+                  : 'All arrival airports'}
               </div>
             </div>
           </div>
 
           {/* ROW 2: DEPART DATE & RETURN DATE */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="px-4 py-3 rounded-2xl border border-neutral-200 hover:border-[#EE8200] flex items-center justify-between bg-white transition">
-              <div className="flex items-center gap-3 flex-1">
-                <Calendar className="w-5 h-5 text-[#EE8200] shrink-0" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#1B3664] flex items-center justify-between bg-white transition">
+              <div className="flex items-center gap-2.5 flex-1">
+                <Calendar className="w-4 h-4 text-[#1B3664] shrink-0" />
                 <div className="flex-1">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Depart Date {departDate ? '' : '(Any Date)'}
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    Depart {departDate ? '' : '(Any Date)'}
                   </div>
                   <input
                     type="date"
                     value={departDate}
                     onChange={(e) => setDepartDate(e.target.value)}
-                    className="w-full text-sm font-bold text-[#0B0A09] focus:outline-none bg-transparent cursor-pointer"
+                    className="w-full text-xs font-medium text-slate-800 focus:outline-none bg-transparent cursor-pointer"
                   />
                 </div>
               </div>
@@ -529,8 +506,7 @@ export default function FlightPOS() {
                 <button
                   type="button"
                   onClick={() => setDepartDate('')}
-                  className="text-[11px] font-bold text-neutral-400 hover:text-red-600 px-2 py-1"
-                  title="Clear Date Filter"
+                  className="text-[11px] text-slate-400 hover:text-red-600 px-1.5"
                 >
                   Clear
                 </button>
@@ -538,24 +514,24 @@ export default function FlightPOS() {
             </div>
 
             <div
-              className={`px-4 py-3 rounded-2xl border flex items-center justify-between transition ${
+              className={`px-3.5 py-2.5 rounded-xl border flex items-center justify-between transition ${
                 tripType === 'Round Trip'
-                  ? 'border-neutral-200 hover:border-[#EE8200] bg-white'
-                  : 'border-neutral-100 bg-neutral-50 opacity-60'
+                  ? 'border-slate-200 hover:border-[#1B3664] bg-white'
+                  : 'border-slate-100 bg-slate-50 opacity-60'
               }`}
             >
-              <div className="flex items-center gap-3 flex-1">
-                <Calendar className="w-5 h-5 text-[#EE8200] shrink-0" />
+              <div className="flex items-center gap-2.5 flex-1">
+                <Calendar className="w-4 h-4 text-[#1B3664] shrink-0" />
                 <div className="flex-1">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Return Date {tripType !== 'Round Trip' && '(Round Trip Only)'}
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    Return {tripType !== 'Round Trip' && '(Round Trip Only)'}
                   </div>
                   <input
                     type="date"
                     disabled={tripType !== 'Round Trip'}
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full text-sm font-bold text-[#0B0A09] focus:outline-none bg-transparent disabled:cursor-not-allowed"
+                    className="w-full text-xs font-medium text-slate-800 focus:outline-none bg-transparent disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -563,7 +539,7 @@ export default function FlightPOS() {
                 <button
                   type="button"
                   onClick={() => setReturnDate('')}
-                  className="text-[11px] font-bold text-neutral-400 hover:text-red-600 px-2 py-1"
+                  className="text-[11px] text-slate-400 hover:text-red-600 px-1.5"
                 >
                   Clear
                 </button>
@@ -572,102 +548,99 @@ export default function FlightPOS() {
           </div>
 
           {/* ROW 3: PASSENGERS STEPPER BOX & CABIN CLASS + SUB-AGENT BOX */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* PASSENGERS BOX */}
-            <div className="p-4 sm:p-5 rounded-2xl border border-neutral-200 bg-white space-y-3">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white space-y-2.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 PASSENGERS
               </div>
 
-              {/* Adults */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold text-[#0B0A09]">Adults</div>
-                  <div className="text-[11px] text-neutral-400">Age 12+</div>
+                  <div className="text-xs font-semibold text-slate-800">Adults</div>
+                  <div className="text-[10px] text-slate-400">Age 12+</div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => setAdultsCount((c) => Math.max(1, c - 1))}
-                    className="w-8 h-8 rounded-full border border-neutral-200 hover:border-[#EE8200] text-neutral-600 hover:text-[#EE8200] flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full border border-slate-200 hover:border-[#1B3664] text-slate-600 hover:text-[#1B3664] flex items-center justify-center transition cursor-pointer"
                   >
-                    <Minus className="w-3.5 h-3.5" />
+                    <Minus className="w-3 h-3" />
                   </button>
-                  <span className="w-6 text-center font-mono font-extrabold text-sm text-[#0B0A09]">
+                  <span className="w-5 text-center font-mono font-semibold text-xs text-slate-800">
                     {adultsCount}
                   </span>
                   <button
                     type="button"
                     onClick={() => setAdultsCount((c) => c + 1)}
-                    className="w-8 h-8 rounded-full bg-[#FFF7ED] border border-[#EE8200]/30 hover:bg-[#EE8200] text-[#EE8200] hover:text-white flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#1B3664] text-[#1B3664] hover:text-white flex items-center justify-center transition cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
               </div>
 
-              {/* Children */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold text-[#0B0A09]">Children</div>
-                  <div className="text-[11px] text-neutral-400">Age 2–11</div>
+                  <div className="text-xs font-semibold text-slate-800">Children</div>
+                  <div className="text-[10px] text-slate-400">Age 2–11</div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => setChildrenCount((c) => Math.max(0, c - 1))}
-                    className="w-8 h-8 rounded-full border border-neutral-200 hover:border-[#EE8200] text-neutral-600 hover:text-[#EE8200] flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full border border-slate-200 hover:border-[#1B3664] text-slate-600 hover:text-[#1B3664] flex items-center justify-center transition cursor-pointer"
                   >
-                    <Minus className="w-3.5 h-3.5" />
+                    <Minus className="w-3 h-3" />
                   </button>
-                  <span className="w-6 text-center font-mono font-extrabold text-sm text-[#0B0A09]">
+                  <span className="w-5 text-center font-mono font-semibold text-xs text-slate-800">
                     {childrenCount}
                   </span>
                   <button
                     type="button"
                     onClick={() => setChildrenCount((c) => c + 1)}
-                    className="w-8 h-8 rounded-full bg-[#FFF7ED] border border-[#EE8200]/30 hover:bg-[#EE8200] text-[#EE8200] hover:text-white flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#1B3664] text-[#1B3664] hover:text-white flex items-center justify-center transition cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
               </div>
 
-              {/* Infants */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold text-[#0B0A09]">Infants</div>
-                  <div className="text-[11px] text-neutral-400">Under 2</div>
+                  <div className="text-xs font-semibold text-slate-800">Infants</div>
+                  <div className="text-[10px] text-slate-400">Under 2</div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => setInfantsCount((c) => Math.max(0, c - 1))}
-                    className="w-8 h-8 rounded-full border border-neutral-200 hover:border-[#EE8200] text-neutral-600 hover:text-[#EE8200] flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full border border-slate-200 hover:border-[#1B3664] text-slate-600 hover:text-[#1B3664] flex items-center justify-center transition cursor-pointer"
                   >
-                    <Minus className="w-3.5 h-3.5" />
+                    <Minus className="w-3 h-3" />
                   </button>
-                  <span className="w-6 text-center font-mono font-extrabold text-sm text-[#0B0A09]">
+                  <span className="w-5 text-center font-mono font-semibold text-xs text-slate-800">
                     {infantsCount}
                   </span>
                   <button
                     type="button"
                     onClick={() => setInfantsCount((c) => c + 1)}
-                    className="w-8 h-8 rounded-full bg-[#FFF7ED] border border-[#EE8200]/30 hover:bg-[#EE8200] text-[#EE8200] hover:text-white flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#1B3664] text-[#1B3664] hover:text-white flex items-center justify-center transition cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
               </div>
             </div>
 
             {/* CABIN CLASS & SUB-AGENT BOX */}
-            <div className="p-4 sm:p-5 rounded-2xl border border-neutral-200 bg-white flex flex-col justify-between space-y-3">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex flex-col justify-between space-y-2.5">
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-2">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
                   CABIN CLASS
                 </div>
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-1.5">
                   {['All', 'Economy', 'Business', 'First'].map((cls) => {
                     const active = cabinClass === cls;
                     return (
@@ -675,22 +648,22 @@ export default function FlightPOS() {
                         key={cls}
                         type="button"
                         onClick={() => setCabinClass(cls)}
-                        className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        className={`text-left px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-between cursor-pointer ${
                           active
-                            ? 'bg-[#EE8200] text-white shadow-sm'
-                            : 'text-[#0B0A09] hover:bg-[#FFF7ED]'
+                            ? 'bg-[#1B3664] text-white'
+                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                         }`}
                       >
-                        <span>{cls === 'All' ? 'All Cabin Classes' : cls}</span>
-                        {active && <CheckCircle2 className="w-4 h-4" />}
+                        <span>{cls === 'All' ? 'All Classes' : cls}</span>
+                        {active && <CheckCircle2 className="w-3.5 h-3.5" />}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-neutral-100">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
                   BOOKING AGENCY / SUB-AGENT
                 </label>
                 <select
@@ -703,9 +676,9 @@ export default function FlightPOS() {
                       setMobile(ag.MobileNumber || '');
                     }
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 bg-[#FAFAFA] text-xs font-bold text-[#0B0A09] focus:border-[#EE8200] focus:outline-none"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:border-[#1B3664] focus:outline-none"
                 >
-                  <option value="DIRECT">Bookly Direct Desk (Walk-In / Admin)</option>
+                  <option value="DIRECT">Bookly Direct Desk (Admin)</option>
                   {subAgents.map((a) => (
                     <option key={a.SubCompanyID} value={a.SubCompanyID}>
                       {a.CompanyName} ({a.City}) — Bal: {formatCurrencyPKR(a.CreditLimitBalance)}
@@ -717,32 +690,30 @@ export default function FlightPOS() {
           </div>
 
           {/* PROMO CODE TOGGLE */}
-          <div>
+          <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={() => setShowPromo((p) => !p)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EE8200] hover:text-[#0B0A09] transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1B3664] hover:underline cursor-pointer"
             >
               <Tag className="w-3.5 h-3.5" />
               <span>Have a promo code?</span>
             </button>
             {showPromo && (
-              <div className="mt-2 max-w-xs">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Enter Promo / Deal Code"
-                  className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 text-xs font-mono font-bold focus:border-[#EE8200] focus:outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="Enter Promo Code"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono focus:border-[#1B3664] focus:outline-none"
+              />
             )}
           </div>
 
           {/* FULL-WIDTH SEARCH FLIGHTS BUTTON */}
           <button
             type="submit"
-            className="w-full py-4 rounded-2xl bg-[#EE8200] hover:bg-[#0B0A09] text-white font-display font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg transition cursor-pointer"
+            className="w-full py-3 rounded-xl bg-[#1B3664] hover:bg-[#0F172A] text-white font-display font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
           >
             <Search className="w-4 h-4" />
             <span>Search Flights ({matchingSegments.length} Available)</span>
@@ -751,20 +722,16 @@ export default function FlightPOS() {
       </div>
 
       {/* FLIGHT SEGMENT SEARCH RESULTS */}
-      <div className="bg-white rounded-2xl border border-[#EE8200]/20 shadow-executive overflow-hidden">
-        <div className="bg-[#0B0A09] text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="bg-[#1D314F] text-white px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <Plane className="w-5 h-5 text-[#EE8200]" />
+            <Plane className="w-4 h-4 text-white/80" />
             <div>
-              <h3 className="font-display font-bold text-sm uppercase tracking-wider">
+              <h3 className="font-display font-semibold text-xs uppercase tracking-wider">
                 Available Flight Segments ({matchingSegments.length})
               </h3>
-              <p className="text-[11px] text-white/65">
-                {tripType === 'One Way'
-                  ? 'Click "Select Flight" on any segment below to open the passenger booking form'
-                  : tripType === 'Round Trip'
-                  ? 'Select up to 2 segments (Outbound + Return) to combine into a single Round Trip PNR'
-                  : 'Select multiple segments to combine into a Multi-City PNR'}
+              <p className="text-[11px] text-white/70">
+                Click &ldquo;Select Flight&rdquo; on any segment below to open passenger booking
               </p>
             </div>
           </div>
@@ -773,41 +740,41 @@ export default function FlightPOS() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="px-3.5 py-1.5 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-white hover:text-[#0B0A09] transition cursor-pointer"
+              className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white text-white hover:text-[#1D314F] text-xs font-medium transition cursor-pointer"
             >
               Show All Segments ({segments.length})
             </button>
           )}
         </div>
 
-        <div className="p-5 space-y-3">
+        <div className="p-4 space-y-2.5">
           {segments.length === 0 ? (
-            <div className="py-12 text-center space-y-3">
-              <div className="text-sm font-bold text-neutral-700">
-                No flight segments have been created yet.
+            <div className="py-10 text-center space-y-2.5">
+              <div className="text-xs font-semibold text-slate-700">
+                No flight segments have been added yet.
               </div>
-              <p className="text-xs text-neutral-500 max-w-md mx-auto">
-                Add a flight segment in <b>Segment Management</b> and it will immediately appear here for search and instant POS booking.
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Add a flight segment in <b>Segment Management</b> and it will appear here for instant search and booking.
               </p>
               <button
                 type="button"
                 onClick={() => navigate('/SegmentManagement')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-black transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 <span>Go to Segment Management</span>
               </button>
             </div>
           ) : matchingSegments.length === 0 ? (
-            <div className="py-10 text-center space-y-3">
-              <div className="text-sm font-bold text-neutral-700">
-                No segments matched your current filter ({fromIata} &rarr; {toIata}
+            <div className="py-8 text-center space-y-2.5">
+              <div className="text-xs font-semibold text-slate-700">
+                No segments matched your filter ({fromIata} &rarr; {toIata}
                 {departDate ? ` on ${departDate}` : ''}).
               </div>
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-black transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition cursor-pointer"
               >
                 <span>Show All {segments.length} Available Segment(s)</span>
               </button>
@@ -821,45 +788,50 @@ export default function FlightPOS() {
                 Number(childrenCount) * (Number(seg.ChildPrice) || 0) +
                 Number(infantsCount) * (Number(seg.InfantPrice) || 0);
 
+              const adtBag = seg.BaggageADT ?? seg.BaggageCountADT ?? '20';
+              const cnnBag = seg.BaggageCNN ?? seg.BaggageCountCNN ?? '20';
+              const infBag = seg.BaggageINF ?? seg.BaggageCountINF ?? '0';
+              const carrierPrefix =
+                seg.OperatingAirline ||
+                seg.MarketingAirline ||
+                (seg.FlightNumber ? seg.FlightNumber.split(/[\s-]+/)[0] : 'FL');
+
               return (
                 <div
                   key={seg.AirGroupSegmentID}
                   onClick={() => handleToggleSelectSegment(seg)}
-                  className={`p-4 sm:p-5 rounded-2xl border-2 transition cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                  className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 ${
                     isSelected
-                      ? 'border-[#EE8200] bg-[#FFF7ED] shadow-md'
-                      : 'border-neutral-200 hover:border-[#EE8200]/60 bg-white'
+                      ? 'border-[#1B3664] bg-slate-50 shadow-xs'
+                      : 'border-slate-200 hover:border-[#1B3664]/60 bg-white'
                   }`}
                 >
                   {/* Airline & Flight Badge */}
-                  <div className="flex items-center gap-3.5 min-w-[180px]">
+                  <div className="flex items-center gap-3 min-w-[180px]">
                     <div
-                      className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-extrabold text-xs shrink-0 ${
-                        isSelected ? 'bg-[#EE8200] text-white' : 'bg-[#0B0A09] text-white'
+                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-semibold text-xs shrink-0 ${
+                        isSelected ? 'bg-[#1B3664] text-white' : 'bg-slate-900 text-white'
                       }`}
                     >
-                      <span>{seg.OperatingAirline || seg.MarketingAirline || 'FL'}</span>
-                      <span className="text-[10px] text-[#EE8200] bg-white px-1 rounded mt-0.5">
-                        {seg.FlightClassCode || 'Y'}
-                      </span>
+                      <span>{carrierPrefix}</span>
                     </div>
                     <div>
-                      <div className="font-mono font-extrabold text-base text-[#0B0A09] flex items-center gap-2">
+                      <div className="font-mono font-semibold text-sm text-slate-900 flex items-center gap-2">
                         <span>{seg.FlightNumber}</span>
-                        <span className="text-[11px] font-sans px-2 py-0.5 rounded-full bg-[#EE8200]/15 text-[#EE8200] font-bold">
-                          {seg.FlightClass || 'Economy'}
+                        <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-slate-100 text-[#1B3664] font-medium">
+                          {seg.FlightClass || 'Economy'} ({seg.FlightClassCode || 'Y'})
                         </span>
                       </div>
-                      <div className="text-xs text-neutral-500 font-medium">
-                        {seg.OperatingAirlineName || 'Scheduled Carrier'} • {seg.AirCraft || 'Jet'}
+                      <div className="text-[11px] text-slate-500">
+                        {seg.OperatingAirlineName || 'Taban Airlines'} • {seg.AirCraft || 'A320'}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-neutral-600">
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-600">
                         <span className="inline-flex items-center gap-1">
-                          <Luggage className="w-3.5 h-3.5 text-[#EE8200]" />
-                          {seg.BaggageCountADT || '1 PC (30 KG)'}
+                          <Luggage className="w-3 h-3 text-[#1B3664]" />
+                          ADT={adtBag}, CNN={cnnBag}, INF={infBag}
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <Utensils className="w-3.5 h-3.5 text-[#EE8200]" />
+                          <Utensils className="w-3 h-3 text-[#1B3664]" />
                           Meal: {seg.Meal || 'Yes'}
                         </span>
                       </div>
@@ -867,52 +839,52 @@ export default function FlightPOS() {
                   </div>
 
                   {/* Route & Schedule Timeline */}
-                  <div className="flex items-center justify-between sm:justify-center gap-4 sm:gap-8 flex-1 border-y lg:border-y-0 border-neutral-100 py-3 lg:py-0">
+                  <div className="flex items-center justify-between sm:justify-center gap-4 sm:gap-7 flex-1 border-y lg:border-y-0 border-slate-100 py-2.5 lg:py-0">
                     <div className="text-left">
-                      <div className="font-display font-extrabold text-2xl text-[#0B0A09]">
+                      <div className="font-display font-bold text-lg text-slate-900">
                         {seg.DepartureIata}
                       </div>
-                      <div className="text-xs font-bold text-neutral-700">{seg.DepartureCity}</div>
-                      <div className="text-[11px] font-mono text-[#EE8200] font-semibold mt-0.5">
+                      <div className="text-xs font-medium text-slate-600">{seg.DepartureCity}</div>
+                      <div className="text-[11px] font-mono text-[#1B3664] mt-0.5">
                         {formatDateTime(seg.DepartureDate)}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-center px-2">
-                      <span className="text-[10px] font-mono font-bold text-neutral-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[#EE8200]" />
+                      <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-[#1B3664]" />
                         {seg.FlightTime || 'Direct'}
                       </span>
-                      <div className="w-24 sm:w-32 h-0.5 bg-[#EE8200] my-1.5 relative">
-                        <Plane className="w-3.5 h-3.5 text-[#EE8200] absolute -top-1.5 right-0" />
+                      <div className="w-20 sm:w-28 h-px bg-slate-300 my-1.5 relative">
+                        <Plane className="w-3 h-3 text-[#1B3664] absolute -top-1.5 right-0" />
                       </div>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">
+                      <span className="text-[10px] font-semibold text-emerald-700">
                         {seatsLeft} Seats Left
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <div className="font-display font-extrabold text-2xl text-[#0B0A09]">
+                      <div className="font-display font-bold text-lg text-slate-900">
                         {seg.ArrivalIata}
                       </div>
-                      <div className="text-xs font-bold text-neutral-700">{seg.ArrivalCity}</div>
-                      <div className="text-[11px] font-mono text-neutral-600 font-semibold mt-0.5">
+                      <div className="text-xs font-medium text-slate-600">{seg.ArrivalCity}</div>
+                      <div className="text-[11px] font-mono text-slate-500 mt-0.5">
                         {formatDateTime(seg.ArrivalDate)}
                       </div>
                     </div>
                   </div>
 
                   {/* Pricing & Select Button */}
-                  <div className="flex sm:flex-row lg:flex-col items-center lg:items-end justify-between gap-2 min-w-[200px]">
+                  <div className="flex sm:flex-row lg:flex-col items-center lg:items-end justify-between gap-2 min-w-[180px]">
                     <div className="text-left lg:text-right">
-                      <div className="text-[11px] text-neutral-500 font-medium">
-                        Adult Fare: <b className="font-mono text-[#0B0A09]">{formatCurrencyPKR(seg.AdultPrice)}</b>
+                      <div className="text-[11px] text-slate-500">
+                        Adult: <b className="font-mono text-slate-800">{formatCurrencyPKR(seg.AdultPrice)}</b>
                       </div>
-                      <div className="font-mono font-extrabold text-lg text-[#EE8200]">
+                      <div className="font-mono font-bold text-base text-[#1B3664]">
                         {formatCurrencyPKR(estTotalForSeg)}
                       </div>
-                      <div className="text-[10px] text-neutral-500">
-                        Total for {adultsCount} ADT, {childrenCount} CNN, {infantsCount} INF
+                      <div className="text-[10px] text-slate-400">
+                        Total ({adultsCount}A, {childrenCount}C, {infantsCount}I)
                       </div>
                     </div>
 
@@ -922,16 +894,16 @@ export default function FlightPOS() {
                         e.stopPropagation();
                         handleToggleSelectSegment(seg);
                       }}
-                      className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
+                      className={`px-3.5 py-2 rounded-lg font-medium text-xs flex items-center gap-1.5 transition cursor-pointer ${
                         isSelected
-                          ? 'bg-[#0B0A09] text-white shadow-sm'
-                          : 'bg-[#EE8200] hover:bg-[#0B0A09] text-white'
+                          ? 'bg-[#0F172A] text-white'
+                          : 'bg-[#1B3664] hover:bg-[#0F172A] text-white'
                       }`}
                     >
                       {isSelected ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-[#EE8200]" />
-                          <span>Selected for Booking</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Selected</span>
                         </>
                       ) : (
                         <span>Select Flight</span>
@@ -945,23 +917,22 @@ export default function FlightPOS() {
         </div>
       </div>
 
-      {/* PASSENGER MANIFEST & INSTANT BOOKING SECTION (Opens as soon as a segment is selected) */}
+      {/* PASSENGER MANIFEST & INSTANT BOOKING SECTION */}
       {selectedSegments.length > 0 && (
         <form
           onSubmit={handleCreateBooking}
-          className="bg-white rounded-2xl border-2 border-[#EE8200] shadow-2xl overflow-hidden"
+          className="bg-white rounded-xl border border-[#1B3664] shadow-lg overflow-hidden"
         >
-          <div className="bg-[#EE8200] text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-[#1D314F] text-white px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <h3 className="font-display font-extrabold text-base uppercase tracking-wider flex items-center gap-2">
-                <Users className="w-5 h-5" />
+              <h3 className="font-display font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
+                <Users className="w-4 h-4" />
                 <span>
-                  Passenger Manifest & Instant Booking ({passengers.length} Passenger
-                  {passengers.length > 1 ? 's' : ''})
+                  Passenger Manifest & Booking ({passengers.length} Pax)
                 </span>
               </h3>
-              <p className="text-xs text-white/90 mt-0.5">
-                Selected Sector(s):{' '}
+              <p className="text-[11px] text-white/80 mt-0.5">
+                Sector(s):{' '}
                 {selectedSegments
                   .map((s) => `${s.FlightNumber} (${s.DepartureIata} → ${s.ArrivalIata} on ${formatShortDate(s.DepartureDate)})`)
                   .join('  +  ')}
@@ -971,15 +942,15 @@ export default function FlightPOS() {
               <button
                 type="button"
                 onClick={() => buildPassengerRows(true)}
-                className="px-4 py-2 rounded-xl bg-[#0B0A09] hover:bg-neutral-800 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-white text-[#1D314F] hover:bg-slate-100 font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#EE8200]" />
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>1-Click Fill NTBA</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedSegmentIds([])}
-                className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition cursor-pointer"
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
                 title="Clear Selected Flight"
               >
                 <X className="w-4 h-4" />
@@ -987,40 +958,39 @@ export default function FlightPOS() {
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
-            {/* Passenger Table */}
-            <div className="overflow-x-auto border border-neutral-200 rounded-xl">
+          <div className="p-5 space-y-5">
+            <div className="overflow-x-auto border border-slate-200 rounded-lg">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#0B0A09] text-white text-[11px] font-bold uppercase">
-                    <th className="py-3 px-2.5">#</th>
-                    <th className="py-3 px-2.5">Pax Type</th>
-                    <th className="py-3 px-2.5">Title</th>
-                    <th className="py-3 px-2.5">First Name *</th>
-                    <th className="py-3 px-2.5">Last Name *</th>
-                    <th className="py-3 px-2.5">Gender</th>
-                    <th className="py-3 px-2.5">Nationality</th>
-                    <th className="py-3 px-2.5">DOB *</th>
-                    <th className="py-3 px-2.5">Passport No *</th>
-                    <th className="py-3 px-2.5">Passport Issue</th>
-                    <th className="py-3 px-2.5">Passport Expiry</th>
-                    <th className="py-3 px-2.5">Scan Upload</th>
+                  <tr className="bg-slate-100 text-slate-700 text-[11px] font-semibold uppercase">
+                    <th className="py-2.5 px-2.5">#</th>
+                    <th className="py-2.5 px-2.5">Type</th>
+                    <th className="py-2.5 px-2.5">Title</th>
+                    <th className="py-2.5 px-2.5">First Name *</th>
+                    <th className="py-2.5 px-2.5">Last Name *</th>
+                    <th className="py-2.5 px-2.5">Gender</th>
+                    <th className="py-2.5 px-2.5">Nationality</th>
+                    <th className="py-2.5 px-2.5">DOB *</th>
+                    <th className="py-2.5 px-2.5">Passport No *</th>
+                    <th className="py-2.5 px-2.5">Issue Date</th>
+                    <th className="py-2.5 px-2.5">Expiry Date</th>
+                    <th className="py-2.5 px-2.5">Passport Scan</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-200">
+                <tbody className="divide-y divide-slate-200">
                   {passengers.map((p, idx) => (
-                    <tr key={p.id || idx} className="hover:bg-[#FFF7ED]/40">
-                      <td className="py-2.5 px-2.5 font-mono font-bold">{idx + 1}</td>
-                      <td className="py-2.5 px-2.5">
-                        <span className="px-2 py-0.5 rounded bg-[#FFF7ED] text-[#EE8200] font-bold">
+                    <tr key={p.id || idx} className="hover:bg-slate-50">
+                      <td className="py-2 px-2.5 font-mono">{idx + 1}</td>
+                      <td className="py-2 px-2.5">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[#1B3664] font-medium">
                           {p.PassengerType}
                         </span>
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <select
                           value={p.Title}
                           onChange={(e) => updatePassengerField(idx, 'Title', e.target.value)}
-                          className="px-2 py-1.5 rounded-lg border border-neutral-300 bg-white font-semibold"
+                          className="px-2 py-1 rounded border border-slate-300 bg-white"
                         >
                           {p.PassengerType === 'Adult' ? (
                             <>
@@ -1036,54 +1006,54 @@ export default function FlightPOS() {
                           )}
                         </select>
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="text"
                           value={p.FirstName}
                           onChange={(e) => updatePassengerField(idx, 'FirstName', e.target.value)}
                           placeholder="FIRST NAME"
-                          className="w-28 px-2.5 py-1.5 rounded-lg border border-neutral-300 uppercase font-semibold"
+                          className="w-28 px-2 py-1 rounded border border-slate-300 uppercase"
                           required
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="text"
                           value={p.LastName}
                           onChange={(e) => updatePassengerField(idx, 'LastName', e.target.value)}
                           placeholder="LAST NAME"
-                          className="w-28 px-2.5 py-1.5 rounded-lg border border-neutral-300 uppercase font-semibold"
+                          className="w-28 px-2 py-1 rounded border border-slate-300 uppercase"
                           required
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <select
                           value={p.Gender}
                           onChange={(e) => updatePassengerField(idx, 'Gender', e.target.value)}
-                          className="px-2 py-1.5 rounded-lg border border-neutral-300 bg-white"
+                          className="px-2 py-1 rounded border border-slate-300 bg-white"
                         >
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
                         </select>
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="text"
                           value={p.Nationality}
                           onChange={(e) => updatePassengerField(idx, 'Nationality', e.target.value)}
-                          className="w-16 px-2 py-1.5 rounded-lg border border-neutral-300 uppercase font-mono font-bold text-center"
+                          className="w-14 px-2 py-1 rounded border border-slate-300 uppercase font-mono text-center"
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="date"
                           value={p.DOB}
                           onChange={(e) => updatePassengerField(idx, 'DOB', e.target.value)}
-                          className="px-2 py-1.5 rounded-lg border border-neutral-300 font-mono"
+                          className="px-2 py-1 rounded border border-slate-300 font-mono"
                           required
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="text"
                           value={p.PassportNumber}
@@ -1091,34 +1061,34 @@ export default function FlightPOS() {
                             updatePassengerField(idx, 'PassportNumber', e.target.value)
                           }
                           placeholder="PASSPORT #"
-                          className="w-28 px-2.5 py-1.5 rounded-lg border border-neutral-300 uppercase font-mono font-bold"
+                          className="w-28 px-2 py-1 rounded border border-slate-300 uppercase font-mono"
                           required
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="date"
                           value={p.PassportIssueDate}
                           onChange={(e) =>
                             updatePassengerField(idx, 'PassportIssueDate', e.target.value)
                           }
-                          className="px-2 py-1.5 rounded-lg border border-neutral-300 font-mono"
+                          className="px-2 py-1 rounded border border-slate-300 font-mono"
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2 px-2.5">
                         <input
                           type="date"
                           value={p.PassportExpiryDate}
                           onChange={(e) =>
                             updatePassengerField(idx, 'PassportExpiryDate', e.target.value)
                           }
-                          className="px-2 py-1.5 rounded-lg border border-neutral-300 font-mono"
+                          className="px-2 py-1 rounded border border-slate-300 font-mono"
                         />
                       </td>
-                      <td className="py-2.5 px-2.5">
-                        <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FFF7ED] hover:bg-[#EE8200] text-[#EE8200] hover:text-white font-semibold cursor-pointer transition">
-                          <Upload className="w-3.5 h-3.5" />
-                          <span className="truncate max-w-[75px]">
+                      <td className="py-2 px-2.5">
+                        <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 hover:bg-[#1B3664] text-[#1B3664] hover:text-white font-medium cursor-pointer transition">
+                          <Upload className="w-3 h-3" />
+                          <span className="truncate max-w-[70px]">
                             {p.PassportImageName || 'Upload'}
                           </span>
                           <input
@@ -1135,11 +1105,10 @@ export default function FlightPOS() {
               </table>
             </div>
 
-            {/* Contact Info & Live Fare Summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                 <div>
-                  <label className="block font-bold uppercase tracking-wider mb-1.5">
+                  <label className="block font-medium text-slate-700 mb-1">
                     Contact Email Address *
                   </label>
                   <input
@@ -1147,12 +1116,12 @@ export default function FlightPOS() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="bookings@bookly.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-[#FAFAFA]"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block font-bold uppercase tracking-wider mb-1.5">
+                  <label className="block font-medium text-slate-700 mb-1">
                     Mobile / WhatsApp Number *
                   </label>
                   <input
@@ -1160,61 +1129,60 @@ export default function FlightPOS() {
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                     placeholder="0300-0000000"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-[#FAFAFA]"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50"
                     required
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block font-bold uppercase tracking-wider mb-1.5">
-                    Booking Remarks / Special Instructions
+                  <label className="block font-medium text-slate-700 mb-1">
+                    Booking Remarks
                   </label>
                   <textarea
                     rows={2}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Optional notes, seat preference, or meal request..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 bg-[#FAFAFA]"
+                    placeholder="Optional notes..."
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50"
                   />
                 </div>
               </div>
 
-              {/* Fare Calculation Box */}
-              <div className="lg:col-span-5 bg-[#0B0A09] text-white rounded-2xl p-5 space-y-3">
-                <div className="flex items-center justify-between border-b border-white/15 pb-2.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#EE8200] flex items-center gap-1.5">
-                    <Calculator className="w-4 h-4" />
-                    Fare Calculation Summary
+              <div className="lg:col-span-5 bg-[#0F172A] text-white rounded-xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
+                    <Calculator className="w-3.5 h-3.5 text-slate-300" />
+                    Fare Calculation
                   </span>
                   <span className="text-[11px] font-mono text-white/70">
                     {selectedSegments.length} Sector(s)
                   </span>
                 </div>
 
-                <div className="space-y-1.5 text-xs font-mono">
+                <div className="space-y-1 text-xs font-mono">
                   <div className="flex justify-between">
-                    <span className="text-white/75">
+                    <span className="text-white/70">
                       Adults ({fareBreakdown.adt} &times; {formatCurrencyPKR(fareBreakdown.adtUnit)})
                     </span>
-                    <span className="font-bold">{formatCurrencyPKR(fareBreakdown.adtTotal)}</span>
+                    <span>{formatCurrencyPKR(fareBreakdown.adtTotal)}</span>
                   </div>
                   {fareBreakdown.cnn > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-white/75">
+                      <span className="text-white/70">
                         Children ({fareBreakdown.cnn} &times; {formatCurrencyPKR(fareBreakdown.cnnUnit)})
                       </span>
-                      <span className="font-bold">{formatCurrencyPKR(fareBreakdown.cnnTotal)}</span>
+                      <span>{formatCurrencyPKR(fareBreakdown.cnnTotal)}</span>
                     </div>
                   )}
                   {fareBreakdown.inf > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-white/75">
+                      <span className="text-white/70">
                         Infants ({fareBreakdown.inf} &times; {formatCurrencyPKR(fareBreakdown.infUnit)})
                       </span>
-                      <span className="font-bold">{formatCurrencyPKR(fareBreakdown.infTotal)}</span>
+                      <span>{formatCurrencyPKR(fareBreakdown.infTotal)}</span>
                     </div>
                   )}
-                  <div className="border-t border-white/15 pt-2.5 flex justify-between text-base font-extrabold text-[#EE8200]">
-                    <span>Total Booking Amount</span>
+                  <div className="border-t border-white/15 pt-2 flex justify-between text-sm font-semibold text-white">
+                    <span>Total Amount</span>
                     <span>{formatCurrencyPKR(fareBreakdown.grandTotal)}</span>
                   </div>
                 </div>
@@ -1222,7 +1190,7 @@ export default function FlightPOS() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3.5 rounded-xl bg-[#EE8200] hover:bg-white hover:text-[#0B0A09] text-white font-display font-extrabold text-sm transition cursor-pointer shadow-lg mt-2"
+                  className="w-full py-2.5 rounded-lg bg-[#1B3664] hover:bg-white hover:text-[#0F172A] text-white font-semibold text-xs transition cursor-pointer mt-1"
                 >
                   {submitting ? 'Creating Booking...' : 'Confirm & Create PNR Booking'}
                 </button>

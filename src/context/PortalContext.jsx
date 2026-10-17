@@ -426,7 +426,7 @@ export function PortalProvider({ children }) {
     const firstSeg = selectedSegments[0];
     const lastSeg = selectedSegments[selectedSegments.length - 1];
     const airlineCode =
-      firstSeg?.OperatingAirline || firstSeg?.MarketingAirline || flight?.Airline || 'BK';
+      firstSeg?.OperatingAirline || firstSeg?.MarketingAirline || flight?.Airline || 'HH';
     const pnr = generatePNR(airlineCode);
     const bookingId = `BK-${Math.floor(10000 + Math.random() * 90000)}`;
 
@@ -477,8 +477,7 @@ export function PortalProvider({ children }) {
       ValidatingCarrierName:
         firstSeg?.OperatingAirlineName ||
         flight?.ValidatingCarrierName ||
-        airlineCode ||
-        'Airline',
+        'Taban Airlines',
       ApprovalStatus: 'Pending',
       AdultCount: adults,
       ChildCount: children,
@@ -539,7 +538,7 @@ export function PortalProvider({ children }) {
   };
 
   const approveBooking = async (id) => {
-    const loginId = user?.LoginID || 'Atta';
+    const loginId = user?.LoginID || 'test';
     updateLocalDb((draft) => {
       const booking = draft.bookings.find((b) => b.AirGroupBookingID === id);
       if (booking) {
@@ -553,7 +552,7 @@ export function PortalProvider({ children }) {
   };
 
   const rejectBooking = async (id) => {
-    const loginId = user?.LoginID || 'Atta';
+    const loginId = user?.LoginID || 'test';
     updateLocalDb((draft) => {
       const booking = draft.bookings.find((b) => b.AirGroupBookingID === id);
       if (booking) {
@@ -567,20 +566,21 @@ export function PortalProvider({ children }) {
   };
 
   const issueTicket = async (id) => {
-    const loginId = user?.LoginID || 'Atta';
+    const loginId = user?.LoginID || 'test';
     updateLocalDb((draft) => {
       const booking = draft.bookings.find((b) => b.AirGroupBookingID === id);
       if (booking) {
         booking.ApprovalStatus = 'Ticket Issued';
         if (!booking.ApprovalLoginID) booking.ApprovalLoginID = loginId;
         booking.ApprovalDateTime = formatNow();
-        const baseTicket = Math.floor(4800000000 + Math.random() * 5000000000);
+        booking.BookingTimeLimit = '';
+        const baseSeq = Math.floor(1000 + Math.random() * 8999);
         booking.Passengers = (booking.Passengers || []).map((pax, i) => ({
           ...pax,
           TicketNumber:
             pax.TicketNumber && pax.TicketNumber.trim()
               ? pax.TicketNumber
-              : `214-${baseTicket + i}`
+              : `740000000${baseSeq + i}`
         }));
       }
       return draft;
@@ -592,7 +592,7 @@ export function PortalProvider({ children }) {
     if (!String(reason).trim()) {
       throw new Error('Void Remarks are required to void a booking.');
     }
-    const loginId = user?.LoginID || 'Atta';
+    const loginId = user?.LoginID || 'test';
     updateLocalDb((draft) => {
       const booking = draft.bookings.find((b) => b.AirGroupBookingID === id);
       if (booking) {
@@ -649,9 +649,9 @@ export function PortalProvider({ children }) {
       Title: payload.Title || 'Group Flight',
       Category: payload.Category || 'Tourism',
       TripType: payload.TripType || 'Round',
-      Airline: payload.Airline || payload.ValidatingCarrier || 'PK',
-      ValidatingCarrier: payload.ValidatingCarrier || 'PK',
-      ValidatingCarrierName: payload.ValidatingCarrierName || payload.ValidatingCarrier || 'PK',
+      Airline: payload.Airline || payload.ValidatingCarrier || 'HH',
+      ValidatingCarrier: payload.ValidatingCarrier || 'HH',
+      ValidatingCarrierName: payload.ValidatingCarrierName || payload.ValidatingCarrier || 'Taban Airlines',
       SupplierName: payload.SupplierName || 'Direct Airline Inventory',
       isDomestic: Boolean(payload.isDomestic),
       isSOTO: Boolean(payload.isSOTO),

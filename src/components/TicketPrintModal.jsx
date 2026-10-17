@@ -1,6 +1,37 @@
 import React, { useRef } from 'react';
-import { Printer, X, Plane } from 'lucide-react';
-import { formatDateTime } from '../utils/exporters';
+import { Printer, X } from 'lucide-react';
+
+function extractTime(dtStr) {
+  if (!dtStr) return '—';
+  const d = new Date(dtStr);
+  if (isNaN(d.getTime())) {
+    const parts = String(dtStr).split('T');
+    return parts[1] ? parts[1].slice(0, 5) : dtStr;
+  }
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function extractShortDate(dtStr) {
+  if (!dtStr) return '—';
+  const d = new Date(dtStr);
+  if (isNaN(d.getTime())) return dtStr;
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit'
+  });
+}
+
+function formatDobShort(dtStr) {
+  if (!dtStr) return '—';
+  const d = new Date(dtStr);
+  if (isNaN(d.getTime())) return dtStr;
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit'
+  });
+}
 
 export default function TicketPrintModal({ booking, onClose }) {
   const printRef = useRef(null);
@@ -22,15 +53,15 @@ export default function TicketPrintModal({ booking, onClose }) {
       <html>
       <head>
         <meta charset="utf-8" />
-        <title>FLIGHT BOOKING — ${booking.PNR}</title>
+        <title>TABAN AIRLINES BOOKING — ${booking.PNR}</title>
         <style>
           * { box-sizing: border-box; }
           body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
             background: #FFFFFF;
-            color: #0B0A09;
+            color: #334155;
             margin: 0;
-            padding: 20px;
+            padding: 18px;
           }
           @media print {
             body { padding: 0; }
@@ -44,7 +75,7 @@ export default function TicketPrintModal({ booking, onClose }) {
           window.onload = function() {
             setTimeout(function() {
               window.print();
-            }, 250);
+            }, 300);
           };
         </script>
       </body>
@@ -55,36 +86,39 @@ export default function TicketPrintModal({ booking, onClose }) {
 
   const segments = booking.Segments || [];
   const passengers = booking.Passengers || [];
+  const logoUrl = `${window.location.origin}/images/Taban%20Air%20Gradient%20Airline%20Logo.png`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
         {/* Top Action Bar */}
-        <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="bg-[#1D314F] text-white px-5 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
-              <Plane className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/images/Taban Air Gradient Airline Logo.png"
+              alt="Taban Air"
+              className="w-8 h-8 rounded bg-white p-0.5 object-contain"
+            />
             <div>
-              <h3 className="font-bold text-base tracking-wide">
-                E-Ticket & Booking Receipt Preview — {booking.PNR}
+              <h3 className="font-semibold text-sm tracking-wide">
+                E-Ticket & Booking Receipt — {booking.PNR}
               </h3>
-              <p className="text-xs text-white/75">
+              <p className="text-[11px] text-white/75">
                 Booking ID: {booking.AirGroupBookingID} • Status: {booking.ApprovalStatus}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#EE8200] hover:bg-orange-50 font-semibold text-xs transition shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white text-[#1D314F] hover:bg-slate-100 font-semibold text-xs transition shadow-xs cursor-pointer"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="w-3.5 h-3.5" />
               Print / Save PDF
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
               title="Close"
             >
               <X className="w-4 h-4" />
@@ -92,345 +126,359 @@ export default function TicketPrintModal({ booking, onClose }) {
           </div>
         </div>
 
-        {/* Printable Document Body */}
-        <div className="p-6 overflow-y-auto bg-[#FAFAFA] flex justify-center">
+        {/* Printable Document Body (Exact PDF Match) */}
+        <div className="p-5 overflow-y-auto bg-slate-100 flex justify-center">
           <div
             ref={printRef}
             style={{
               width: '780px',
-              border: '1px solid #d6d0c8',
-              padding: '24px',
+              border: '1px solid #e2e8f0',
+              borderRadius: '4px',
+              padding: '22px',
               backgroundColor: '#ffffff',
-              color: '#0B0A09',
-              fontFamily: "'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif"
+              color: '#334155',
+              fontFamily: "'Segoe UI', Roboto, Arial, sans-serif"
             }}
           >
-            {/* HEADER */}
+            {/* TOP NAVY HEADER BAR */}
             <div
               style={{
-                background: '#EE8200',
-                padding: '12px 16px',
+                background: '#1D314F',
+                padding: '11px 16px',
                 color: '#ffffff',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderRadius: '6px'
+                fontSize: '15px',
+                fontWeight: 700,
+                letterSpacing: '0.2px'
               }}
             >
-              <span>FLIGHT BOOKING CONFIRMATION {statusSubtitle}</span>
-              <span style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '1px' }}>
-                PNR: {booking.PNR}
-              </span>
+              TABAN AIRLINES BOOKING {statusSubtitle}
             </div>
 
-            {/* BRAND & AIRLINE PNR BAR */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '14px',
-                marginBottom: '14px',
-                padding: '0 8px'
-              }}
-            >
-              <div>
-                <div style={{ fontSize: '20px', fontWeight: 800, color: '#EE8200', letterSpacing: '-0.5px' }}>
-                  {booking.SubCompanyName || 'BOOKLY'}
-                </div>
-                <div style={{ fontSize: '12px', color: '#555', fontWeight: 600 }}>
-                  {booking.ValidatingCarrierName || 'Bookly Group & Charter Ticketing'}
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', fontWeight: 700 }}>
-                  Airline Reference (PNR_AIRLINE)
-                </div>
-                <div
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 800,
-                    color: '#0B0A09',
-                    background: '#FFF7ED',
-                    border: '1px solid #EE8200',
-                    padding: '4px 12px',
-                    borderRadius: '6px',
-                    marginTop: '3px',
-                    display: 'inline-block'
-                  }}
-                >
-                  {booking.PNR_AIRLINE || booking.PNR}
-                </div>
+            {/* LOGO BOX ON LEFT (No PNR_AIRLINE on top right) */}
+            <div style={{ marginTop: '14px', marginBottom: '14px' }}>
+              <div
+                style={{
+                  display: 'inline-block',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  backgroundColor: '#ffffff'
+                }}
+              >
+                <img
+                  src={logoUrl}
+                  alt="Taban Air"
+                  style={{ width: '88px', height: '88px', objectFit: 'contain', display: 'block' }}
+                />
               </div>
             </div>
 
             {/* SUMMARY METADATA BOX */}
             <div
               style={{
-                padding: '14px 24px',
-                fontSize: '13px',
-                border: '1px solid #d6d0c8',
-                borderRadius: '8px',
-                backgroundColor: '#FAFAFA',
-                marginBottom: '16px'
+                padding: '16px 28px',
+                fontSize: '12.5px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                backgroundColor: '#ffffff',
+                marginBottom: '18px',
+                color: '#475569'
               }}
             >
-              <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
-                <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>BOOKING PNR</span>
-                <span>{booking.PNR}</span>
+              <div style={{ display: 'flex', marginBottom: '8px' }}>
+                <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>BOOKING PNR</span>
+                <span style={{ fontWeight: 600, color: '#334155' }}>{booking.PNR}</span>
               </div>
-              <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
-                <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>ISSUING AIRLINE</span>
-                <span>{booking.ValidatingCarrierName || '—'}</span>
+
+              <div style={{ display: 'flex', marginBottom: '8px' }}>
+                <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>ISSUE DATE</span>
+                <span style={{ fontWeight: 600, color: '#334155' }}>
+                  {booking.ApprovalDateTime || booking.TimeStamp}
+                </span>
               </div>
-              <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
-                <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>BOOKING TIMELIMIT</span>
-                <span>{booking.BookingTimeLimit || '—'}</span>
+
+              <div style={{ display: 'flex', marginBottom: !isIssued && booking.BookingTimeLimit && booking.BookingTimeLimit !== '—' ? '8px' : '8px' }}>
+                <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>ISSUING AIRLINE</span>
+                <span style={{ fontWeight: 600, color: '#334155' }}>
+                  {booking.ValidatingCarrierName || 'Taban Airlines'}
+                </span>
               </div>
-              <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
-                <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>ISSUE DATE</span>
-                <span>{booking.ApprovalDateTime || booking.TimeStamp}</span>
-              </div>
-              <div style={{ fontWeight: 'bold' }}>
-                <span style={{ display: 'inline-block', width: '260px', color: '#EE8200' }}>
+
+              {/* Show BOOKING TIMELIMIT ONLY when ticket is NOT issued yet */}
+              {!isIssued && booking.BookingTimeLimit && booking.BookingTimeLimit !== '—' && (
+                <div style={{ display: 'flex', marginBottom: '8px' }}>
+                  <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>BOOKING TIMELIMIT</span>
+                  <span style={{ fontWeight: 600, color: '#334155' }}>{booking.BookingTimeLimit}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex' }}>
+                <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>
                   BOOKING ID / AGENT ID
                 </span>
-                <span>
-                  {booking.AirGroupBookingID} / {booking.SubCompanyID} ({booking.SubCompanyName})
+                <span style={{ fontWeight: 600, color: '#334155' }}>
+                  {booking.AirGroupBookingID} / {booking.SubCompanyID}
                 </span>
               </div>
             </div>
 
-            {/* FLIGHT DETAILS */}
+            {/* FLIGHT INFORMATION */}
             <div
               style={{
-                border: '1px solid #d6d0c8',
-                borderRadius: '8px',
-                padding: '14px',
-                marginBottom: '16px'
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '16px',
+                marginBottom: '18px'
               }}
             >
-              <h4
+              <div
                 style={{
-                  fontWeight: 'bold',
-                  borderBottom: '2px solid #EE8200',
-                  paddingBottom: '6px',
-                  marginTop: 0,
-                  marginBottom: '10px',
-                  color: '#EE8200',
+                  fontWeight: 700,
+                  borderBottom: '1px solid #e2e8f0',
+                  paddingBottom: '8px',
+                  marginBottom: '12px',
+                  color: '#1e293b',
                   fontSize: '15px'
                 }}
               >
                 Flight Information
-              </h4>
+              </div>
 
               {segments.length === 0 ? (
-                <div style={{ fontSize: '13px', color: '#666', padding: '8px 0' }}>
-                  {booking.FlightTitle || 'Group Flight Sector'}
+                <div style={{ fontSize: '12.5px', color: '#64748b', padding: '6px 0' }}>
+                  {booking.FlightTitle || 'Flight Sector'}
                 </div>
               ) : (
-                segments.map((seg, idx) => (
-                  <div key={seg.AirGroupSegmentID || idx} style={{ marginBottom: idx < segments.length - 1 ? '14px' : 0 }}>
+                segments.map((seg, idx) => {
+                  const adtBag =
+                    seg.BaggageADT !== undefined && seg.BaggageADT !== ''
+                      ? seg.BaggageADT
+                      : seg.BaggageCountADT || '20';
+                  const cnnBag =
+                    seg.BaggageCNN !== undefined && seg.BaggageCNN !== ''
+                      ? seg.BaggageCNN
+                      : seg.BaggageCountCNN || '20';
+                  const infBag =
+                    seg.BaggageINF !== undefined && seg.BaggageINF !== ''
+                      ? seg.BaggageINF
+                      : seg.BaggageCountINF || '0';
+
+                  return (
                     <div
-                      style={{
-                        fontWeight: 'bold',
-                        fontSize: '14px',
-                        marginBottom: '6px',
-                        background: '#FFF7ED',
-                        color: '#EE8200',
-                        padding: '8px 12px',
-                        borderLeft: '4px solid #EE8200'
-                      }}
+                      key={seg.AirGroupSegmentID || idx}
+                      style={{ marginBottom: idx < segments.length - 1 ? '16px' : 0 }}
                     >
-                      Flight {idx + 1}: {seg.DepartureCity} ({seg.DepartureIata}) &rarr; {seg.ArrivalCity} ({seg.ArrivalIata})
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          fontSize: '13.5px',
+                          marginBottom: '12px',
+                          background: '#f1f3f5',
+                          color: '#334155',
+                          padding: '9px 14px',
+                          borderRadius: '4px'
+                        }}
+                      >
+                        Flight {idx + 1} - {seg.DepartureCity} ({seg.DepartureIata}) to {seg.ArrivalCity} ({seg.ArrivalIata})
+                      </div>
+
+                      <table style={{ width: '100%', fontSize: '12.5px', borderCollapse: 'collapse', color: '#475569' }}>
+                        <thead>
+                          <tr>
+                            <td style={{ width: '135px', padding: '4px 6px', fontWeight: 600, color: '#64748b' }}>
+                              Carrier Flight No
+                            </td>
+                            <td style={{ width: '210px', padding: '4px 6px', fontWeight: 600, color: '#64748b' }}>
+                              Depart
+                            </td>
+                            <td style={{ width: '215px', padding: '4px 6px', fontWeight: 600, color: '#64748b' }}>
+                              Arrive
+                            </td>
+                            <td style={{ padding: '4px 6px' }}></td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style={{ padding: '8px 6px', verticalAlign: 'middle', fontWeight: 500, color: '#334155' }}>
+                              {seg.FlightNumber}
+                            </td>
+                            <td style={{ padding: '8px 6px', verticalAlign: 'top', lineHeight: '1.55' }}>
+                              <div style={{ fontWeight: 700, color: '#334155' }}>
+                                {extractTime(seg.DepartureDate)}
+                              </div>
+                              <div>
+                                {seg.DepartureCity}, {seg.DepartureIata}
+                              </div>
+                              <div>{seg.DepartureAirport}</div>
+                              <div>{extractShortDate(seg.DepartureDate)}</div>
+                            </td>
+                            <td style={{ padding: '8px 6px', verticalAlign: 'top', lineHeight: '1.55' }}>
+                              <div style={{ fontWeight: 700, color: '#334155' }}>
+                                {extractTime(seg.ArrivalDate)}
+                              </div>
+                              <div>
+                                {seg.ArrivalCity}, {seg.ArrivalIata}
+                              </div>
+                              <div>{seg.ArrivalAirport}</div>
+                              <div>{extractShortDate(seg.ArrivalDate)}</div>
+                            </td>
+                            <td style={{ padding: '8px 6px', verticalAlign: 'top', lineHeight: '1.55' }}>
+                              <div>
+                                <b>Cabin:</b> {seg.FlightClass || 'Economy'}, {seg.FlightClassCode || 'Y'}
+                              </div>
+                              <div>
+                                <b>Baggage:</b>
+                              </div>
+                              <div>Adult={adtBag},</div>
+                              <div>
+                                Child={cnnBag}, Infant={infBag}
+                              </div>
+                              <div>
+                                <b>Aircraft:</b> {seg.AirCraft || 'A320'}
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
-                    <table style={{ width: '100%', fontSize: '12.5px', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid #e5e0d8', color: '#EE8200' }}>
-                          <td style={{ width: '130px', padding: '6px' }}>
-                            <b>Carrier Flight No</b>
-                          </td>
-                          <td style={{ width: '210px', padding: '6px' }}>
-                            <b>Depart</b>
-                          </td>
-                          <td style={{ width: '210px', padding: '6px' }}>
-                            <b>Arrive</b>
-                          </td>
-                          <td style={{ padding: '6px' }}>
-                            <b>Cabin & Baggage</b>
-                          </td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td style={{ padding: '8px 6px', verticalAlign: 'top', fontWeight: 'bold' }}>
-                            <div>{seg.MarketingAirline || ''}</div>
-                            <div style={{ fontSize: '14px', color: '#EE8200' }}>{seg.FlightNumber}</div>
-                            <div style={{ fontSize: '11px', color: '#666' }}>{seg.OperatingAirlineName}</div>
-                          </td>
-                          <td style={{ padding: '8px 6px', verticalAlign: 'top' }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '13px' }}>
-                              {seg.DepartureCity} ({seg.DepartureIata})
-                            </div>
-                            <div style={{ color: '#444' }}>{seg.DepartureAirport}</div>
-                            <div style={{ fontWeight: 'bold', marginTop: '3px', color: '#EE8200' }}>
-                              {formatDateTime(seg.DepartureDate)}
-                            </div>
-                          </td>
-                          <td style={{ padding: '8px 6px', verticalAlign: 'top' }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '13px' }}>
-                              {seg.ArrivalCity} ({seg.ArrivalIata})
-                            </div>
-                            <div style={{ color: '#444' }}>{seg.ArrivalAirport}</div>
-                            <div style={{ fontWeight: 'bold', marginTop: '3px', color: '#EE8200' }}>
-                              {formatDateTime(seg.ArrivalDate)}
-                            </div>
-                          </td>
-                          <td style={{ padding: '8px 6px', verticalAlign: 'top', lineHeight: 1.5 }}>
-                            <div>
-                              <b>Cabin:</b> {seg.FlightClass} ({seg.FlightClassCode})
-                            </div>
-                            <div>
-                              <b>Baggage:</b> Adult={seg.BaggageCountADT || '30 KG'}, Child=
-                              {seg.BaggageCountCNN || '20 KG'}, Infant={seg.BaggageCountINF || '10 KG'}
-                            </div>
-                            <div>
-                              <b>Aircraft:</b> {seg.AirCraft || '—'}
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
-            {/* PASSENGER SECTION */}
+            {/* PASSENGER INFORMATION */}
             <div
               style={{
-                border: '1px solid #d6d0c8',
-                borderRadius: '8px',
-                padding: '14px',
-                marginBottom: '16px'
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '16px',
+                marginBottom: '18px'
               }}
             >
-              <h4
+              <div
                 style={{
-                  fontWeight: 'bold',
-                  borderBottom: '2px solid #EE8200',
-                  paddingBottom: '6px',
-                  marginTop: 0,
-                  marginBottom: '10px',
-                  color: '#EE8200',
+                  fontWeight: 700,
+                  borderBottom: '1px solid #e2e8f0',
+                  paddingBottom: '8px',
+                  marginBottom: '12px',
+                  color: '#1e293b',
                   fontSize: '15px'
                 }}
               >
-                Passenger Information ({passengers.length})
-              </h4>
-              <table
-                style={{
-                  width: '100%',
-                  marginTop: '5px',
-                  borderCollapse: 'collapse',
-                  fontSize: '12.5px',
-                  tableLayout: 'fixed'
-                }}
-              >
+                Passenger Information
+              </div>
+
+              <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', color: '#475569' }}>
                 <thead>
-                  <tr style={{ background: '#EE8200', textAlign: 'left', color: '#ffffff' }}>
-                    <th style={{ padding: '7px 6px', width: '8%' }}>Title</th>
-                    <th style={{ padding: '7px 6px', width: '16%' }}>First Name</th>
-                    <th style={{ padding: '7px 6px', width: '16%' }}>Last Name</th>
-                    <th style={{ padding: '7px 6px', width: '9%' }}>Type</th>
-                    <th style={{ padding: '7px 6px', width: '12%' }}>DOB</th>
-                    <th style={{ padding: '7px 6px', width: '10%' }}>Nat.</th>
-                    <th style={{ padding: '7px 6px', width: '13%' }}>Passport #</th>
-                    <th style={{ padding: '7px 6px', width: '16%' }}>Ticket #</th>
+                  <tr style={{ background: '#f1f3f5', color: '#334155', fontWeight: 700 }}>
+                    <td style={{ padding: '8px 8px' }}>Title</td>
+                    <td style={{ padding: '8px 8px' }}>First Name</td>
+                    <td style={{ padding: '8px 8px' }}>Last Name</td>
+                    <td style={{ padding: '8px 8px' }}>Type</td>
+                    <td style={{ padding: '8px 8px' }}>DOB</td>
+                    <td style={{ padding: '8px 8px' }}>Nationality</td>
+                    <td style={{ padding: '8px 8px' }}>Passport #</td>
+                    <td style={{ padding: '8px 8px' }}>Ticket #</td>
                   </tr>
                 </thead>
                 <tbody>
-                  {passengers.map((pax, i) => (
+                  {passengers.map((p, idx) => (
                     <tr
-                      key={pax.PassengerID || i}
-                      style={{
-                        borderBottom: '1px solid #e5e0d8',
-                        backgroundColor: i % 2 === 1 ? '#FAFAFA' : '#ffffff'
-                      }}
+                      key={p.PassengerID || idx}
+                      style={{ borderBottom: idx < passengers.length - 1 ? '1px solid #f1f5f9' : 'none' }}
                     >
-                      <td style={{ padding: '7px 6px', fontWeight: 600 }}>{pax.Title}</td>
-                      <td style={{ padding: '7px 6px', fontWeight: 700 }}>{pax.FirstName}</td>
-                      <td style={{ padding: '7px 6px', fontWeight: 700 }}>{pax.LastName}</td>
-                      <td style={{ padding: '7px 6px' }}>{pax.PassengerType}</td>
-                      <td style={{ padding: '7px 6px' }}>{pax.DOB}</td>
-                      <td style={{ padding: '7px 6px' }}>{pax.Nationality}</td>
-                      <td style={{ padding: '7px 6px', fontFamily: 'monospace' }}>{pax.PassportNumber}</td>
-                      <td style={{ padding: '7px 6px', fontFamily: 'monospace', fontWeight: 700, color: '#EE8200' }}>
-                        {pax.TicketNumber || 'PENDING'}
-                      </td>
+                      <td style={{ padding: '10px 8px' }}>{p.Title}</td>
+                      <td style={{ padding: '10px 8px' }}>{p.FirstName}</td>
+                      <td style={{ padding: '10px 8px' }}>{p.LastName}</td>
+                      <td style={{ padding: '10px 8px' }}>{p.PassengerType}</td>
+                      <td style={{ padding: '10px 8px' }}>{formatDobShort(p.DOB)}</td>
+                      <td style={{ padding: '10px 8px' }}>{p.Nationality}</td>
+                      <td style={{ padding: '10px 8px' }}>{p.PassportNumber}</td>
+                      <td style={{ padding: '10px 8px' }}>{p.TicketNumber || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* DISCLAIMER SECTION */}
-            <div style={{ border: '1px solid #d6d0c8', borderRadius: '8px', padding: '14px' }}>
-              <h4
+            {/* DISCLAIMER */}
+            <div
+              style={{
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '16px'
+              }}
+            >
+              <div
                 style={{
-                  fontWeight: 'bold',
-                  borderBottom: '2px solid #EE8200',
-                  paddingBottom: '6px',
-                  marginTop: 0,
-                  marginBottom: '8px',
-                  color: '#EE8200',
+                  fontWeight: 700,
+                  borderBottom: '1px solid #e2e8f0',
+                  paddingBottom: '8px',
+                  marginBottom: '12px',
+                  color: '#1e293b',
                   fontSize: '15px'
                 }}
               >
-                Disclaimer & Conditions of Carriage
-              </h4>
-              <div style={{ padding: '6px', fontSize: '11.5px', lineHeight: '1.55', color: '#222' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#0B0A09' }}>
+                Disclaimer
+              </div>
+
+              <div style={{ fontSize: '12px', lineHeight: '1.7', color: '#475569', padding: '0 6px' }}>
+                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                  داشتن ویزا ،معتبر واچر هتل و بلیط برگشت برای مسافران ایرانی هنگام ورود به پاکستان الزامی است
+                </div>
+
+                <div style={{ fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
                   Ticket Terms and Conditions
                 </div>
-                <ul style={{ paddingLeft: '18px', margin: 0 }}>
-                  <li>Passengers must check in at least 3 hours prior to scheduled departure.</li>
-                  <li>The Airline accepts no liability for valuables in checked or unchecked baggage.</li>
-                  <li>
-                    Flight schedules and times are not guaranteed. In case of delay, cancellation, or denied boarding,
-                    the Airline&apos;s liability is limited to refund of the unused portion of the ticket, in accordance
-                    with fare rules.
-                  </li>
-                  <li>Tickets are non-transferable and non-endorsable.</li>
-                  <li>Excess baggage charges apply. Prohibited or dangerous items must not be carried.</li>
-                  <li>All tickets are non refundable.</li>
-                  <li>
-                    Refunds, if permitted, shall be processed at the place of ticket issuance upon presentation of the
-                    original ticket and required Airline endorsement.
-                  </li>
-                  <li>
+
+                <div style={{ marginBottom: '6px', paddingLeft: '14px' }}>
+                  <div>
+                    اگر از خروج یا ورود مسافران ایرانی توسط پلیس مهاجرت و گذرنامه جلوگیری شود تمام هزینه‌های مربوطه از جمله حمل و نقل برگشت و ،اقامتبر عهده مسافر خواهد بود شرکت هواپیمایی تابان هیچ مسئولیتی در این زمینه ندارد
+                  </div>
+                  <div>Passengers must check in at least 3 hours prior to scheduled departure.</div>
+                  <div>The Airline accepts no liability for valuables in checked or unchecked baggage.</div>
+                  <div>
+                    Flight schedules and times are not guaranteed. In case of delay, cancellation, or denied boarding, the Airline&apos;s liability is limited to refund of the unused portion of the ticket, in accordance with fare rules.
+                  </div>
+                  <div>Tickets are non-transferable and non-endorsable.</div>
+                  <div>Excess baggage charges apply. Prohibited or dangerous items must not be carried.</div>
+                  <div>All tickets are non refundable.</div>
+                  <div>
+                    Refunds, if permitted, shall be processed at the place of ticket issuance upon presentation of the original ticket and required Airline endorsement.
+                  </div>
+                  <div>
                     All known taxes are collected at booking; additional taxes may be payable at departure.
-                  </li>
-                  <li>Valid passport and visa must be presented at check-in and boarding.</li>
-                  <li>No refund shall be due in cases of no-show or offload.</li>
-                  <li>
-                    Purchase of this ticket constitutes acceptance of the Airline&apos;s Conditions of Carriage and
-                    liability limitations.
-                  </li>
-                </ul>
+                  </div>
+                  <div>Valid passport and visa must be presented at check-in and boarding.</div>
+                  <div>
+                    In cases of Force Majeure (including war, security or operational disruptions, or flight cancellation), Taban Airline may, at its sole discretion, re-accommodate the passenger or issue a travel voucher for unused sectors.
+                  </div>
+                  <div>
+                    If re-accommodation involves a higher fare, the passenger shall pay the difference; no refund shall apply for lower fare alternatives.
+                  </div>
+                  <div>No refund shall be due in cases of no-show or offload.</div>
+                  <div>
+                    Passengers must carry a minimum of USD 350 and present it upon request at check-in.
+                  </div>
+                  <div>
+                    Purchase of this ticket constitutes acceptance of the Airline&apos;s Conditions of Carriage and liability limitations.
+                  </div>
+                  <div>
+                    In case of force majeure, war, flight cancellation, or any changes initiated by Taban Airline or CAA Iran, tickets will be non-refundable.
+                  </div>
+                  <div>
+                    Each passenger is required to submit four (4) copies of their visa at the boarding counter.
+                  </div>
+                </div>
+
                 <div
                   style={{
-                    marginTop: '10px',
-                    fontWeight: 'bold',
-                    color: '#EE8200',
-                    borderTop: '1px dashed #ccc',
-                    paddingTop: '8px'
+                    marginTop: '12px',
+                    fontWeight: 700,
+                    color: '#475569'
                   }}
                 >
-                  I have read all the terms and conditions above mentioned and accepted them before purchasing the
-                  tickets.
+                  I have read all the terms and conditions above mentioned and accepted them before purchasing the tickets.
                 </div>
               </div>
             </div>

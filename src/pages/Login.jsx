@@ -5,7 +5,6 @@ import {
   User,
   Eye,
   EyeOff,
-  Plane,
   QrCode,
   KeyRound,
   ArrowRight
@@ -22,7 +21,6 @@ export default function Login() {
   const [require2FA, setRequire2FA] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // 2FA Step state
   const [step, setStep] = useState('credentials');
   const [pendingUser, setPendingUser] = useState(null);
   const [otpCode, setOtpCode] = useState('');
@@ -42,7 +40,7 @@ export default function Login() {
         setManualKey(res.manualKey || 'JBSWY3DPEHPK3PXP');
         setStep('otp');
       } else {
-        navigate('/FlightBookings');
+        navigate('/FlightPOS');
       }
     } catch (err) {
       addToast(err.message, 'error');
@@ -56,7 +54,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       await verifyOtpAndFinishLogin(pendingUser, otpCode);
-      navigate('/FlightBookings');
+      navigate('/FlightPOS');
     } catch (err) {
       addToast(err.message, 'error');
     } finally {
@@ -65,74 +63,75 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-12 bg-[#FAFAFA]">
-      {/* Left Hero Panel */}
-      <div className="hidden lg:flex lg:col-span-7 bg-[#0B0A09] text-white p-12 flex-col justify-between relative overflow-hidden">
-        <div
-          className="absolute -right-24 -bottom-24 w-96 h-96 rounded-full border border-[#EE8200]/20 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(238,130,0,0.12) 0%, transparent 70%)' }}
-        />
+    <div className="min-h-screen grid lg:grid-cols-12 bg-[#F8FAFC]">
+      {/* Left Hero Panel — Taban Air Royal Navy */}
+      <div className="hidden lg:flex lg:col-span-7 bg-gradient-to-br from-[#0B1528] via-[#15284B] to-[#1D314F] text-white p-10 flex-col justify-between relative overflow-hidden">
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#EE8200] text-white">
-            <Plane className="w-5 h-5" />
-            <span className="font-display font-bold text-sm tracking-wider uppercase">
-              BOOKLY • ADMIN & SUB-AGENT PORTAL
+          <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15">
+            <img
+              src="/images/Taban Air Gradient Airline Logo.png"
+              alt="Taban Air"
+              className="w-8 h-8 rounded bg-white p-0.5 object-contain"
+            />
+            <span className="font-display font-semibold text-xs tracking-wider uppercase">
+              BOOKLY • TABAN AIR B2B PORTAL
             </span>
           </div>
 
-          <h1 className="font-display font-extrabold text-4xl xl:text-5xl leading-tight mt-10 max-w-xl">
-            B2B Group Charter, POS Ticketing & Sub-Agent Consolidation.
+          <h1 className="font-display font-semibold text-3xl xl:text-4xl leading-snug mt-8 max-w-lg">
+            Taban Air Group Charter, POS Search & Sub-Agent Ticketing.
           </h1>
-          <p className="text-white/75 text-base mt-5 max-w-lg leading-relaxed">
-            Manage group seat inventory, approve sub-agent PNR blocks, issue instant e-tickets, and generate IATA PNL & Excel passenger manifests from a unified command desk.
+          <p className="text-white/75 text-sm mt-4 max-w-md leading-relaxed">
+            Search flight segments directly in POS, issue instant e-tickets with official Taban Air itinerary receipts, and export IATA PNL & Excel passenger manifests.
           </p>
 
-          <div className="grid grid-cols-3 gap-4 mt-10 max-w-xl">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-2xl font-extrabold font-display text-[#EE8200]">6 Modules</div>
-              <div className="text-xs text-white/70 mt-1">Bookings, POS, Flights, Segments, Agents, Analytics</div>
+          <div className="grid grid-cols-3 gap-3.5 mt-8 max-w-lg">
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-lg font-semibold font-display text-white">Direct POS</div>
+              <div className="text-[11px] text-white/70 mt-0.5">Search & book directly from flight segments</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-2xl font-extrabold font-display text-[#EE8200]">IATA PNL</div>
-              <div className="text-xs text-white/70 mt-1">1-Click Excel, Word & A4 E-Ticket PDF Exports</div>
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-lg font-semibold font-display text-white">IATA PNL</div>
+              <div className="text-[11px] text-white/70 mt-0.5">1-Click Excel, Word & PDF E-Ticket exports</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-2xl font-extrabold font-display text-[#EE8200]">2FA Ready</div>
-              <div className="text-xs text-white/70 mt-1">Role-based Sub-Agent & Operator Access Control</div>
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-lg font-semibold font-display text-white">Cloud Sync</div>
+              <div className="text-[11px] text-white/70 mt-0.5">Real-time shared database across all agents</div>
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between text-xs text-white/60 border-t border-white/10 pt-6">
-          <span>Bookly Admin Portal</span>
-          <span className="font-mono">B2B Aviation Suite</span>
+        <div className="relative z-10 flex items-center justify-between text-xs text-white/60 border-t border-white/10 pt-5">
+          <span>Bookly • Taban Air Portal</span>
+          <span className="font-mono">B2B Aviation System</span>
         </div>
       </div>
 
       {/* Right Login Card */}
-      <div className="lg:col-span-5 flex items-center justify-center p-6 sm:p-12 bg-white">
-        <div className="w-full max-w-md">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-[#EE8200] text-white flex items-center justify-center font-display font-extrabold text-xl shadow-lg">
-              <Plane className="w-6 h-6" />
-            </div>
+      <div className="lg:col-span-5 flex items-center justify-center p-6 sm:p-10 bg-white">
+        <div className="w-full max-w-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <img
+              src="/images/Taban Air Gradient Airline Logo.png"
+              alt="Taban Air"
+              className="w-12 h-12 rounded-xl border border-slate-200 p-1 object-contain shadow-xs"
+            />
             <div>
-              <h2 className="font-display font-extrabold text-2xl text-[#0B0A09]">Bookly Sign In</h2>
-              <p className="text-xs text-neutral-500">
-                Enter your Login ID and Password to continue
+              <h2 className="font-display font-semibold text-xl text-slate-900">Bookly Sign In</h2>
+              <p className="text-xs text-slate-500">
+                Taban Air B2B Booking & Inventory System
               </p>
             </div>
           </div>
 
           {step === 'credentials' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-5">
-              {/* Login ID */}
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#0B0A09] mb-2">
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">
                   Login ID *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#EE8200]">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <User className="w-4 h-4" />
                   </span>
                   <input
@@ -140,19 +139,18 @@ export default function Login() {
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
                     placeholder="Enter Login ID"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-medium bg-[#FAFAFA] focus:bg-white transition"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none text-xs bg-slate-50 focus:bg-white transition"
                     required
                   />
                 </div>
               </div>
 
-              {/* Password */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#0B0A09] mb-2">
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">
                   Password *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#EE8200]">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <Lock className="w-4 h-4" />
                   </span>
                   <input
@@ -160,13 +158,13 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter Password"
-                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-medium bg-[#FAFAFA] focus:bg-white transition"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none text-xs bg-slate-50 focus:bg-white transition"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-[#EE8200]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#1B3664]"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -174,14 +172,13 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Optional 2FA / OTP Mode Toggle */}
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-neutral-700">
+              <div className="flex items-center justify-between pt-0.5">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
                   <input
                     type="checkbox"
                     checked={require2FA}
                     onChange={(e) => setRequire2FA(e.target.checked)}
-                    className="rounded border-neutral-300 text-[#EE8200] focus:ring-[#EE8200]"
+                    className="rounded border-slate-300 text-[#1B3664] focus:ring-[#1B3664]"
                   />
                   <span>Enable 2FA / OTP Verification</span>
                 </label>
@@ -190,34 +187,31 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3.5 px-6 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
+                className="w-full py-2.5 px-5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white font-medium text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
               >
                 <span>{submitting ? 'Signing In...' : 'Login'}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>
           ) : (
-            <form onSubmit={handleOtpSubmit} className="space-y-5">
-              <div className="p-4 rounded-2xl bg-[#FFF7ED] border border-[#EE8200]/20 text-center">
-                <div className="w-12 h-12 rounded-xl bg-[#EE8200] text-white flex items-center justify-center mx-auto mb-2">
-                  <QrCode className="w-6 h-6" />
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <div className="w-10 h-10 rounded-lg bg-[#1B3664] text-white flex items-center justify-center mx-auto mb-2">
+                  <QrCode className="w-5 h-5" />
                 </div>
-                <h5 className="font-bold text-sm text-[#0B0A09]">Scan QR Code / Enter OTP</h5>
-                <p className="text-xs text-neutral-600 mt-1">
-                  An OTP has been sent to your registered contact, or use your authenticator app.
-                </p>
-                <div className="mt-3 p-2.5 rounded-lg bg-white border border-neutral-200 text-xs">
-                  Or enter this code manually:
-                  <div className="font-mono font-bold text-[#EE8200] mt-0.5">{manualKey}</div>
+                <h5 className="font-semibold text-xs text-slate-800">Scan QR Code / Enter OTP</h5>
+                <div className="mt-2 p-2 rounded bg-white border border-slate-200 text-xs">
+                  Manual Key:
+                  <div className="font-mono font-semibold text-[#1B3664] mt-0.5">{manualKey}</div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#0B0A09] mb-2">
-                  Enter 2FA Authentication Code / OTP
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                  Enter 2FA Authentication Code
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#EE8200]">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#1B3664]">
                     <KeyRound className="w-4 h-4" />
                   </span>
                   <input
@@ -225,24 +219,24 @@ export default function Login() {
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
                     placeholder="Enter 6-digit OTP"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:border-[#EE8200] focus:outline-none text-sm font-mono font-bold tracking-widest bg-[#FAFAFA]"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none text-xs font-mono"
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2.5">
                 <button
                   type="button"
                   onClick={() => setStep('credentials')}
-                  className="px-4 py-3 rounded-xl border border-neutral-300 text-xs font-bold text-neutral-700 hover:bg-neutral-100"
+                  className="px-4 py-2.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 px-6 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-sm transition"
+                  className="flex-1 py-2.5 px-5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white font-medium text-xs transition"
                 >
                   Verify OTP
                 </button>

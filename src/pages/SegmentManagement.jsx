@@ -6,7 +6,8 @@ import {
   Trash2,
   X,
   FileSpreadsheet,
-  FileText
+  FileText,
+  Luggage
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import {
@@ -19,36 +20,36 @@ import {
 
 const INITIAL_SEGMENT_FORM = {
   FlightNumber: '',
-  MarketingAirline: 'PK',
-  OperatingAirline: 'PK',
-  OperatingAirlineName: '',
+  MarketingAirline: '',
+  OperatingAirline: '',
+  OperatingAirlineName: 'Taban Airlines',
   DepartureIata: 'KHI',
-  DepartureAirport: 'Jinnah International Airport',
+  DepartureAirport: 'Jinnah Intl Airport',
   DepartureCity: 'Karachi',
   DepartureCountry: 'Pakistan',
   DepartureDate: '',
-  ArrivalIata: 'JED',
-  ArrivalAirport: 'King Abdulaziz International Airport',
-  ArrivalCity: 'Jeddah',
-  ArrivalCountry: 'Saudi Arabia',
+  ArrivalIata: 'IKA',
+  ArrivalAirport: 'Imam Khomeini Intl Airport',
+  ArrivalCity: 'Tehran',
+  ArrivalCountry: 'Iran',
   ArrivalDate: '',
   TotalSeats: 160,
   FlightClass: 'Economy',
   FlightClassCode: 'Y',
-  FlightTime: '04h 00m',
-  FlightMinutes: 240,
+  FlightTime: '02h 30m',
+  FlightMinutes: 150,
   LayoverDuration: 0,
-  AirCraft: '',
+  AirCraft: 'A320',
   Meal: 'Yes',
-  AdultFareBasisCode: '',
-  ChildFareBasisCode: '',
-  InfantFareBasisCode: '',
-  BaggageTypeADT: 'Pieces',
-  BaggageCountADT: '1 PC (30 KG)',
-  BaggageTypeCNN: 'Pieces',
-  BaggageCountCNN: '1 PC (20 KG)',
-  BaggageTypeINF: 'Pieces',
-  BaggageCountINF: '1 PC (10 KG)',
+  BaggageADT: '20',
+  BaggageCNN: '20',
+  BaggageINF: '0',
+  BaggageTypeADT: 'KG',
+  BaggageCountADT: '20',
+  BaggageTypeCNN: 'KG',
+  BaggageCountCNN: '20',
+  BaggageTypeINF: 'KG',
+  BaggageCountINF: '0',
   AdultPrice: 0,
   AdultBasicFare: 0,
   AdultTax: 0,
@@ -94,7 +95,13 @@ export default function SegmentManagement() {
 
   const openEditModal = (seg) => {
     setEditingId(seg.AirGroupSegmentID);
-    setForm({ ...INITIAL_SEGMENT_FORM, ...seg });
+    setForm({
+      ...INITIAL_SEGMENT_FORM,
+      ...seg,
+      BaggageADT: seg.BaggageADT ?? seg.BaggageCountADT ?? '20',
+      BaggageCNN: seg.BaggageCNN ?? seg.BaggageCountCNN ?? '20',
+      BaggageINF: seg.BaggageINF ?? seg.BaggageCountINF ?? '0'
+    });
     setShowEditor(true);
   };
 
@@ -122,15 +129,34 @@ export default function SegmentManagement() {
 
   const handleSaveSegment = async (e) => {
     e.preventDefault();
-    if (!form.FlightNumber.trim()) {
-      addToast('Please enter Flight Number.', 'error');
+    const fn = form.FlightNumber.trim();
+    if (!fn) {
+      addToast('Please enter Flight Number (e.g. HH 7212).', 'error');
       return;
     }
+
+    // Extract carrier prefix from FlightNumber if OperatingAirline not explicitly entered
+    const extractedPrefix = fn.split(/[\s-]+/)[0] || '';
+    const airlineCode = (form.OperatingAirline || extractedPrefix).trim().toUpperCase();
+
+    const payload = {
+      ...form,
+      FlightNumber: fn,
+      OperatingAirline: airlineCode,
+      MarketingAirline: form.MarketingAirline || airlineCode,
+      BaggageADT: String(form.BaggageADT ?? '20'),
+      BaggageCNN: String(form.BaggageCNN ?? '20'),
+      BaggageINF: String(form.BaggageINF ?? '0'),
+      BaggageCountADT: String(form.BaggageADT ?? '20'),
+      BaggageCountCNN: String(form.BaggageCNN ?? '20'),
+      BaggageCountINF: String(form.BaggageINF ?? '0')
+    };
+
     try {
       if (editingId) {
-        await updateSegment(editingId, form);
+        await updateSegment(editingId, payload);
       } else {
-        await createSegment(form);
+        await createSegment(payload);
       }
       setShowEditor(false);
     } catch (err) {
@@ -167,20 +193,20 @@ export default function SegmentManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#EE8200]">
-            Sector Legs, Pricing & IATA Manifests
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#1B3664]">
+            Sector Legs, Baggage, Pricing & IATA Manifests
           </span>
-          <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-[#0B0A09] mt-0.5">
+          <h1 className="font-display font-semibold text-xl text-slate-900 mt-0.5">
             Segment Management
           </h1>
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold text-xs transition shadow-md cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white font-medium text-xs transition shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add Flight Segment</span>
@@ -188,283 +214,218 @@ export default function SegmentManagement() {
       </div>
 
       {/* Segments Table */}
-      <div className="bg-white rounded-2xl border border-[#EE8200]/15 shadow-executive overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#EE8200] text-white text-[11px] font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-3">Flight No</th>
-                <th className="py-3.5 px-3">From (Departure)</th>
-                <th className="py-3.5 px-3">To (Arrival)</th>
-                <th className="py-3.5 px-3">Flight Date & Time</th>
-                <th className="py-3.5 px-3">Aircraft & Cabin</th>
-                <th className="py-3.5 px-3 text-center">Seats (Left / Total)</th>
-                <th className="py-3.5 px-3">Customer / Supplier Fare</th>
-                <th className="py-3.5 px-4 text-right">Actions & Manifests</th>
+              <tr className="bg-[#1D314F] text-white text-[11px] font-medium uppercase tracking-wider">
+                <th className="py-3 px-3">Flight No & Airline</th>
+                <th className="py-3 px-3">From (Departure)</th>
+                <th className="py-3 px-3">To (Arrival)</th>
+                <th className="py-3 px-3">Flight Date & Time</th>
+                <th className="py-3 px-3">Cabin & Baggage</th>
+                <th className="py-3 px-3 text-center">Seats (Left / Total)</th>
+                <th className="py-3 px-3">Customer / Supplier Fare</th>
+                <th className="py-3 px-4 text-right">Actions & Manifests</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200">
+            <tbody className="divide-y divide-slate-200">
               {segments.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-neutral-500">
+                  <td colSpan={8} className="py-10 text-center text-slate-500">
                     No flight segments added yet. Click &ldquo;Add Flight Segment&rdquo; to create your first sector.
                   </td>
                 </tr>
               ) : (
-                segments.map((seg) => (
-                  <tr key={seg.AirGroupSegmentID} className="hover:bg-[#FFF7ED]/60 transition">
-                    <td className="py-4 px-3">
-                      <div className="font-mono font-extrabold text-sm text-[#EE8200]">
-                        {seg.FlightNumber}
-                      </div>
-                      <div className="text-[11px] text-neutral-500">{seg.OperatingAirlineName}</div>
-                    </td>
-                    <td className="py-4 px-3">
-                      <div className="font-bold text-[#0B0A09]">
-                        {seg.DepartureCity} ({seg.DepartureIata})
-                      </div>
-                      <div className="text-[11px] text-neutral-500 max-w-[180px] truncate">
-                        {seg.DepartureAirport}
-                      </div>
-                    </td>
-                    <td className="py-4 px-3">
-                      <div className="font-bold text-[#0B0A09]">
-                        {seg.ArrivalCity} ({seg.ArrivalIata})
-                      </div>
-                      <div className="text-[11px] text-neutral-500 max-w-[180px] truncate">
-                        {seg.ArrivalAirport}
-                      </div>
-                    </td>
-                    <td className="py-4 px-3 font-mono">
-                      <div className="font-bold text-[#0B0A09]">
-                        {formatDateTime(seg.DepartureDate)}
-                      </div>
-                      <div className="text-[11px] text-neutral-500">
-                        Arr: {formatDateTime(seg.ArrivalDate)}
-                      </div>
-                    </td>
-                    <td className="py-4 px-3">
-                      <div className="font-semibold text-[#0B0A09]">{seg.AirCraft || '—'}</div>
-                      <div className="text-[11px] text-[#EE8200] font-bold">
-                        {seg.FlightClass} ({seg.FlightClassCode}) • {seg.BaggageCountADT}
-                      </div>
-                    </td>
-                    <td className="py-4 px-3 text-center font-mono">
-                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold">
-                        {seg.SeatsLeft ?? seg.TotalSeats}
-                      </span>{' '}
-                      / <span className="font-bold text-neutral-600">{seg.TotalSeats}</span>
-                    </td>
-                    <td className="py-4 px-3 font-mono text-[11px]">
-                      <div className="font-bold text-[#EE8200]">
-                        Pax: {formatCurrencyPKR(seg.AdultPrice)}
-                      </div>
-                      <div className="text-neutral-500">
-                        Sup: {formatCurrencyPKR(seg.AdultPriceSupplier)}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => setDetailsSegment(seg)}
-                          className="px-3 py-1.5 rounded-lg bg-[#EE8200] hover:bg-black text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Details & Manifest</span>
-                        </button>
-                        <button
-                          onClick={() => openEditModal(seg)}
-                          className="p-1.5 rounded-lg border border-neutral-200 hover:border-[#EE8200] text-neutral-700 hover:text-[#EE8200] cursor-pointer"
-                          title="Edit Segment"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Delete segment ${seg.FlightNumber}?`)) {
-                              deleteSegment(seg.AirGroupSegmentID);
-                            }
-                          }}
-                          className="p-1.5 rounded-lg border border-neutral-200 hover:border-red-600 text-neutral-500 hover:text-red-600 cursor-pointer"
-                          title="Delete Segment"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                segments.map((seg) => {
+                  const adtBag = seg.BaggageADT ?? seg.BaggageCountADT ?? '20';
+                  const cnnBag = seg.BaggageCNN ?? seg.BaggageCountCNN ?? '20';
+                  const infBag = seg.BaggageINF ?? seg.BaggageCountINF ?? '0';
+                  return (
+                    <tr key={seg.AirGroupSegmentID} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-3">
+                        <div className="font-mono font-semibold text-sm text-[#1B3664]">
+                          {seg.FlightNumber}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {seg.OperatingAirlineName || seg.OperatingAirline || '—'}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-slate-800">
+                          {seg.DepartureCity} ({seg.DepartureIata})
+                        </div>
+                        <div className="text-[11px] text-slate-500 max-w-[170px] truncate">
+                          {seg.DepartureAirport}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-slate-800">
+                          {seg.ArrivalCity} ({seg.ArrivalIata})
+                        </div>
+                        <div className="text-[11px] text-slate-500 max-w-[170px] truncate">
+                          {seg.ArrivalAirport}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 font-mono">
+                        <div className="font-medium text-slate-800">
+                          {formatDateTime(seg.DepartureDate)}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Arr: {formatDateTime(seg.ArrivalDate)}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-slate-800">
+                          {seg.FlightClass} ({seg.FlightClassCode || 'Y'}) • {seg.AirCraft || 'A320'}
+                        </div>
+                        <div className="text-[11px] text-[#1B3664]">
+                          ADT={adtBag}, CNN={cnnBag}, INF={infBag}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono">
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                          {seg.SeatsLeft ?? seg.TotalSeats}
+                        </span>{' '}
+                        / <span className="text-slate-600">{seg.TotalSeats}</span>
+                      </td>
+                      <td className="py-3 px-3 font-mono text-[11px]">
+                        <div className="font-semibold text-[#1B3664]">
+                          Pax: {formatCurrencyPKR(seg.AdultPrice)}
+                        </div>
+                        <div className="text-slate-500">
+                          Sup: {formatCurrencyPKR(seg.AdultPriceSupplier)}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setDetailsSegment(seg)}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white font-medium text-[11px] flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details & Manifest</span>
+                          </button>
+                          <button
+                            onClick={() => openEditModal(seg)}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:border-[#1B3664] text-slate-600 hover:text-[#1B3664] cursor-pointer"
+                            title="Edit Segment"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Delete segment ${seg.FlightNumber}?`)) {
+                                deleteSegment(seg.AirGroupSegmentID);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:border-red-600 text-slate-500 hover:text-red-600 cursor-pointer"
+                            title="Delete Segment"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* FLIGHT SEGMENT DETAILS & MANIFEST EXPORT MODAL */}
+      {/* DETAILS & MANIFEST DOWNLOAD MODAL */}
       {detailsSegment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#EE8200] text-white px-6 py-4 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-[#1D314F] text-white px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
               <div>
-                <h5 className="font-bold text-base">
-                  Flight Segment Details — {detailsSegment.FlightNumber} ({detailsSegment.DepartureIata} &rarr;{' '}
-                  {detailsSegment.ArrivalIata})
+                <h5 className="font-semibold text-sm">
+                  Segment Details & Passenger Manifest — {detailsSegment.FlightNumber}
                 </h5>
-                <p className="text-xs text-white/75">
-                  Download official Excel Manifest, 15-Column Passenger List, or Word IATA PNL
+                <p className="text-[11px] text-white/75">
+                  {detailsSegment.DepartureCity} ({detailsSegment.DepartureIata}) &rarr;{' '}
+                  {detailsSegment.ArrivalCity} ({detailsSegment.ArrivalIata})
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => {
-                    const pax = getPassengersForSegment(detailsSegment);
-                    downloadExcelManifest(detailsSegment, pax);
-                    addToast('Manifest (Excel) downloaded.', 'success');
-                  }}
-                  className="px-3 py-2 rounded-xl bg-black hover:bg-neutral-800 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  onClick={() =>
+                    downloadExcelManifest(detailsSegment, getPassengersForSegment(detailsSegment))
+                  }
+                  className="px-3 py-1.5 rounded-lg bg-white text-[#1D314F] hover:bg-slate-100 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>Manifest (Excel)</span>
                 </button>
                 <button
-                  onClick={() => {
-                    const pax = getPassengersForSegment(detailsSegment);
-                    downloadExcelPassengersList(detailsSegment, pax);
-                    addToast('Passenger List (Excel) downloaded.', 'success');
-                  }}
-                  className="px-3 py-2 rounded-xl bg-white text-[#EE8200] hover:bg-[#FFF7ED] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  onClick={() =>
+                    downloadExcelPassengersList(
+                      detailsSegment,
+                      getPassengersForSegment(detailsSegment)
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-[#EE8200]" />
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>Passenger List (Excel)</span>
                 </button>
                 <button
-                  onClick={() => {
-                    const pax = getPassengersForSegment(detailsSegment);
-                    downloadWordManifest(detailsSegment, pax);
-                    addToast('Manifest (Word IATA PNL) downloaded.', 'success');
-                  }}
-                  className="px-3 py-2 rounded-xl bg-black/50 border border-white/25 hover:bg-black text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  onClick={() =>
+                    downloadWordManifest(detailsSegment, getPassengersForSegment(detailsSegment))
+                  }
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FileText className="w-4 h-4" />
-                  <span>Manifest (Word)</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Manifest (Word / PNL)</span>
                 </button>
                 <button
                   onClick={() => setDetailsSegment(null)}
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-5 text-xs">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
+            <div className="p-5 overflow-y-auto space-y-4 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
                 <div>
                   <b>Flight No:</b> {detailsSegment.FlightNumber}
                 </div>
                 <div>
-                  <b>Aircraft:</b> {detailsSegment.AirCraft || '—'}
+                  <b>Aircraft:</b> {detailsSegment.AirCraft || 'A320'}
                 </div>
                 <div>
                   <b>Class:</b> {detailsSegment.FlightClass} ({detailsSegment.FlightClassCode})
                 </div>
                 <div>
-                  <b>Flight Time:</b> {detailsSegment.FlightTime} ({detailsSegment.FlightMinutes} min)
+                  <b>Flight Time:</b> {detailsSegment.FlightTime}
                 </div>
                 <div>
-                  <b>Marketing Airline:</b> {detailsSegment.MarketingAirline}
+                  <b>Airline Code:</b> {detailsSegment.OperatingAirline || '—'}
                 </div>
                 <div>
                   <b>Operating Airline:</b> {detailsSegment.OperatingAirlineName}
                 </div>
                 <div>
-                  <b>Baggage (ADT/CNN/INF):</b> {detailsSegment.BaggageCountADT} /{' '}
-                  {detailsSegment.BaggageCountCNN} / {detailsSegment.BaggageCountINF}
+                  <b>Baggage:</b> Adult={detailsSegment.BaggageADT ?? detailsSegment.BaggageCountADT ?? '20'}, Child={detailsSegment.BaggageCNN ?? detailsSegment.BaggageCountCNN ?? '20'}, Infant={detailsSegment.BaggageINF ?? detailsSegment.BaggageCountINF ?? '0'}
                 </div>
                 <div>
                   <b>Meal / Total Seats:</b> {detailsSegment.Meal} / {detailsSegment.TotalSeats}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-[#EE8200]/15 overflow-hidden">
-                  <div className="bg-[#FFF7ED] px-4 py-2.5 font-bold text-[#EE8200] border-b border-[#EE8200]/10">
-                    Departure
-                  </div>
-                  <div className="p-4 space-y-1">
-                    <div>
-                      <b>City:</b> {detailsSegment.DepartureCity} ({detailsSegment.DepartureIata})
-                    </div>
-                    <div>
-                      <b>Airport:</b> {detailsSegment.DepartureAirport}
-                    </div>
-                    <div>
-                      <b>Country:</b> {detailsSegment.DepartureCountry}
-                    </div>
-                    <div>
-                      <b>Date & Time:</b> {formatDateTime(detailsSegment.DepartureDate)}
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-[#EE8200]/15 overflow-hidden">
-                  <div className="bg-[#FFF7ED] px-4 py-2.5 font-bold text-[#EE8200] border-b border-[#EE8200]/10">
-                    Arrival
-                  </div>
-                  <div className="p-4 space-y-1">
-                    <div>
-                      <b>City:</b> {detailsSegment.ArrivalCity} ({detailsSegment.ArrivalIata})
-                    </div>
-                    <div>
-                      <b>Airport:</b> {detailsSegment.ArrivalAirport}
-                    </div>
-                    <div>
-                      <b>Country:</b> {detailsSegment.ArrivalCountry}
-                    </div>
-                    <div>
-                      <b>Date & Time:</b> {formatDateTime(detailsSegment.ArrivalDate)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#EE8200]/15 overflow-hidden">
-                <div className="bg-[#FFF7ED] px-4 py-2.5 font-bold text-[#EE8200] border-b border-[#EE8200]/10">
-                  Fare Details (Customer & Supplier)
-                </div>
-                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <b>Adult Price:</b> {formatCurrencyPKR(detailsSegment.AdultPrice)}
-                  </div>
-                  <div>
-                    <b>Child Price:</b> {formatCurrencyPKR(detailsSegment.ChildPrice)}
-                  </div>
-                  <div>
-                    <b>Infant Price:</b> {formatCurrencyPKR(detailsSegment.InfantPrice)}
-                  </div>
-                  <div>
-                    <b>Adult Price (Supplier):</b>{' '}
-                    {formatCurrencyPKR(detailsSegment.AdultPriceSupplier)}
-                  </div>
-                  <div>
-                    <b>Child Price (Supplier):</b>{' '}
-                    {formatCurrencyPKR(detailsSegment.ChildPriceSupplier)}
-                  </div>
-                  <div>
-                    <b>Infant Price (Supplier):</b>{' '}
-                    {formatCurrencyPKR(detailsSegment.InfantPriceSupplier)}
-                  </div>
-                </div>
-              </div>
-
               <div>
-                <h6 className="font-display font-bold text-sm text-[#EE8200] mb-2">
+                <h6 className="font-semibold text-xs text-[#1B3664] mb-2">
                   Passengers Booked on {detailsSegment.FlightNumber} (
                   {getPassengersForSegment(detailsSegment).length})
                 </h6>
-                <div className="border border-neutral-200 rounded-xl overflow-hidden">
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-neutral-100 text-neutral-700 font-bold">
+                      <tr className="bg-slate-100 text-slate-700 font-semibold">
                         <th className="py-2 px-3">#</th>
                         <th className="py-2 px-3">Title</th>
                         <th className="py-2 px-3">Last Name</th>
@@ -476,17 +437,17 @@ export default function SegmentManagement() {
                         <th className="py-2 px-3">Ticket #</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-neutral-100">
+                    <tbody className="divide-y divide-slate-100">
                       {getPassengersForSegment(detailsSegment).map((p, idx) => (
                         <tr key={p.PassengerID || idx}>
                           <td className="py-2 px-3">{idx + 1}</td>
                           <td className="py-2 px-3">{p.Title}</td>
-                          <td className="py-2 px-3 font-bold">{p.LastName}</td>
-                          <td className="py-2 px-3 font-bold">{p.FirstName}</td>
+                          <td className="py-2 px-3 font-medium">{p.LastName}</td>
+                          <td className="py-2 px-3 font-medium">{p.FirstName}</td>
                           <td className="py-2 px-3">{p.PassengerType}</td>
                           <td className="py-2 px-3 font-mono">{p.PassportNumber}</td>
                           <td className="py-2 px-3 font-mono">{p.DOB}</td>
-                          <td className="py-2 px-3 font-mono font-bold text-[#EE8200]">{p.PNR}</td>
+                          <td className="py-2 px-3 font-mono font-semibold text-[#1B3664]">{p.PNR}</td>
                           <td className="py-2 px-3 font-mono">{p.TicketNumber || 'PENDING'}</td>
                         </tr>
                       ))}
@@ -499,27 +460,28 @@ export default function SegmentManagement() {
         </div>
       )}
 
-      {/* ADD / EDIT SEGMENT MODAL */}
+      {/* ADD / EDIT SEGMENT MODAL (With Full Baggage & Airline Fields) */}
       {showEditor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#EE8200]/20 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
-            <div className="bg-[#EE8200] text-white px-6 py-4 flex items-center justify-between shrink-0">
-              <h5 className="font-bold text-base">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-[#1D314F] text-white px-5 py-3.5 flex items-center justify-between shrink-0">
+              <h5 className="font-semibold text-sm">
                 {editingId ? `Edit Flight Segment — ${editingId}` : 'Add Flight Segment'}
               </h5>
               <button onClick={() => setShowEditor(false)} className="text-white/75 hover:text-white">
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveSegment} className="p-6 overflow-y-auto space-y-5 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <form onSubmit={handleSaveSegment} className="p-5 overflow-y-auto space-y-4 text-xs">
+              {/* Row 1: Departure & Arrival */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
                 <div>
-                  <label className="block font-bold mb-1">Departure Airport</label>
+                  <label className="block font-medium text-slate-700 mb-1">Departure Airport</label>
                   <select
                     value={form.DepartureIata}
                     onChange={(e) => handleAirportSelect('Departure', e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                   >
                     {airports.map((a) => (
                       <option key={a.AirportCode} value={a.AirportCode}>
@@ -529,21 +491,21 @@ export default function SegmentManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Departure Date *</label>
+                  <label className="block font-medium text-slate-700 mb-1">Departure Date & Time *</label>
                   <input
                     type="datetime-local"
                     value={form.DepartureDate?.slice(0, 16) || ''}
                     onChange={(e) => setForm({ ...form, DepartureDate: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Arrival Airport</label>
+                  <label className="block font-medium text-slate-700 mb-1">Arrival Airport</label>
                   <select
                     value={form.ArrivalIata}
                     onChange={(e) => handleAirportSelect('Arrival', e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                   >
                     {airports.map((a) => (
                       <option key={a.AirportCode} value={a.AirportCode}>
@@ -553,54 +515,55 @@ export default function SegmentManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Arrival Date *</label>
+                  <label className="block font-medium text-slate-700 mb-1">Arrival Date & Time *</label>
                   <input
                     type="datetime-local"
                     value={form.ArrivalDate?.slice(0, 16) || ''}
                     onChange={(e) => setForm({ ...form, ArrivalDate: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                     required
                   />
                 </div>
               </div>
 
+              {/* Row 2: Flight Number, Airline, Seats, Cabin, Aircraft */}
               <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                 <div>
-                  <label className="block font-bold mb-1">Flight Number *</label>
+                  <label className="block font-medium text-slate-700 mb-1">Flight Number *</label>
                   <input
                     type="text"
-                    placeholder="e.g. PK-731"
+                    placeholder="e.g. HH 7212"
                     value={form.FlightNumber}
                     onChange={(e) => setForm({ ...form, FlightNumber: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 font-mono font-bold"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono font-semibold focus:border-[#1B3664] focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Operating Airline</label>
+                  <label className="block font-medium text-slate-700 mb-1">Operating Airline</label>
                   <input
                     type="text"
-                    placeholder="Airline Name"
+                    placeholder="e.g. Taban Airlines"
                     value={form.OperatingAirlineName}
                     onChange={(e) => setForm({ ...form, OperatingAirlineName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Total Seats</label>
+                  <label className="block font-medium text-slate-700 mb-1">Total Seats</label>
                   <input
                     type="number"
                     value={form.TotalSeats}
                     onChange={(e) => setForm({ ...form, TotalSeats: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Flight Class</label>
+                  <label className="block font-medium text-slate-700 mb-1">Flight Class</label>
                   <select
                     value={form.FlightClass}
                     onChange={(e) => setForm({ ...form, FlightClass: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                   >
                     <option value="Economy">Economy</option>
                     <option value="Premium Economy">Premium Economy</option>
@@ -609,66 +572,152 @@ export default function SegmentManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Class Code</label>
+                  <label className="block font-medium text-slate-700 mb-1">Class Code</label>
                   <input
                     type="text"
                     value={form.FlightClassCode}
                     onChange={(e) =>
                       setForm({ ...form, FlightClassCode: e.target.value.toUpperCase() })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">AirCraft</label>
+                  <label className="block font-medium text-slate-700 mb-1">Aircraft</label>
                   <input
                     type="text"
-                    placeholder="e.g. A320 / B777"
+                    placeholder="e.g. A320 / MD88"
                     value={form.AirCraft}
                     onChange={(e) => setForm({ ...form, AirCraft: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/15">
+              {/* Row 3: Baggage Allowance (Adult, Child, Infant) & Flight Time / Meal */}
+              <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1B3664]">
+                  <Luggage className="w-4 h-4" />
+                  <span>Baggage Allowance & Cabin Service</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1">
+                      Adult Baggage (KG)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 20"
+                      value={form.BaggageADT}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          BaggageADT: e.target.value,
+                          BaggageCountADT: e.target.value
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1">
+                      Child Baggage (KG)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 20"
+                      value={form.BaggageCNN}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          BaggageCNN: e.target.value,
+                          BaggageCountCNN: e.target.value
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1">
+                      Infant Baggage (KG)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 0"
+                      value={form.BaggageINF}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          BaggageINF: e.target.value,
+                          BaggageCountINF: e.target.value
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1">Flight Duration</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 02h 30m"
+                      value={form.FlightTime}
+                      onChange={(e) => setForm({ ...form, FlightTime: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white focus:border-[#1B3664] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1">Meal Included</label>
+                    <select
+                      value={form.Meal}
+                      onChange={(e) => setForm({ ...form, Meal: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white focus:border-[#1B3664] focus:outline-none"
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Customer & Supplier Fares */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
                 <div>
-                  <label className="block font-bold text-[#EE8200] mb-1">
-                    Adult Price (Customer)
+                  <label className="block font-medium text-[#1B3664] mb-1">
+                    Adult Price (Customer PKR)
                   </label>
                   <input
                     type="number"
                     value={form.AdultPrice}
                     onChange={(e) => setForm({ ...form, AdultPrice: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#EE8200] mb-1">
-                    Child Price (Customer)
+                  <label className="block font-medium text-[#1B3664] mb-1">
+                    Child Price (Customer PKR)
                   </label>
                   <input
                     type="number"
                     value={form.ChildPrice}
                     onChange={(e) => setForm({ ...form, ChildPrice: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#EE8200] mb-1">
-                    Infant Price (Customer)
+                  <label className="block font-medium text-[#1B3664] mb-1">
+                    Infant Price (Customer PKR)
                   </label>
                   <input
                     type="number"
                     value={form.InfantPrice}
                     onChange={(e) => setForm({ ...form, InfantPrice: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-neutral-600 mb-1">
-                    Adult Price (Supplier)
+                  <label className="block font-medium text-slate-600 mb-1">
+                    Adult Price (Supplier PKR)
                   </label>
                   <input
                     type="number"
@@ -676,12 +725,12 @@ export default function SegmentManagement() {
                     onChange={(e) =>
                       setForm({ ...form, AdultPriceSupplier: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-neutral-600 mb-1">
-                    Child Price (Supplier)
+                  <label className="block font-medium text-slate-600 mb-1">
+                    Child Price (Supplier PKR)
                   </label>
                   <input
                     type="number"
@@ -689,12 +738,12 @@ export default function SegmentManagement() {
                     onChange={(e) =>
                       setForm({ ...form, ChildPriceSupplier: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-neutral-600 mb-1">
-                    Infant Price (Supplier)
+                  <label className="block font-medium text-slate-600 mb-1">
+                    Infant Price (Supplier PKR)
                   </label>
                   <input
                     type="number"
@@ -702,22 +751,22 @@ export default function SegmentManagement() {
                     onChange={(e) =>
                       setForm({ ...form, InfantPriceSupplier: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-200">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowEditor(false)}
-                  className="px-5 py-2.5 rounded-xl border border-neutral-300 font-bold text-neutral-700"
+                  className="px-4 py-2 rounded-lg border border-slate-300 font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#EE8200] hover:bg-black text-white font-bold transition"
+                  className="px-5 py-2 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white font-medium transition cursor-pointer"
                 >
                   Save Segment
                 </button>

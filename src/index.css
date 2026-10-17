@@ -4,20 +4,27 @@
 
 @layer base {
   :root {
-    --primary: #EE8200;
-    --primary-hover: #D47100;
-    --obsidian: #0B0A09;
-    --surface: #FAFAFA;
+    --primary: #1B3664;
+    --primary-hover: #122444;
+    --obsidian: #0F172A;
+    --surface: #F8FAFC;
+  }
+
+  html {
+    font-size: 13.5px;
   }
 
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #FAFAFA;
-    color: #0B0A09;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-weight: 400;
+    letter-spacing: -0.005em;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
   }
 }
 
@@ -28,14 +35,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #F4F4F5;
+  background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #EE8200;
+  background: #1B3664;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0B0A09;
+  background: #0F172A;
 }
