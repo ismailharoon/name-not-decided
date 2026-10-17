@@ -144,12 +144,13 @@ export default function SegmentManagement() {
       .filter((f) => (f.SegmentIDs || []).includes(seg.AirGroupSegmentID))
       .map((f) => f.AirGroupID);
 
-    const relevantBookings = bookings.filter(
-      (b) =>
-        groupIds.includes(b.AirGroupID) &&
-        b.ApprovalStatus !== 'Rejected' &&
-        b.ApprovalStatus !== 'Ticket Void'
-    );
+    const relevantBookings = bookings.filter((b) => {
+      if (b.ApprovalStatus === 'Rejected' || b.ApprovalStatus === 'Ticket Void') return false;
+      if (Array.isArray(b.SegmentIDs) && b.SegmentIDs.includes(seg.AirGroupSegmentID)) return true;
+      if (b.AirGroupSegmentID === seg.AirGroupSegmentID) return true;
+      if (groupIds.includes(b.AirGroupID)) return true;
+      return false;
+    });
 
     const paxList = [];
     relevantBookings.forEach((b) => {
@@ -197,7 +198,7 @@ export default function SegmentManagement() {
                 <th className="py-3.5 px-3">To (Arrival)</th>
                 <th className="py-3.5 px-3">Flight Date & Time</th>
                 <th className="py-3.5 px-3">Aircraft & Cabin</th>
-                <th className="py-3.5 px-3 text-center">Total Seats</th>
+                <th className="py-3.5 px-3 text-center">Seats (Left / Total)</th>
                 <th className="py-3.5 px-3">Customer / Supplier Fare</th>
                 <th className="py-3.5 px-4 text-right">Actions & Manifests</th>
               </tr>
@@ -248,8 +249,11 @@ export default function SegmentManagement() {
                         {seg.FlightClass} ({seg.FlightClassCode}) • {seg.BaggageCountADT}
                       </div>
                     </td>
-                    <td className="py-4 px-3 text-center font-mono font-bold">
-                      {seg.TotalSeats}
+                    <td className="py-4 px-3 text-center font-mono">
+                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold">
+                        {seg.SeatsLeft ?? seg.TotalSeats}
+                      </span>{' '}
+                      / <span className="font-bold text-neutral-600">{seg.TotalSeats}</span>
                     </td>
                     <td className="py-4 px-3 font-mono text-[11px]">
                       <div className="font-bold text-[#EE8200]">

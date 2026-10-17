@@ -35,9 +35,8 @@ const navSections = [
   {
     group: 'Flight Operations',
     items: [
+      { to: '/FlightPOS', label: 'Flight POS (Search & Book)', urdu: 'فلائٹ سرچ اور بکنگ', icon: ShoppingBag },
       { to: '/FlightBookings', label: 'Flight Bookings', urdu: 'فلائٹ بکنگز', icon: Ticket, badgeKey: 'pending' },
-      { to: '/FlightPOS', label: 'Flight POS (Desk)', urdu: 'فلائٹ سیلز ڈیسک', icon: ShoppingBag },
-      { to: '/FlightManagement', label: 'Flight Management', urdu: 'فلائٹ مینجمنٹ', icon: PlaneTakeoff },
       { to: '/SegmentManagement', label: 'Segment Management', urdu: 'سیگمنٹ مینجمنٹ', icon: Layers }
     ]
   },
@@ -56,7 +55,7 @@ export default function Layout({ children }) {
     language,
     setLanguage,
     bookings,
-    flights,
+    segments,
     subAgents,
     toasts,
     showTimeoutModal,
@@ -75,7 +74,7 @@ export default function Layout({ children }) {
 
   const searchResults = React.useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return { bookings: [], flights: [], agents: [] };
+    if (!q) return { bookings: [], segments: [], agents: [] };
     return {
       bookings: bookings
         .filter(
@@ -91,14 +90,16 @@ export default function Layout({ children }) {
             )
         )
         .slice(0, 4),
-      flights: flights
+      segments: (segments || [])
         .filter(
-          (f) =>
-            f.Title?.toLowerCase().includes(q) ||
-            f.GroupDepartureIata?.toLowerCase().includes(q) ||
-            f.PNR_AIRLINE?.toLowerCase().includes(q)
+          (s) =>
+            s.FlightNumber?.toLowerCase().includes(q) ||
+            s.DepartureIata?.toLowerCase().includes(q) ||
+            s.ArrivalIata?.toLowerCase().includes(q) ||
+            s.DepartureCity?.toLowerCase().includes(q) ||
+            s.ArrivalCity?.toLowerCase().includes(q)
         )
-        .slice(0, 3),
+        .slice(0, 4),
       agents: subAgents
         .filter(
           (a) =>
@@ -107,7 +108,7 @@ export default function Layout({ children }) {
         )
         .slice(0, 3)
     };
-  }, [searchQuery, bookings, flights, subAgents]);
+  }, [searchQuery, bookings, segments, subAgents]);
 
   return (
     <div className="min-h-screen flex bg-[#FAFAFA] text-[#0B0A09]">
@@ -312,27 +313,29 @@ export default function Layout({ children }) {
                   ))}
 
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[#EE8200] px-2 py-1 mt-2">
-                    Flight Groups ({searchResults.flights.length})
+                    Flight Segments ({searchResults.segments.length})
                   </div>
-                  {searchResults.flights.map((f) => (
+                  {searchResults.segments.map((s) => (
                     <button
-                      key={f.AirGroupID}
+                      key={s.AirGroupSegmentID}
                       onClick={() => {
                         setOpenDropdown(null);
                         setSearchQuery('');
-                        navigate('/FlightManagement');
+                        navigate('/FlightPOS');
                       }}
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-orange-50 flex items-center justify-between text-xs"
                     >
-                      <span className="font-semibold truncate">{f.Title}</span>
+                      <span className="font-semibold truncate">
+                        {s.FlightNumber} • {s.DepartureIata} &rarr; {s.ArrivalIata}
+                      </span>
                       <span className="font-mono text-[#EE8200] font-bold">
-                        {formatCurrencyPKR(f.AdultPrice)}
+                        {formatCurrencyPKR(s.AdultPrice)}
                       </span>
                     </button>
                   ))}
 
                   {searchResults.bookings.length === 0 &&
-                    searchResults.flights.length === 0 &&
+                    searchResults.segments.length === 0 &&
                     searchResults.agents.length === 0 && (
                       <div className="text-xs text-neutral-500 py-4 text-center">
                         No matching records found for &ldquo;{searchQuery}&rdquo;

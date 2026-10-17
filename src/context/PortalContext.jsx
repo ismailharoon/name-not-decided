@@ -49,9 +49,44 @@ function loadLocalDb() {
 }
 
 function computeEnriched(db) {
-  const segmentsById = Object.fromEntries((db.segments || []).map((s) => [s.AirGroupSegmentID, s]));
-  const flights = (db.flights || []).map((f) => {
-    const groupBookings = (db.bookings || []).filter((b) => b.AirGroupID === f.AirGroupID);
+  const rawSegments = db.segments || [];
+  const rawFlights = db.flights || [];
+  const rawBookings = db.bookings || [];
+
+  const flightsById = Object.fromEntries(rawFlights.map((f) => [f.AirGroupID, f]));
+
+  // Calculate booked seats per segment across both direct segment bookings and group flight bookings
+  const segments = rawSegments.map((s) => {
+    const segBookings = rawBookings.filter((b) => {
+      if (b.ApprovalStatus === 'Rejected' || b.ApprovalStatus === 'Ticket Void') return false;
+      if (Array.isArray(b.SegmentIDs) && b.SegmentIDs.includes(s.AirGroupSegmentID)) return true;
+      if (b.AirGroupSegmentID === s.AirGroupSegmentID) return true;
+      const fl = flightsById[b.AirGroupID];
+      if (fl && Array.isArray(fl.SegmentIDs) && fl.SegmentIDs.includes(s.AirGroupSegmentID)) {
+        return true;
+      }
+      return false;
+    });
+
+    const bookedSeats = segBookings.reduce(
+      (sum, b) => sum + (Number(b.AdultCount) || 0) + (Number(b.ChildCount) || 0),
+      0
+    );
+    const totalSeats = Number(s.TotalSeats) || 0;
+    const seatsLeft = Math.max(0, totalSeats - bookedSeats);
+
+    return {
+      ...s,
+      BookedSeats: bookedSeats,
+      SeatsLeft: seatsLeft,
+      AvailableSeats: seatsLeft
+    };
+  });
+
+  const segmentsById = Object.fromEntries(segments.map((s) => [s.AirGroupSegmentID, s]));
+
+  const flights = rawFlights.map((f) => {
+    const groupBookings = rawBookings.filter((b) => b.AirGroupID === f.AirGroupID);
     const activeBookings = groupBookings.filter(
       (b) => b.ApprovalStatus !== 'Rejected' && b.ApprovalStatus !== 'Ticket Void'
     );
@@ -76,16 +111,40 @@ function computeEnriched(db) {
     };
   });
 
-  const flightsById = Object.fromEntries(flights.map((f) => [f.AirGroupID, f]));
+  const enrichedFlightsById = Object.fromEntries(flights.map((f) => [f.AirGroupID, f]));
 
-  const bookings = (db.bookings || []).map((b) => {
-    const flight = flightsById[b.AirGroupID];
+  const bookings = rawBookings.map((b) => {
+    const flight = enrichedFlightsById[b.AirGroupID];
+    const directSegments = Array.isArray(b.SegmentIDs)
+      ? b.SegmentIDs.map((id) => segmentsById[id]).filter(Boolean)
+      : b.AirGroupSegmentID && segmentsById[b.AirGroupSegmentID]
+      ? [segmentsById[b.AirGroupSegmentID]]
+      : [];
+
+    const resolvedSegments =
+      directSegments.length > 0
+        ? directSegments
+        : flight
+        ? flight.Segments
+        : Array.isArray(b.Segments)
+        ? b.Segments
+        : [];
+
+    const firstSeg = resolvedSegments[0];
+    const lastSeg = resolvedSegments[resolvedSegments.length - 1];
+    const autoTitle =
+      firstSeg && lastSeg
+        ? resolvedSegments.length > 1
+          ? `${firstSeg.FlightNumber} • ${firstSeg.DepartureIata} → ${lastSeg.ArrivalIata} (${resolvedSegments.length} Legs)`
+          : `${firstSeg.FlightNumber} • ${firstSeg.DepartureIata} → ${firstSeg.ArrivalIata}`
+        : 'Flight Booking';
+
     return {
       ...b,
-      FlightTitle: flight ? flight.Title : b.FlightTitle || 'Group Flight Block',
-      FlightCategory: flight ? flight.Category : 'Tourism',
-      TripType: flight ? flight.TripType : 'One Way',
-      Segments: flight ? flight.Segments : []
+      FlightTitle: b.FlightTitle || (flight ? flight.Title : autoTitle),
+      FlightCategory: b.FlightCategory || (flight ? flight.Category : firstSeg?.FlightClass || 'Economy'),
+      TripType: b.TripType || (flight ? flight.TripType : resolvedSegments.length > 1 ? 'Round Trip' : 'One Way'),
+      Segments: resolvedSegments
     };
   });
 
@@ -108,7 +167,7 @@ function computeEnriched(db) {
     airports: db.airports || [],
     airlines: db.airlines || [],
     suppliers: db.suppliers || [],
-    segments: db.segments || [],
+    segments,
     flights,
     bookings,
     subAgents: db.subAgents || []
@@ -313,6 +372,8 @@ export function PortalProvider({ children }) {
   const createBooking = async (bookingPayload) => {
     const {
       AirGroupID,
+      SegmentIDs = [],
+      TripType = 'One Way',
       SubCompanyID,
       EmailAddress,
       MobileNumber,
@@ -321,22 +382,52 @@ export function PortalProvider({ children }) {
       BookingChannelName = 'Flight POS Desk'
     } = bookingPayload;
 
-    const flight = dbState.flights.find((f) => f.AirGroupID === AirGroupID);
-    if (!flight) throw new Error('Please Select Flight Group.');
-    const agent = dbState.subAgents.find((a) => a.SubCompanyID === SubCompanyID);
-    if (!agent) throw new Error('Please Select Sub Agent.');
+    const selectedSegments = (SegmentIDs || [])
+      .map((id) => (dbState.segments || []).find((s) => s.AirGroupSegmentID === id))
+      .filter(Boolean);
+
+    const flight = AirGroupID
+      ? (dbState.flights || []).find((f) => f.AirGroupID === AirGroupID)
+      : null;
+
+    if (selectedSegments.length === 0 && !flight) {
+      throw new Error('Please select at least one Flight Segment to book.');
+    }
+
+    const agent =
+      SubCompanyID && SubCompanyID !== 'DIRECT'
+        ? (dbState.subAgents || []).find((a) => a.SubCompanyID === SubCompanyID)
+        : null;
+
+    const resolvedCompanyId = agent ? agent.SubCompanyID : 'DIRECT';
+    const resolvedCompanyName = agent ? agent.CompanyName : 'Bookly Direct Desk';
+
     if (!Passengers.length) throw new Error('Please add at least one passenger.');
 
     const adults = Passengers.filter((p) => p.PassengerType === 'Adult').length;
     const children = Passengers.filter((p) => p.PassengerType === 'Child').length;
     const infants = Passengers.filter((p) => p.PassengerType === 'Infant').length;
 
-    const totalPrice =
-      adults * (Number(flight.AdultPrice) || 0) +
-      children * (Number(flight.ChildPrice) || 0) +
-      infants * (Number(flight.InfantPrice) || 0);
+    let totalPrice = 0;
+    if (selectedSegments.length > 0) {
+      selectedSegments.forEach((seg) => {
+        totalPrice +=
+          adults * (Number(seg.AdultPrice) || 0) +
+          children * (Number(seg.ChildPrice) || 0) +
+          infants * (Number(seg.InfantPrice) || 0);
+      });
+    } else if (flight) {
+      totalPrice =
+        adults * (Number(flight.AdultPrice) || 0) +
+        children * (Number(flight.ChildPrice) || 0) +
+        infants * (Number(flight.InfantPrice) || 0);
+    }
 
-    const pnr = generatePNR(flight.Airline || 'PN');
+    const firstSeg = selectedSegments[0];
+    const lastSeg = selectedSegments[selectedSegments.length - 1];
+    const airlineCode =
+      firstSeg?.OperatingAirline || firstSeg?.MarketingAirline || flight?.Airline || 'BK';
+    const pnr = generatePNR(airlineCode);
     const bookingId = `BK-${Math.floor(10000 + Math.random() * 90000)}`;
 
     const formattedPassengers = Passengers.map((p, idx) => ({
@@ -363,28 +454,48 @@ export function PortalProvider({ children }) {
       PassportFileData: p.PassportFileData || ''
     }));
 
+    const flightTitle =
+      selectedSegments.length > 0
+        ? selectedSegments.length > 1
+          ? `${firstSeg.FlightNumber} • ${firstSeg.DepartureIata} ⇄ ${lastSeg.ArrivalIata} (${TripType})`
+          : `${firstSeg.FlightNumber} • ${firstSeg.DepartureIata} → ${firstSeg.ArrivalIata}`
+        : flight?.Title || 'Flight Booking';
+
     const newBooking = {
       AirGroupBookingID: bookingId,
-      AirGroupID: flight.AirGroupID,
-      SubCompanyID: agent.SubCompanyID,
-      SubCompanyName: agent.CompanyName,
+      AirGroupID: flight ? flight.AirGroupID : `POS-${bookingId}`,
+      SegmentIDs: selectedSegments.map((s) => s.AirGroupSegmentID),
+      AirGroupSegmentID: firstSeg ? firstSeg.AirGroupSegmentID : '',
+      FlightTitle: flightTitle,
+      FlightCategory: firstSeg?.FlightClass || flight?.Category || 'Economy',
+      TripType: TripType || (selectedSegments.length > 1 ? 'Round Trip' : 'One Way'),
+      SubCompanyID: resolvedCompanyId,
+      SubCompanyName: resolvedCompanyName,
       BookingChannelName,
       PNR: pnr,
-      PNR_AIRLINE: flight.PNR_AIRLINE || pnr,
-      ValidatingCarrierName: flight.ValidatingCarrierName || flight.Airline || 'Airline',
+      PNR_AIRLINE: flight?.PNR_AIRLINE || firstSeg?.FlightNumber || pnr,
+      ValidatingCarrierName:
+        firstSeg?.OperatingAirlineName ||
+        flight?.ValidatingCarrierName ||
+        airlineCode ||
+        'Airline',
       ApprovalStatus: 'Pending',
       AdultCount: adults,
       ChildCount: children,
       InfantCount: infants,
       TotalPrice: totalPrice,
-      BookingTimeLimit: flight.TimeLimit ? flight.TimeLimit.replace('T', ' ') : '—',
+      BookingTimeLimit: firstSeg?.DepartureDate
+        ? firstSeg.DepartureDate.replace('T', ' ')
+        : flight?.TimeLimit
+        ? flight.TimeLimit.replace('T', ' ')
+        : '—',
       ApprovalLoginID: '',
       ApprovalDateTime: '',
       VoidLoginID: '',
       VoidDateTime: '',
       VoidReason: '',
-      EmailAddress: EmailAddress || agent.Email,
-      MobileNumber: MobileNumber || agent.MobileNumber,
+      EmailAddress: EmailAddress || agent?.Email || 'bookings@bookly.com',
+      MobileNumber: MobileNumber || agent?.MobileNumber || '',
       Remarks: Remarks || '',
       TimeStamp: formatNow(),
       Passengers: formattedPassengers
@@ -392,9 +503,11 @@ export function PortalProvider({ children }) {
 
     updateLocalDb((draft) => {
       draft.bookings.unshift(newBooking);
-      const ag = draft.subAgents.find((a) => a.SubCompanyID === SubCompanyID);
-      if (ag) {
-        ag.CreditLimitBalance = Math.max(0, (Number(ag.CreditLimitBalance) || 0) - totalPrice);
+      if (agent) {
+        const ag = draft.subAgents.find((a) => a.SubCompanyID === agent.SubCompanyID);
+        if (ag) {
+          ag.CreditLimitBalance = Math.max(0, (Number(ag.CreditLimitBalance) || 0) - totalPrice);
+        }
       }
       return draft;
     });

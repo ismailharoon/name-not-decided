@@ -18,7 +18,7 @@ import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR, formatShortDate } from '../utils/exporters';
 
 export default function Dashboard() {
-  const { stats, bookings, flights, subAgents } = usePortal();
+  const { stats, bookings, segments, subAgents } = usePortal();
   const navigate = useNavigate();
 
   const statusCounts = {
@@ -145,67 +145,70 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Booking Lifecycle Pipeline & Active Flight Seat Inventory */}
+      {/* Booking Lifecycle Pipeline & Active Flight Segment Inventory */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Group Flight Seat Inventory */}
+        {/* Left: Active Flight Segments Seat Inventory */}
         <div className="lg:col-span-7 bg-white rounded-2xl border border-[#EE8200]/15 p-6 shadow-executive">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="font-display font-bold text-lg text-[#0B0A09]">
-                Active Group Flight Blocks & Seat Occupancy
+                Active Flight Segments & Seat Occupancy
               </h3>
               <p className="text-xs text-neutral-500">
-                Real-time inventory across active flight groups
+                Real-time inventory across active flight segments
               </p>
             </div>
             <button
-              onClick={() => navigate('/FlightManagement')}
+              onClick={() => navigate('/SegmentManagement')}
               className="text-xs font-bold text-[#EE8200] hover:underline"
             >
-              Manage Flights &rarr;
+              Manage Segments &rarr;
             </button>
           </div>
 
-          {flights.length === 0 ? (
+          {segments.length === 0 ? (
             <div className="py-12 text-center border border-dashed border-neutral-200 rounded-xl">
               <p className="text-xs text-neutral-500 mb-3">
-                No flight groups created yet. Add segments and flight groups to begin.
+                No flight segments created yet. Add a segment in Segment Management and search/book it directly in POS.
               </p>
               <button
-                onClick={() => navigate('/FlightManagement')}
+                onClick={() => navigate('/SegmentManagement')}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#EE8200] text-white text-xs font-bold hover:bg-black transition"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Flight Group</span>
+                <span>Add Flight Segment</span>
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              {flights.map((f) => {
-                const total = Number(f.TotalSeats) || 160;
-                const left = Number(f.SeatsLeft) || 0;
+              {segments.map((seg) => {
+                const total = Number(seg.TotalSeats) || 160;
+                const left = Number(seg.SeatsLeft ?? seg.TotalSeats) || 0;
                 const sold = Math.max(0, total - left);
                 const pct = Math.min(100, Math.round((sold / total) * 100));
                 return (
                   <div
-                    key={f.AirGroupID}
-                    className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/10 hover:border-[#EE8200]/30 transition"
+                    key={seg.AirGroupSegmentID}
+                    onClick={() => navigate('/FlightPOS')}
+                    className="p-4 rounded-xl bg-[#FAFAFA] border border-[#EE8200]/10 hover:border-[#EE8200]/40 transition cursor-pointer"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5">
                         <span className="px-2.5 py-1 rounded-lg bg-[#EE8200] text-white font-mono text-xs font-bold">
-                          {f.Airline}
+                          {seg.FlightNumber}
                         </span>
                         <div>
-                          <div className="font-bold text-sm text-[#0B0A09]">{f.Title}</div>
+                          <div className="font-bold text-sm text-[#0B0A09]">
+                            {seg.DepartureCity} ({seg.DepartureIata}) &rarr; {seg.ArrivalCity} ({seg.ArrivalIata})
+                          </div>
                           <div className="text-xs text-neutral-500">
-                            Dep: {formatShortDate(f.GroupDepartureDate)} • Category: {f.Category} ({f.TripType})
+                            Dep: {formatShortDate(seg.DepartureDate)} • {seg.FlightClass || 'Economy'} • {seg.BaggageCountADT}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-mono font-bold text-sm text-[#EE8200]">
-                          {formatCurrencyPKR(f.AdultPrice)}
+                          {formatCurrencyPKR(seg.AdultPrice)}
                         </div>
                         <div className="text-[11px] text-neutral-500">
                           {left} of {total} seats left
