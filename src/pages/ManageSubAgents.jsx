@@ -14,6 +14,8 @@ import { formatCurrencyPKR } from '../utils/exporters';
 
 const INITIAL_AGENT_FORM = {
   CompanyName: '',
+  LoginID: '',
+  PassCode: '',
   City: 'Karachi',
   Country: 'Pakistan',
   MobileNumber: '',
@@ -462,6 +464,35 @@ export default function ManageSubAgents() {
                   </select>
                 </div>
               </div>
+
+              {!editingAgentId && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-3.5 rounded-lg bg-[#EFF4FB] border border-[#1B3664]/20">
+                  <div>
+                    <label className="block font-semibold text-[#1B3664] mb-1">
+                      Sub-Agent Login ID (For POS Login)
+                    </label>
+                    <input
+                      type="text"
+                      value={agentForm.LoginID || ''}
+                      onChange={(e) => setAgentForm({ ...agentForm, LoginID: e.target.value })}
+                      placeholder="e.g. agent1"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-[#1B3664] mb-1">
+                      Sub-Agent Password
+                    </label>
+                    <input
+                      type="text"
+                      value={agentForm.PassCode || ''}
+                      onChange={(e) => setAgentForm({ ...agentForm, PassCode: e.target.value })}
+                      placeholder="e.g. Pass@123"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block font-medium text-slate-700 mb-1">Address</label>

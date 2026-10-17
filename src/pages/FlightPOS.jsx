@@ -17,10 +17,12 @@ import {
   Users,
   Calculator,
   X,
-  Trash2
+  Trash2,
+  Printer
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR, formatDateTime, formatShortDate } from '../utils/exporters';
+import TicketPrintModal from '../components/TicketPrintModal';
 
 const DEFAULT_MULTI_LEGS = [
   { id: 'leg-1', fromIata: 'KHI', toIata: 'IKA', departDate: '' },
@@ -28,7 +30,8 @@ const DEFAULT_MULTI_LEGS = [
 ];
 
 export default function FlightPOS() {
-  const { segments, subAgents, airports, createBooking, addToast } = usePortal();
+  const { user, isSubAgent, bookings, segments, subAgents, airports, createBooking, addToast } =
+    usePortal();
   const navigate = useNavigate();
 
   const [tripType, setTripType] = useState('One Way'); // 'Round Trip' | 'One Way' | 'Multi City'
@@ -45,7 +48,9 @@ export default function FlightPOS() {
   const [infantsCount, setInfantsCount] = useState(0);
 
   const [cabinClass, setCabinClass] = useState('All');
-  const [selectedAgentId, setSelectedAgentId] = useState('DIRECT');
+  const [selectedAgentId, setSelectedAgentId] = useState(
+    isSubAgent ? user?.SubCompanyID || 'DIRECT' : 'DIRECT'
+  );
   const [showPromo, setShowPromo] = useState(false);
   const [promoCode, setPromoCode] = useState('');
 
@@ -56,12 +61,15 @@ export default function FlightPOS() {
   const [mobile, setMobile] = useState('');
   const [remarks, setRemarks] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [printBooking, setPrintBooking] = useState(null);
 
   useEffect(() => {
-    if (selectedAgentId === 'DIRECT' && subAgents.length > 0) {
+    if (isSubAgent && user?.SubCompanyID) {
+      setSelectedAgentId(user.SubCompanyID);
+    } else if (selectedAgentId === 'DIRECT' && subAgents.length > 0) {
       setSelectedAgentId(subAgents[0].SubCompanyID);
     }
-  }, [subAgents, selectedAgentId]);
+  }, [subAgents, selectedAgentId, isSubAgent, user]);
 
   const selectedAgent = useMemo(
     () => subAgents.find((a) => a.SubCompanyID === selectedAgentId) || null,
@@ -404,14 +412,19 @@ export default function FlightPOS() {
       await createBooking({
         SegmentIDs: selectedSegments.map((s) => s.AirGroupSegmentID),
         TripType: tripType,
-        SubCompanyID: selectedAgentId || 'DIRECT',
+        SubCompanyID: isSubAgent ? user.SubCompanyID : selectedAgentId || 'DIRECT',
         EmailAddress: email || selectedAgent?.Email || 'bookings@bookly.com',
         MobileNumber: mobile || selectedAgent?.MobileNumber || '',
         Remarks: promoCode ? `${remarks ? remarks + ' | ' : ''}Promo: ${promoCode}` : remarks,
         Passengers: passengers,
         BookingChannelName: 'Bookly POS Search'
       });
-      navigate('/FlightBookings');
+      setSelectedSegmentIds([]);
+      if (isSubAgent) {
+        navigate('/Dashboard');
+      } else {
+        navigate('/FlightBookings');
+      }
     } catch (err) {
       addToast(err.message, 'error');
     } finally {
@@ -867,25 +880,36 @@ export default function FlightPOS() {
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
                   BOOKING AGENCY / SUB-AGENT
                 </label>
-                <select
-                  value={selectedAgentId}
-                  onChange={(e) => {
-                    setSelectedAgentId(e.target.value);
-                    const ag = subAgents.find((a) => a.SubCompanyID === e.target.value);
-                    if (ag) {
-                      setEmail(ag.Email || '');
-                      setMobile(ag.MobileNumber || '');
-                    }
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:border-[#1B3664] focus:outline-none"
-                >
-                  <option value="DIRECT">Bookly Direct Desk (Admin)</option>
-                  {subAgents.map((a) => (
-                    <option key={a.SubCompanyID} value={a.SubCompanyID}>
-                      {a.CompanyName} ({a.City}) — Bal: {formatCurrencyPKR(a.CreditLimitBalance)}
-                    </option>
-                  ))}
-                </select>
+                {isSubAgent ? (
+                  <div className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-xs font-semibold text-[#1B3664] flex items-center justify-between">
+                    <span className="truncate">{user?.SubCompanyName || 'Sub Agent'}</span>
+                    {selectedAgent && (
+                      <span className="font-mono text-[11px] text-emerald-700 shrink-0 ml-2">
+                        Bal: {formatCurrencyPKR(selectedAgent.CreditLimitBalance)}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <select
+                    value={selectedAgentId}
+                    onChange={(e) => {
+                      setSelectedAgentId(e.target.value);
+                      const ag = subAgents.find((a) => a.SubCompanyID === e.target.value);
+                      if (ag) {
+                        setEmail(ag.Email || '');
+                        setMobile(ag.MobileNumber || '');
+                      }
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:border-[#1B3664] focus:outline-none"
+                  >
+                    <option value="DIRECT">Bookly Direct Desk (Admin)</option>
+                    {subAgents.map((a) => (
+                      <option key={a.SubCompanyID} value={a.SubCompanyID}>
+                        {a.CompanyName} ({a.City}) — Bal: {formatCurrencyPKR(a.CreditLimitBalance)}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
           </div>
@@ -994,17 +1018,21 @@ export default function FlightPOS() {
               <div className="text-xs font-semibold text-slate-700">
                 No flight segments have been added yet.
               </div>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Add a flight segment in <b>Segment Management</b> and it will appear here for instant search and booking.
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/SegmentManagement')}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Go to Segment Management</span>
-              </button>
+              {!isSubAgent && (
+                <>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    Add a flight segment in <b>Segment Management</b> and it will appear here for instant search and booking.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/SegmentManagement')}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Go to Segment Management</span>
+                  </button>
+                </>
+              )}
             </div>
           ) : matchingSegments.length === 0 ? (
             <div className="py-8 text-center space-y-2.5">
@@ -1456,6 +1484,97 @@ export default function FlightPOS() {
             </div>
           </div>
         </form>
+      )}
+
+      {/* SUB-AGENT OWN BOOKINGS SECTION INSIDE POS */}
+      {isSubAgent && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="bg-[#1D314F] text-white px-5 py-3 flex items-center justify-between">
+            <div>
+              <h3 className="font-display font-semibold text-xs uppercase tracking-wider">
+                My POS Bookings ({bookings.length})
+              </h3>
+              <p className="text-[11px] text-white/70">
+                Only bookings created by your agency account are displayed here
+              </p>
+            </div>
+          </div>
+          {bookings.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-500">
+              You have not booked any tickets yet. Select a flight above to create your first booking.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                    <th className="py-2.5 px-3">PNR / Booking ID</th>
+                    <th className="py-2.5 px-3">Flight Sector</th>
+                    <th className="py-2.5 px-3 text-center">Passengers</th>
+                    <th className="py-2.5 px-3">Total Amount</th>
+                    <th className="py-2.5 px-3">Status</th>
+                    <th className="py-2.5 px-3">Booked At</th>
+                    <th className="py-2.5 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {bookings.map((b) => {
+                    const isIssued = b.ApprovalStatus === 'Ticket Issued';
+                    return (
+                      <tr key={b.AirGroupBookingID} className="hover:bg-slate-50 transition">
+                        <td className="py-2.5 px-3">
+                          <div className="font-mono font-semibold text-[#1B3664]">{b.PNR}</div>
+                          <div className="text-[10px] text-slate-500">{b.AirGroupBookingID}</div>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <div className="font-semibold text-slate-900">{b.FlightTitle}</div>
+                          <div className="text-[10px] text-slate-500">{b.TripType}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-mono">
+                          {b.AdultCount || 0}A / {b.ChildCount || 0}C / {b.InfantCount || 0}I
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-[#1B3664]">
+                          {formatCurrencyPKR(b.TotalPrice)}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              isIssued
+                                ? 'bg-[#1B3664] text-white'
+                                : b.ApprovalStatus === 'Approved'
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : b.ApprovalStatus === 'Rejected' ||
+                                  b.ApprovalStatus === 'Ticket Void'
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-amber-50 text-amber-800 border border-amber-200'
+                            }`}
+                          >
+                            {b.ApprovalStatus}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-[11px] text-slate-500">{b.TimeStamp}</td>
+                        <td className="py-2.5 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setPrintBooking(b)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white text-[11px] font-medium transition cursor-pointer"
+                          >
+                            <Printer className="w-3 h-3" />
+                            <span>{isIssued ? 'Print Ticket' : 'Print Details'}</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {printBooking && (
+        <TicketPrintModal booking={printBooking} onClose={() => setPrintBooking(null)} />
       )}
     </div>
   );

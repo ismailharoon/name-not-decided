@@ -34,14 +34,15 @@ const navSections = [
     group: 'Flight Operations',
     items: [
       { to: '/FlightPOS', label: 'Flight POS (Search & Book)', urdu: 'فلائٹ سرچ اور بکنگ', icon: ShoppingBag },
-      { to: '/FlightBookings', label: 'Flight Bookings', urdu: 'فلائٹ بکنگز', icon: Ticket, badgeKey: 'pending' },
-      { to: '/SegmentManagement', label: 'Segment Management', urdu: 'سیگمنٹ مینجمنٹ', icon: Layers }
+      { to: '/FlightBookings', label: 'Flight Bookings', urdu: 'فلائٹ بکنگز', icon: Ticket, badgeKey: 'pending', adminOnly: true },
+      { to: '/SegmentManagement', label: 'Segment Management', urdu: 'سیگمنٹ مینجمنٹ', icon: Layers, adminOnly: true }
     ]
   },
   {
     group: 'Agency Network',
+    adminOnly: true,
     items: [
-      { to: '/ManageSubAgents', label: 'Manage Sub Agents', urdu: 'سب ایجنٹس', icon: Users }
+      { to: '/ManageSubAgents', label: 'Manage Sub Agents', urdu: 'سب ایجنٹس', icon: Users, adminOnly: true }
     ]
   }
 ];
@@ -49,6 +50,8 @@ const navSections = [
 export default function Layout({ children }) {
   const {
     user,
+    isAdmin,
+    isSubAgent,
     logout,
     language,
     setLanguage,
@@ -67,6 +70,17 @@ export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  const visibleNavSections = React.useMemo(() => {
+    if (!isSubAgent) return navSections;
+    return navSections
+      .filter((sec) => !sec.adminOnly)
+      .map((sec) => ({
+        ...sec,
+        items: sec.items.filter((item) => !item.adminOnly)
+      }))
+      .filter((sec) => sec.items.length > 0);
+  }, [isSubAgent]);
 
   const pendingCount = bookings.filter((b) => b.ApprovalStatus === 'Pending').length;
 
@@ -169,7 +183,7 @@ export default function Layout({ children }) {
 
         {/* Navigation Links */}
         <nav className="flex-1 px-2.5 py-4 space-y-5 overflow-y-auto">
-          {navSections.map((sec) => (
+          {visibleNavSections.map((sec) => (
             <div key={sec.group}>
               {!sidebarCollapsed && (
                 <div className="px-2.5 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
@@ -231,13 +245,15 @@ export default function Layout({ children }) {
             <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             {!sidebarCollapsed && <span>Session Guard</span>}
           </button>
-          <button
-            onClick={resetDemoData}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            {!sidebarCollapsed && <span>Clear All Data</span>}
-          </button>
+          {isAdmin && (
+            <button
+              onClick={resetDemoData}
+              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              {!sidebarCollapsed && <span>Clear All Data</span>}
+            </button>
+          )}
           <button
             onClick={logout}
             className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium bg-[#1B3664] text-white hover:bg-[#152a4f] transition cursor-pointer"
@@ -279,7 +295,11 @@ export default function Layout({ children }) {
                   setOpenDropdown('search');
                 }}
                 onFocus={() => setOpenDropdown('search')}
-                placeholder="Search PNR, Booking ID, Passenger, Flight Segment, or Agent..."
+                placeholder={
+                  isSubAgent
+                    ? 'Search your PNR, Booking ID, Passenger, or Flight...'
+                    : 'Search PNR, Booking ID, Passenger, Flight Segment, or Agent...'
+                }
                 className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-[#1B3664] focus:bg-white transition"
               />
               {openDropdown === 'search' && searchQuery.trim().length > 0 && (
@@ -296,7 +316,7 @@ export default function Layout({ children }) {
                       onClick={() => {
                         setOpenDropdown(null);
                         setSearchQuery('');
-                        navigate('/FlightBookings');
+                        navigate(isSubAgent ? '/Dashboard' : '/FlightBookings');
                       }}
                       className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-between text-xs"
                     >
@@ -387,7 +407,7 @@ export default function Layout({ children }) {
                       <div
                         onClick={() => {
                           setOpenDropdown(null);
-                          navigate('/FlightBookings');
+                          navigate(isSubAgent ? '/Dashboard' : '/FlightBookings');
                         }}
                         className="p-3 hover:bg-slate-50 cursor-pointer transition"
                       >
@@ -395,7 +415,9 @@ export default function Layout({ children }) {
                           {pendingCount} Pending Booking(s)
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5">
-                          Click to review, approve, or issue e-tickets.
+                          {isSubAgent
+                            ? 'Click to view your booking status on Dashboard.'
+                            : 'Click to review, approve, or issue e-tickets.'}
                         </div>
                       </div>
                     ) : (
@@ -433,17 +455,21 @@ export default function Layout({ children }) {
                     <div className="text-[11px] text-white/75">{user?.Email || 'admin@bookly.com'}</div>
                   </div>
                   <div className="p-1.5">
-                    <button
-                      onClick={() => {
-                        setOpenDropdown(null);
-                        navigate('/ManageSubAgents');
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-slate-50 text-left cursor-pointer"
-                    >
-                      <UserCheck className="w-3.5 h-3.5 text-[#1B3664]" />
-                      <span>Sub Agent & Profile Settings</span>
-                    </button>
-                    <hr className="my-1 border-slate-100" />
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setOpenDropdown(null);
+                            navigate('/ManageSubAgents');
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-slate-50 text-left cursor-pointer"
+                        >
+                          <UserCheck className="w-3.5 h-3.5 text-[#1B3664]" />
+                          <span>Sub Agent & Profile Settings</span>
+                        </button>
+                        <hr className="my-1 border-slate-100" />
+                      </>
+                    )}
                     <button
                       onClick={logout}
                       className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 text-left cursor-pointer"

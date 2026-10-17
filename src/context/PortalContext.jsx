@@ -274,18 +274,23 @@ export function PortalProvider({ children }) {
 
   const enriched = React.useMemo(() => computeEnriched(dbState), [dbState]);
 
+  const isAdmin = !user || user.SubCompanyID === 'ADMIN';
+  const isSubAgent = Boolean(user && user.SubCompanyID && user.SubCompanyID !== 'ADMIN');
+
   const login = async (loginId, password, require2FA = false) => {
     if (!loginId || !password) {
       throw new Error('Please enter both Login ID and Password.');
     }
 
+    const cleanLogin = String(loginId).trim().toLowerCase();
     let matchedUser = null;
     let matchedAgent = null;
 
     for (const agent of dbState.subAgents || []) {
       for (const u of agent.Users || []) {
         if (
-          u.LoginID.toLowerCase() === String(loginId).trim().toLowerCase() &&
+          u.LoginID &&
+          u.LoginID.trim().toLowerCase() === cleanLogin &&
           u.PassCode === password
         ) {
           matchedUser = u;
@@ -293,12 +298,24 @@ export function PortalProvider({ children }) {
           break;
         }
       }
+      if (!matchedUser && agent.LoginID && agent.LoginID.trim().toLowerCase() === cleanLogin && agent.PassCode === password) {
+        matchedUser = {
+          UserID: `USR-${agent.SubCompanyID}`,
+          LoginID: agent.LoginID,
+          FullName: agent.CompanyName,
+          Email: agent.Email || '',
+          Designation: 'Sub Agent',
+          AccountType: 'Sub Agent',
+          AccountStatus: agent.AccountStatus || 'Enable'
+        };
+        matchedAgent = agent;
+      }
       if (matchedUser) break;
     }
 
     if (
       !matchedUser &&
-      String(loginId).trim().toLowerCase() === 'test' &&
+      cleanLogin === 'test' &&
       password === 'test123'
     ) {
       matchedUser = {
@@ -316,8 +333,8 @@ export function PortalProvider({ children }) {
       throw new Error('Invalid Login ID or Password.');
     }
 
-    if (matchedUser.AccountStatus === 'Disable') {
-      throw new Error('Your user account is currently disabled.');
+    if (matchedUser.AccountStatus === 'Disable' || matchedAgent?.AccountStatus === 'Disable') {
+      throw new Error('Your user or agency account is currently disabled.');
     }
 
     const userObj = {
@@ -325,7 +342,7 @@ export function PortalProvider({ children }) {
       FullName: matchedUser.FullName,
       Email: matchedUser.Email,
       Designation: matchedUser.Designation,
-      AccountType: matchedUser.AccountType,
+      AccountType: matchedAgent ? 'Sub Agent' : matchedUser.AccountType,
       SubCompanyID: matchedAgent?.SubCompanyID || 'ADMIN',
       SubCompanyName: matchedAgent?.CompanyName || 'Bookly'
     };
@@ -394,13 +411,19 @@ export function PortalProvider({ children }) {
       throw new Error('Please select at least one Flight Segment to book.');
     }
 
+    const effectiveSubCompanyID = isSubAgent ? user.SubCompanyID : SubCompanyID;
+
     const agent =
-      SubCompanyID && SubCompanyID !== 'DIRECT'
-        ? (dbState.subAgents || []).find((a) => a.SubCompanyID === SubCompanyID)
+      effectiveSubCompanyID && effectiveSubCompanyID !== 'DIRECT'
+        ? (dbState.subAgents || []).find((a) => a.SubCompanyID === effectiveSubCompanyID)
         : null;
 
-    const resolvedCompanyId = agent ? agent.SubCompanyID : 'DIRECT';
-    const resolvedCompanyName = agent ? agent.CompanyName : 'Bookly Direct Desk';
+    const resolvedCompanyId = agent ? agent.SubCompanyID : isSubAgent ? user.SubCompanyID : 'DIRECT';
+    const resolvedCompanyName = agent
+      ? agent.CompanyName
+      : isSubAgent
+      ? user.SubCompanyName
+      : 'Bookly Direct Desk';
 
     if (!Passengers.length) throw new Error('Please add at least one passenger.');
 
@@ -471,6 +494,7 @@ export function PortalProvider({ children }) {
       TripType: TripType || (selectedSegments.length > 1 ? 'Round Trip' : 'One Way'),
       SubCompanyID: resolvedCompanyId,
       SubCompanyName: resolvedCompanyName,
+      BookedByLoginID: user?.LoginID || 'test',
       BookingChannelName,
       PNR: pnr,
       PNR_AIRLINE: flight?.PNR_AIRLINE || firstSeg?.FlightNumber || pnr,
@@ -738,9 +762,26 @@ export function PortalProvider({ children }) {
   // --- SubAgent & User mutations ---
   const createSubAgent = async (p) => {
     if (!p.CompanyName) throw new Error('Company Name is required.');
+    const subCompanyId = `SUB-${Math.floor(205 + Math.random() * 800)}`;
+    const initialUsers = [];
+    if (p.LoginID && String(p.LoginID).trim()) {
+      initialUsers.push({
+        UserID: `USR-${Math.floor(100 + Math.random() * 9000)}`,
+        SubCompanyID: subCompanyId,
+        LoginID: String(p.LoginID).trim(),
+        PassCode: p.PassCode || 'Pass@123',
+        FullName: p.FullName || p.CompanyName,
+        Email: p.Email || '',
+        Designation: 'Sub Agent',
+        WhatsAppNumber: p.MobileNumber || '',
+        AccountType: 'Sub Agent',
+        AccountStatus: p.AccountStatus || 'Enable',
+        Reset2FA: false
+      });
+    }
     const newAgent = {
       ...p,
-      SubCompanyID: `SUB-${Math.floor(205 + Math.random() * 800)}`,
+      SubCompanyID: subCompanyId,
       CreditLimit: Number(p.CreditLimit) || 0,
       CreditLimitBalance: Number(p.CreditLimitBalance ?? p.CreditLimit) || 0,
       Created: new Date().toLocaleDateString('en-GB', {
@@ -748,7 +789,7 @@ export function PortalProvider({ children }) {
         month: 'short',
         year: 'numeric'
       }),
-      Users: []
+      Users: initialUsers
     };
     updateLocalDb((draft) => {
       draft.subAgents.unshift(newAgent);
@@ -829,10 +870,37 @@ export function PortalProvider({ children }) {
     addToast('User Deleted Successfully.', 'info');
   };
 
+  // Role-based filtering: Sub Agents ONLY see their own bookings & agency
+  const visibleBookings = React.useMemo(() => {
+    if (!isSubAgent) return enriched.bookings;
+    return enriched.bookings.filter((b) => b.SubCompanyID === user.SubCompanyID);
+  }, [enriched.bookings, isSubAgent, user]);
+
+  const visibleSubAgents = React.useMemo(() => {
+    if (!isSubAgent) return enriched.subAgents;
+    return enriched.subAgents.filter((a) => a.SubCompanyID === user.SubCompanyID);
+  }, [enriched.subAgents, isSubAgent, user]);
+
+  const visibleStats = React.useMemo(() => {
+    if (!isSubAgent) return enriched.stats;
+    const validOwnBookings = visibleBookings.filter(
+      (b) => b.ApprovalStatus !== 'Rejected' && b.ApprovalStatus !== 'Ticket Void'
+    );
+    const ownSales = validOwnBookings.reduce((acc, b) => acc + (Number(b.TotalPrice) || 0), 0);
+    return {
+      TotalSubAgents: 1,
+      TotalBookings: visibleBookings.length,
+      TotalUsers: (visibleSubAgents[0]?.Users || []).length || 1,
+      TotalBookingPrice: ownSales
+    };
+  }, [enriched.stats, isSubAgent, visibleBookings, visibleSubAgents]);
+
   return (
     <PortalContext.Provider
       value={{
         user,
+        isAdmin,
+        isSubAgent,
         loading,
         language,
         setLanguage,
@@ -840,14 +908,14 @@ export function PortalProvider({ children }) {
         setShowTimeoutModal,
         toasts,
         addToast,
-        stats: enriched.stats,
+        stats: visibleStats,
         airports: enriched.airports,
         airlines: enriched.airlines,
         suppliers: enriched.suppliers,
         segments: enriched.segments,
         flights: enriched.flights,
-        bookings: enriched.bookings,
-        subAgents: enriched.subAgents,
+        bookings: visibleBookings,
+        subAgents: visibleSubAgents,
         login,
         verifyOtpAndFinishLogin,
         logout,

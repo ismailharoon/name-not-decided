@@ -10,15 +10,20 @@ import FlightPOS from './pages/FlightPOS';
 import SegmentManagement from './pages/SegmentManagement';
 import ManageSubAgents from './pages/ManageSubAgents';
 
-function ProtectedShell({ children }) {
-  const { user } = usePortal();
+function ProtectedShell({ children, adminOnly = false }) {
+  const { user, isSubAgent } = usePortal();
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  if (adminOnly && isSubAgent) {
+    return <Navigate to="/FlightPOS" replace />;
   }
   return <Layout>{children}</Layout>;
 }
 
 export default function App() {
+  const { isSubAgent } = usePortal();
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -31,22 +36,6 @@ export default function App() {
         }
       />
       <Route
-        path="/FlightBookings"
-        element={
-          <ProtectedShell>
-            <FlightBookings />
-          </ProtectedShell>
-        }
-      />
-      <Route
-        path="/FlightManagement"
-        element={
-          <ProtectedShell>
-            <FlightManagement />
-          </ProtectedShell>
-        }
-      />
-      <Route
         path="/FlightPOS"
         element={
           <ProtectedShell>
@@ -55,9 +44,25 @@ export default function App() {
         }
       />
       <Route
+        path="/FlightBookings"
+        element={
+          <ProtectedShell adminOnly>
+            <FlightBookings />
+          </ProtectedShell>
+        }
+      />
+      <Route
+        path="/FlightManagement"
+        element={
+          <ProtectedShell adminOnly>
+            <FlightManagement />
+          </ProtectedShell>
+        }
+      />
+      <Route
         path="/SegmentManagement"
         element={
-          <ProtectedShell>
+          <ProtectedShell adminOnly>
             <SegmentManagement />
           </ProtectedShell>
         }
@@ -65,13 +70,19 @@ export default function App() {
       <Route
         path="/ManageSubAgents"
         element={
-          <ProtectedShell>
+          <ProtectedShell adminOnly>
             <ManageSubAgents />
           </ProtectedShell>
         }
       />
-      <Route path="/" element={<Navigate to="/FlightBookings" replace />} />
-      <Route path="*" element={<Navigate to="/FlightBookings" replace />} />
+      <Route
+        path="/"
+        element={<Navigate to={isSubAgent ? '/FlightPOS' : '/FlightBookings'} replace />}
+      />
+      <Route
+        path="*"
+        element={<Navigate to={isSubAgent ? '/FlightPOS' : '/FlightBookings'} replace />}
+      />
     </Routes>
   );
 }
