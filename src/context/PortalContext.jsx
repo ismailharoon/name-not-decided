@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { initialSeedData } from '../data/seedData';
 
 const PortalContext = createContext(null);
@@ -132,10 +132,11 @@ export function PortalProvider({ children }) {
   });
 
   const [dbState, setDbState] = useState(() => loadLocalDb());
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [language, setLanguage] = useState('English');
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const isSavingRef = useRef(false);
 
   const addToast = useCallback((message, type = 'success') => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -145,16 +146,72 @@ export function PortalProvider({ children }) {
     }, 4200);
   }, []);
 
-  const updateLocalDb = useCallback((updater) => {
-    setDbState((prev) => {
-      const next =
-        typeof updater === 'function' ? updater(JSON.parse(JSON.stringify(prev))) : updater;
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
+  const fetchRemoteDb = useCallback(async () => {
+    if (isSavingRef.current) return;
+    try {
+      const res = await fetch('/api/db', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.ok && data.state) {
+        setDbState(data.state);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.state));
+        } catch {}
+      }
+    } catch {
+      // Fallback to local state when running offline
+    }
   }, []);
+
+  useEffect(() => {
+    fetchRemoteDb();
+    const interval = setInterval(fetchRemoteDb, 5000);
+    const handleFocus = () => fetchRemoteDb();
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchRemoteDb]);
+
+  const saveRemoteDb = useCallback(async (nextState) => {
+    isSavingRef.current = true;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nextState)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.ok && data.state) {
+          setDbState(data.state);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.state));
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.warn('Cloud DB sync warning:', err);
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, []);
+
+  const updateLocalDb = useCallback(
+    (updater) => {
+      setDbState((prev) => {
+        const next =
+          typeof updater === 'function' ? updater(JSON.parse(JSON.stringify(prev))) : updater;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {}
+        saveRemoteDb(next);
+        return next;
+      });
+    },
+    [saveRemoteDb]
+  );
 
   const enriched = React.useMemo(() => computeEnriched(dbState), [dbState]);
 
