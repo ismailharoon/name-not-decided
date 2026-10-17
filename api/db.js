@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         state: {
-          airports: state.airports || initialSeedData.airports || [],
+          airports: initialSeedData.airports,
           airlines: state.airlines || initialSeedData.airlines || [],
           suppliers: state.suppliers || initialSeedData.suppliers || [],
           segments: state.segments || [],
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
       const current = await loadOrInitState(collection);
 
       const nextState = {
-        airports: Array.isArray(body.airports) ? body.airports : current.airports || initialSeedData.airports,
+        airports: initialSeedData.airports,
         airlines: Array.isArray(body.airlines) ? body.airlines : current.airlines || initialSeedData.airlines,
         suppliers: Array.isArray(body.suppliers) ? body.suppliers : current.suppliers || initialSeedData.suppliers,
         segments: Array.isArray(body.segments) ? body.segments : current.segments || [],

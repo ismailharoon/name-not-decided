@@ -164,9 +164,9 @@ function computeEnriched(db) {
       TotalUsers: totalUsers,
       TotalBookingPrice: totalSales
     },
-    airports: db.airports || [],
-    airlines: db.airlines || [],
-    suppliers: db.suppliers || [],
+    airports: initialSeedData.airports,
+    airlines: db.airlines || initialSeedData.airlines || [],
+    suppliers: db.suppliers || initialSeedData.suppliers || [],
     segments,
     flights,
     bookings,

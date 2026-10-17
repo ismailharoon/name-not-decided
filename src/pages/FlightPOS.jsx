@@ -60,35 +60,13 @@ export default function FlightPOS() {
   );
 
   const airportOptions = useMemo(() => {
-    const map = new Map();
-    (airports || []).forEach((a) => {
-      map.set(a.AirportCode, {
-        code: a.AirportCode,
-        name: a.AirportName,
-        city: a.CityName,
-        country: a.CountryName
-      });
-    });
-    (segments || []).forEach((s) => {
-      if (s.DepartureIata && !map.has(s.DepartureIata)) {
-        map.set(s.DepartureIata, {
-          code: s.DepartureIata,
-          name: s.DepartureAirport || s.DepartureCity || s.DepartureIata,
-          city: s.DepartureCity || s.DepartureIata,
-          country: s.DepartureCountry || ''
-        });
-      }
-      if (s.ArrivalIata && !map.has(s.ArrivalIata)) {
-        map.set(s.ArrivalIata, {
-          code: s.ArrivalIata,
-          name: s.ArrivalAirport || s.ArrivalCity || s.ArrivalIata,
-          city: s.ArrivalCity || s.ArrivalIata,
-          country: s.ArrivalCountry || ''
-        });
-      }
-    });
-    return Array.from(map.values());
-  }, [airports, segments]);
+    return (airports || []).map((a) => ({
+      code: a.AirportCode,
+      name: a.AirportName,
+      city: a.CityName,
+      country: a.CountryName
+    }));
+  }, [airports]);
 
   const fromAirportObj = useMemo(
     () => airportOptions.find((a) => a.code === fromIata) || null,

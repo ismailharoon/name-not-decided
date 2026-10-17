@@ -2,25 +2,7 @@ export const initialSeedData = {
   airports: [
     { AirportCode: 'KHI', AirportName: 'Jinnah Intl Airport', CityName: 'Karachi', CountryName: 'Pakistan' },
     { AirportCode: 'IKA', AirportName: 'Imam Khomeini Intl Airport', CityName: 'Tehran', CountryName: 'Iran' },
-    { AirportCode: 'MHD', AirportName: 'Mashhad Intl Airport', CityName: 'Mashhad', CountryName: 'Iran' },
-    { AirportCode: 'LHE', AirportName: 'Allama Iqbal Intl Airport', CityName: 'Lahore', CountryName: 'Pakistan' },
-    { AirportCode: 'ISB', AirportName: 'Islamabad Intl Airport', CityName: 'Islamabad', CountryName: 'Pakistan' },
-    { AirportCode: 'NJF', AirportName: 'Al Najaf Intl Airport', CityName: 'Najaf', CountryName: 'Iraq' },
-    { AirportCode: 'BGW', AirportName: 'Baghdad Intl Airport', CityName: 'Baghdad', CountryName: 'Iraq' },
-    { AirportCode: 'IFN', AirportName: 'Isfahan Intl Airport', CityName: 'Isfahan', CountryName: 'Iran' },
-    { AirportCode: 'SYZ', AirportName: 'Shiraz Intl Airport', CityName: 'Shiraz', CountryName: 'Iran' },
-    { AirportCode: 'DXB', AirportName: 'Dubai Intl Airport', CityName: 'Dubai', CountryName: 'United Arab Emirates' },
-    { AirportCode: 'SHJ', AirportName: 'Sharjah Intl Airport', CityName: 'Sharjah', CountryName: 'United Arab Emirates' },
-    { AirportCode: 'JED', AirportName: 'King Abdulaziz Intl Airport', CityName: 'Jeddah', CountryName: 'Saudi Arabia' },
-    { AirportCode: 'MED', AirportName: 'Prince Mohammad Bin Abdulaziz Airport', CityName: 'Madinah', CountryName: 'Saudi Arabia' },
-    { AirportCode: 'RUH', AirportName: 'King Khalid Intl Airport', CityName: 'Riyadh', CountryName: 'Saudi Arabia' },
-    { AirportCode: 'DOH', AirportName: 'Hamad Intl Airport', CityName: 'Doha', CountryName: 'Qatar' },
-    { AirportCode: 'MCT', AirportName: 'Muscat Intl Airport', CityName: 'Muscat', CountryName: 'Oman' },
-    { AirportCode: 'PEW', AirportName: 'Bacha Khan Intl Airport', CityName: 'Peshawar', CountryName: 'Pakistan' },
-    { AirportCode: 'MUX', AirportName: 'Multan Intl Airport', CityName: 'Multan', CountryName: 'Pakistan' },
-    { AirportCode: 'SKT', AirportName: 'Sialkot Intl Airport', CityName: 'Sialkot', CountryName: 'Pakistan' },
-    { AirportCode: 'UET', AirportName: 'Quetta Intl Airport', CityName: 'Quetta', CountryName: 'Pakistan' },
-    { AirportCode: 'IST', AirportName: 'Istanbul Airport', CityName: 'Istanbul', CountryName: 'Turkey' }
+    { AirportCode: 'MHD', AirportName: 'Mashhad Intl Airport', CityName: 'Mashhad', CountryName: 'Iran' }
   ],
   airlines: [
     { AirlineCode: 'HH', AirlineName: 'Taban Airlines' },
@@ -32,13 +14,7 @@ export const initialSeedData = {
     { AirlineCode: 'PA', AirlineName: 'Airblue' },
     { AirlineCode: 'ER', AirlineName: 'SereneAir' },
     { AirlineCode: '9P', AirlineName: 'Fly Jinnah' },
-    { AirlineCode: 'PF', AirlineName: 'AirSial' },
-    { AirlineCode: 'SV', AirlineName: 'Saudia' },
-    { AirlineCode: 'EK', AirlineName: 'Emirates' },
-    { AirlineCode: 'FZ', AirlineName: 'flydubai' },
-    { AirlineCode: 'G9', AirlineName: 'Air Arabia' },
-    { AirlineCode: 'QR', AirlineName: 'Qatar Airways' },
-    { AirlineCode: 'TK', AirlineName: 'Turkish Airlines' }
+    { AirlineCode: 'PF', AirlineName: 'AirSial' }
   ],
   suppliers: [
     { SupplierID: 'SUP-01', Supplier_Name: 'Direct Airline Inventory' },
