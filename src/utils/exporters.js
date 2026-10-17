@@ -1,5 +1,3 @@
-import * as XLSX from 'xlsx';
-
 export function formatCurrencyPKR(amount) {
   const num = Number(amount) || 0;
   return `PKR ${num.toLocaleString('en-US')}`;
@@ -59,16 +57,26 @@ export function formatDDMMM(dtStr, fallback = '27OCT') {
 }
 
 /**
- * Formats a date string into DD-MMM-YY (e.g., "27-Oct-26") for Excel cell D2
+ * Formats a date string into DD-MMM (e.g., "27-Oct") for Excel cell D2 fallback
  */
 export function formatExcelFlightDate(dtStr) {
-  if (!dtStr) return '';
+  if (!dtStr) return '27-Oct';
   const d = new Date(dtStr);
   if (isNaN(d.getTime())) return dtStr;
   const dd = String(d.getDate()).padStart(2, '0');
   const mmm = MONTHS_TITLE[d.getMonth()];
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${dd}-${mmm}-${yy}`;
+  return `${dd}-${mmm}`;
+}
+
+/**
+ * Converts a JS Date/string into an Excel serial date number (1900 date system)
+ */
+function toExcelDateSerial(dtStr) {
+  if (!dtStr) return null;
+  const d = new Date(dtStr);
+  if (isNaN(d.getTime())) return null;
+  const utcMs = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.round(utcMs / 86400000) + 25569;
 }
 
 /**
@@ -90,134 +98,9 @@ export function parseFlightNumberParts(segment) {
 }
 
 /**
- * Excel Export matching reference file: KHI-IKA-27OCT26-7212.xlsx
- * Sheet Name: "Page 1"
- * Row 1: From | To | Flight No | Flight Date
- * Row 2: KHI  | IKA| 7212      | 27-Oct-26
- * Row 3: R | Action | Age Type (A,C,I) | Title (M/F) | English First Name | English Last Name | Persian First Name | Persian Last Name | Birth date | With Adult | National Id | Passport Id | Mobile | Email | SSR Code | Agency PNR | Agency Ticket No. | Cabin
+ * Minimal pure-JS ZIP builder (STORE method) to generate authentic OpenXML .xlsx and .docx files
  */
-export function downloadExcelManifest(segment, passengers = []) {
-  const depIata = (segment?.DepartureIata || 'KHI').toUpperCase();
-  const arrIata = (segment?.ArrivalIata || 'IKA').toUpperCase();
-  const dateToken = formatDDMMMYY(segment?.DepartureDate, '27OCT26');
-  const { flightDigits } = parseFlightNumberParts(segment);
-
-  const filename = `${depIata}-${arrIata}-${dateToken}-${flightDigits}.xlsx`;
-
-  const row1 = ['From', 'To', 'Flight No', 'Flight Date'];
-  const flightNoValue = /^\d+$/.test(flightDigits) ? Number(flightDigits) : flightDigits;
-  const row2 = [depIata, arrIata, flightNoValue, formatExcelFlightDate(segment?.DepartureDate)];
-
-  const row3Headers = [
-    'R',
-    'Action',
-    'Age Type (A,C,I)',
-    'Title (M/F)',
-    'English First Name',
-    'English Last Name',
-    'Persian First Name',
-    'Persian Last Name',
-    'Birth date',
-    'With Adult',
-    'National Id',
-    'Passport Id',
-    'Mobile',
-    'Email',
-    'SSR Code',
-    'Agency PNR',
-    'Agency Ticket No.',
-    'Cabin'
-  ];
-
-  const paxRows = passengers.map((p, idx) => {
-    const ageType =
-      p.PassengerType === 'Infant' ? 'I' : p.PassengerType === 'Child' ? 'C' : 'A';
-    const genderCode =
-      p.Gender === 'Female' || p.Title === 'MRS' || p.Title === 'MISS' || p.Title === 'MS'
-        ? 'F'
-        : 'M';
-    const firstName = (p.FirstName || '').toUpperCase().trim();
-    const lastName = (p.LastName || '').toUpperCase().trim();
-    const persianFirst = (p.PersianFirstName || firstName).toUpperCase().trim();
-    const persianLast = (p.PersianLastName || lastName).toUpperCase().trim();
-    const dob = p.DOB || '';
-    const withAdult = ageType === 'I' ? 'X' : p.WithAdult || '';
-    const nationalId = p.NationalId || '';
-
-    const nat = (p.Nationality || 'PAK').toUpperCase().trim();
-    const passNo = (p.PassportNumber || '').toUpperCase().trim();
-    const dobToken = formatDDMMMYY(p.DOB, '01JAN90');
-    const expToken = formatDDMMMYY(p.PassportExpiryDate, '01JAN30');
-
-    // Exact reference format: PAK/AE3743832/PAK/17MAR85/M/05APR28/PANHWAR/MAZHAR HASSAN
-    const passportDocsId = `${nat}/${passNo}/${nat}/${dobToken}/${genderCode}/${expToken}/${lastName}/${firstName}`;
-
-    const mobile = p.MobileNumber || '';
-    const email = (p.EmailAddress || p.Email || '').toUpperCase().trim();
-    const ssrCode =
-      p.SSRCode && !['TKNE', 'INFT', 'CHLD'].includes(p.SSRCode) ? p.SSRCode : '';
-    const agencyPnr = (p.PNR || '').toUpperCase().trim();
-    const ticketNo = p.TicketNumber || '';
-    const cabin = segment?.FlightClass || 'Economy';
-
-    return [
-      idx + 1,
-      'I',
-      ageType,
-      genderCode,
-      firstName,
-      lastName,
-      persianFirst,
-      persianLast,
-      dob,
-      withAdult,
-      nationalId,
-      passportDocsId,
-      mobile,
-      email,
-      ssrCode,
-      agencyPnr,
-      ticketNo,
-      cabin
-    ];
-  });
-
-  const wsData = [row1, row2, row3Headers, ...paxRows];
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  ws['!cols'] = [
-    { wch: 5 },  // A: R
-    { wch: 8 },  // B: Action
-    { wch: 16 }, // C: Age Type (A,C,I)
-    { wch: 12 }, // D: Title (M/F)
-    { wch: 22 }, // E: English First Name
-    { wch: 18 }, // F: English Last Name
-    { wch: 22 }, // G: Persian First Name
-    { wch: 18 }, // H: Persian Last Name
-    { wch: 12 }, // I: Birth date
-    { wch: 11 }, // J: With Adult
-    { wch: 12 }, // K: National Id
-    { wch: 58 }, // L: Passport Id
-    { wch: 14 }, // M: Mobile
-    { wch: 28 }, // N: Email
-    { wch: 10 }, // O: SSR Code
-    { wch: 12 }, // P: Agency PNR
-    { wch: 18 }, // Q: Agency Ticket No.
-    { wch: 11 }  // R: Cabin
-  ];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Page 1');
-  XLSX.writeFile(wb, filename);
-}
-
-// Alias so both Excel buttons produce the exact reference format
-export const downloadExcelPassengersList = downloadExcelManifest;
-
-/**
- * Minimal pure-JS ZIP builder (STORE method) to generate authentic OpenXML .docx files
- */
-function createZipBlob(files) {
+function createZipBlob(files, mimeType) {
   const crcTable = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
     let c = n;
@@ -250,12 +133,12 @@ function createZipBlob(files) {
     // Local file header (30 bytes + name)
     const localHeader = new Uint8Array(30 + nameBytes.length);
     const lv = new DataView(localHeader.buffer);
-    lv.setUint32(0, 0x04034b50, true); // signature
-    lv.setUint16(4, 20, true); // version needed
-    lv.setUint16(6, 0x0800, true); // UTF-8 flag
-    lv.setUint16(8, 0, true); // compression: STORE (0)
-    lv.setUint16(10, 0, true); // mod time
-    lv.setUint16(12, 0x5421, true); // mod date
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint16(6, 0x0800, true);
+    lv.setUint16(8, 0, true);
+    lv.setUint16(10, 0, true);
+    lv.setUint16(12, 0x5421, true);
     lv.setUint32(14, crc, true);
     lv.setUint32(18, size, true);
     lv.setUint32(22, size, true);
@@ -266,11 +149,11 @@ function createZipBlob(files) {
     // Central directory header (46 bytes + name)
     const centralHeader = new Uint8Array(46 + nameBytes.length);
     const cv = new DataView(centralHeader.buffer);
-    cv.setUint32(0, 0x02014b50, true); // signature
-    cv.setUint16(4, 20, true); // version made by
-    cv.setUint16(6, 20, true); // version needed
-    cv.setUint16(8, 0x0800, true); // UTF-8 flag
-    cv.setUint16(10, 0, true); // compression: STORE (0)
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true);
     cv.setUint16(12, 0, true);
     cv.setUint16(14, 0x5421, true);
     cv.setUint32(16, crc, true);
@@ -303,7 +186,7 @@ function createZipBlob(files) {
   ev.setUint16(20, 0, true);
 
   return new Blob([...localParts, ...centralParts, eocd], {
-    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    type: mimeType
   });
 }
 
@@ -315,6 +198,250 @@ function escapeXml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 }
+
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+const EXCEL_COL_LETTERS = [
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+  'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'
+];
+
+const REFERENCE_EXCEL_STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac x16r2 xr" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:x16r2="http://schemas.microsoft.com/office/spreadsheetml/2015/02/main" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"><fonts count="4" x14ac:knownFonts="1"><font><sz val="10"/><color rgb="FF000000"/><name val="Arial"/><charset val="1"/></font><font><sz val="11"/><color rgb="FF000000"/><name val="Calibri"/><family val="2"/></font><font><sz val="22"/><color rgb="FF000000"/><name val="Arial"/><family val="2"/></font><font><sz val="10"/><color rgb="FF000000"/><name val="Arial"/><family val="2"/></font></fonts><fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCDCDC"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor theme="3" tint="0.59999389629810485"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="9"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="left"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf><xf numFmtId="16" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="4" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf><xf numFmtId="0" fontId="0" fillId="4" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment horizontal="left"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="3" fillId="4" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles><dxfs count="0"/><tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleLight16"/></styleSheet>`;
+
+const REFERENCE_EXCEL_THEME_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Office Theme 2007 - 2010"><a:themeElements><a:clrScheme name="Office 2007 - 2010"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F497D"/></a:dk2><a:lt2><a:srgbClr val="EEECE1"/></a:lt2><a:accent1><a:srgbClr val="4F81BD"/></a:accent1><a:accent2><a:srgbClr val="C0504D"/></a:accent2><a:accent3><a:srgbClr val="9BBB59"/></a:accent3><a:accent4><a:srgbClr val="8064A2"/></a:accent4><a:accent5><a:srgbClr val="4BACC6"/></a:accent5><a:accent6><a:srgbClr val="F79646"/></a:accent6><a:hlink><a:srgbClr val="0000FF"/></a:hlink><a:folHlink><a:srgbClr val="800080"/></a:folHlink></a:clrScheme><a:fontScheme name="Office 2007 - 2010"><a:majorFont><a:latin typeface="Cambria"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Office 2007 - 2010"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:schemeClr val="phClr"><a:tint val="50000"/><a:satMod val="300000"/></a:schemeClr></a:gs><a:gs pos="35000"><a:schemeClr val="phClr"><a:tint val="37000"/><a:satMod val="300000"/></a:schemeClr></a:gs><a:gs pos="100000"><a:schemeClr val="phClr"><a:tint val="15000"/><a:satMod val="350000"/></a:schemeClr></a:gs></a:gsLst><a:lin ang="16200000" scaled="1"/></a:gradFill><a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:schemeClr val="phClr"><a:shade val="51000"/><a:satMod val="130000"/></a:schemeClr></a:gs><a:gs pos="80000"><a:schemeClr val="phClr"><a:shade val="93000"/><a:satMod val="130000"/></a:schemeClr></a:gs><a:gs pos="100000"><a:schemeClr val="phClr"><a:shade val="94000"/><a:satMod val="135000"/></a:schemeClr></a:gs></a:gsLst><a:lin ang="16200000" scaled="0"/></a:gradFill></a:fillStyleLst><a:lnStyleLst><a:ln w="9525" cap="flat" cmpd="sng" algn="ctr"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:prstDash val="solid"/></a:ln><a:ln w="25400" cap="flat" cmpd="sng" algn="ctr"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:prstDash val="solid"/></a:ln><a:ln w="38100" cap="flat" cmpd="sng" algn="ctr"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:prstDash val="solid"/></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:schemeClr val="phClr"/></a:gs><a:gs pos="100000"><a:schemeClr val="phClr"/></a:gs></a:gsLst></a:gradFill><a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:schemeClr val="phClr"/></a:gs><a:gs pos="100000"><a:schemeClr val="phClr"/></a:gs></a:gsLst></a:gradFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>`;
+
+/**
+ * Excel Export matching reference file: KHI-IKA-27OCT26-7212.xlsx
+ * Includes exact colors/fills:
+ *  - Row 1 (A1:D1): Grey (#DCDCDC) fill — From | To | Flight No | Flight Date
+ *  - Row 2 (A2:D2): Yellow (#FFFF00) fill — KHI | IKA | 7212 | 27-Oct (numFmtId=16 d-mmm)
+ *  - Row 3 (A3:R3): Grey (#DCDCDC) fill — R | Action | Age Type (A,C,I) | ... | Cabin
+ *  - Row 4+ (A4:R...): Blue (#8DB4E2 theme 3 tint 0.6) fill — Passenger rows
+ */
+export function downloadExcelManifest(segment, passengers = []) {
+  const depIata = (segment?.DepartureIata || 'KHI').toUpperCase();
+  const arrIata = (segment?.ArrivalIata || 'IKA').toUpperCase();
+  const dateToken = formatDDMMMYY(segment?.DepartureDate, '27OCT26');
+  const { flightDigits } = parseFlightNumberParts(segment);
+
+  const filename = `${depIata}-${arrIata}-${dateToken}-${flightDigits}.xlsx`;
+
+  // Shared strings table builder
+  const sharedStrings = [];
+  const sharedMap = new Map();
+  let totalStringRefs = 0;
+
+  const getSharedStringIndex = (val) => {
+    const str = String(val ?? '');
+    totalStringRefs += 1;
+    if (sharedMap.has(str)) {
+      return sharedMap.get(str);
+    }
+    const idx = sharedStrings.length;
+    sharedStrings.push(str);
+    sharedMap.set(str, idx);
+    return idx;
+  };
+
+  const makeStringCell = (cellRef, styleIdx, text) => {
+    const str = String(text ?? '');
+    if (str === '') {
+      return `<c r="${cellRef}" s="${styleIdx}"/>`;
+    }
+    const sIdx = getSharedStringIndex(str);
+    return `<c r="${cellRef}" s="${styleIdx}" t="s"><v>${sIdx}</v></c>`;
+  };
+
+  const makeNumberCell = (cellRef, styleIdx, numVal) => {
+    return `<c r="${cellRef}" s="${styleIdx}"><v>${numVal}</v></c>`;
+  };
+
+  const xmlRows = [];
+
+  // Row 1: Grey header (From | To | Flight No | Flight Date) -> s="1"
+  const row1Headers = ['From', 'To', 'Flight No', 'Flight Date'];
+  const row1Cells = row1Headers
+    .map((h, i) => makeStringCell(`${EXCEL_COL_LETTERS[i]}1`, 1, h))
+    .join('');
+  xmlRows.push(
+    `<row r="1" spans="1:18" ht="14.85" customHeight="1" x14ac:dyDescent="0.25">${row1Cells}</row>`
+  );
+
+  // Row 2: Yellow values (KHI | IKA | 7212 | 27-Oct) -> A2:C2 s="2", D2 s="4" (d-mmm date serial)
+  const c2IsNumeric = /^\d+$/.test(flightDigits);
+  const c2Xml = c2IsNumeric
+    ? makeNumberCell('C2', 2, Number(flightDigits))
+    : makeStringCell('C2', 2, flightDigits);
+
+  const excelSerial = toExcelDateSerial(segment?.DepartureDate);
+  const d2Xml =
+    excelSerial !== null
+      ? makeNumberCell('D2', 4, excelSerial)
+      : makeStringCell('D2', 2, formatExcelFlightDate(segment?.DepartureDate));
+
+  const row2Cells = [
+    makeStringCell('A2', 2, depIata),
+    makeStringCell('B2', 2, arrIata),
+    c2Xml,
+    d2Xml
+  ].join('');
+  xmlRows.push(
+    `<row r="2" spans="1:18" ht="14.85" customHeight="1" x14ac:dyDescent="0.25">${row2Cells}</row>`
+  );
+
+  // Row 3: Grey passenger table headers (A3:R3) -> s="1"
+  const row3Headers = [
+    'R',
+    'Action',
+    'Age Type (A,C,I)',
+    'Title (M/F)',
+    'English First Name',
+    'English Last Name',
+    'Persian First Name',
+    'Persian Last Name',
+    'Birth date',
+    'With Adult',
+    'National Id',
+    'Passport Id',
+    'Mobile',
+    'Email',
+    'SSR Code',
+    'Agency PNR',
+    'Agency Ticket No.',
+    'Cabin'
+  ];
+  const row3Cells = row3Headers
+    .map((h, i) => makeStringCell(`${EXCEL_COL_LETTERS[i]}3`, 1, h))
+    .join('');
+  xmlRows.push(
+    `<row r="3" spans="1:18" ht="14.85" customHeight="1" x14ac:dyDescent="0.25">${row3Cells}</row>`
+  );
+
+  // Row 4+: Blue passenger rows -> s="5" (and s="6" when blank, matching reference file)
+  passengers.forEach((p, idx) => {
+    const rowNum = 4 + idx;
+    const ageType =
+      p.PassengerType === 'Infant' ? 'I' : p.PassengerType === 'Child' ? 'C' : 'A';
+    const genderCode =
+      p.Gender === 'Female' || p.Title === 'MRS' || p.Title === 'MISS' || p.Title === 'MS'
+        ? 'F'
+        : 'M';
+    const firstName = (p.FirstName || '').toUpperCase().trim();
+    const lastName = (p.LastName || '').toUpperCase().trim();
+    const persianFirst = (p.PersianFirstName || firstName).toUpperCase().trim();
+    const persianLast = (p.PersianLastName || lastName).toUpperCase().trim();
+    const dob = p.DOB || '';
+    const withAdult = ageType === 'I' ? 'X' : p.WithAdult || '';
+    const nationalId = p.NationalId || '';
+
+    const nat = (p.Nationality || 'PAK').toUpperCase().trim();
+    const passNo = (p.PassportNumber || '').toUpperCase().trim();
+    const dobToken = formatDDMMMYY(p.DOB, '01JAN90');
+    const expToken = formatDDMMMYY(p.PassportExpiryDate, '01JAN30');
+
+    // Exact reference format: PAK/AE3743832/PAK/17MAR85/M/05APR28/PANHWAR/MAZHAR HASSAN
+    const passportDocsId = `${nat}/${passNo}/${nat}/${dobToken}/${genderCode}/${expToken}/${lastName}/${firstName}`;
+
+    const mobile = p.MobileNumber || '';
+    const email = (p.EmailAddress || p.Email || '').toUpperCase().trim();
+    const ssrCode =
+      p.SSRCode && !['TKNE', 'INFT', 'CHLD'].includes(p.SSRCode) ? p.SSRCode : '';
+    const agencyPnr = (p.PNR || '').toUpperCase().trim();
+    const ticketNo = p.TicketNumber || '';
+    const cabin = segment?.FlightClass || 'Economy';
+
+    const rowValues = [
+      idx === 0 ? '1' : idx + 1, // In reference file A4 is string "1" and A5+ are numbers
+      'I',
+      ageType,
+      genderCode,
+      firstName,
+      lastName,
+      persianFirst,
+      persianLast,
+      dob,
+      withAdult,
+      nationalId,
+      passportDocsId,
+      mobile,
+      email,
+      ssrCode,
+      agencyPnr,
+      ticketNo,
+      cabin
+    ];
+
+    const cellsXml = rowValues
+      .map((val, colIdx) => {
+        const ref = `${EXCEL_COL_LETTERS[colIdx]}${rowNum}`;
+        if (colIdx === 0 && typeof val === 'number') {
+          return makeNumberCell(ref, 5, val);
+        }
+        if (val === '' || val === null || val === undefined) {
+          return `<c r="${ref}" s="6"/>`;
+        }
+        return makeStringCell(ref, 5, val);
+      })
+      .join('');
+
+    xmlRows.push(
+      `<row r="${rowNum}" spans="1:18" ht="14.85" customHeight="1" x14ac:dyDescent="0.25">${cellsXml}</row>`
+    );
+  });
+
+  const lastRow = Math.max(3 + passengers.length, 3);
+  const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac xr xr2 xr3" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision" xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2" xmlns:xr3="http://schemas.microsoft.com/office/spreadsheetml/2016/revision3"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:R${lastRow}"/><sheetViews><sheetView tabSelected="1" workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="13.2" x14ac:dyDescent="0.25"/><cols><col min="1" max="1" width="5.109375" customWidth="1"/><col min="2" max="2" width="7.6640625" customWidth="1"/><col min="3" max="3" width="15.44140625" customWidth="1"/><col min="4" max="4" width="11.5546875" customWidth="1"/><col min="5" max="6" width="18" customWidth="1"/><col min="7" max="7" width="30.6640625" bestFit="1" customWidth="1"/><col min="8" max="8" width="18" customWidth="1"/><col min="9" max="12" width="11.5546875" customWidth="1"/><col min="13" max="14" width="7.6640625" customWidth="1"/><col min="15" max="15" width="10.21875" customWidth="1"/><col min="16" max="16" width="12.88671875" customWidth="1"/><col min="17" max="17" width="18" customWidth="1"/><col min="18" max="18" width="9" customWidth="1"/></cols><sheetData>${xmlRows.join(
+    ''
+  )}</sheetData><pageMargins left="0.39" right="0.39" top="0.39" bottom="0.39" header="0" footer="0"/><pageSetup fitToHeight="0" orientation="landscape"/></worksheet>`;
+
+  const sharedStringsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${totalStringRefs}" uniqueCount="${
+    sharedStrings.length
+  }">${sharedStrings.map((s) => `<si><t>${escapeXml(s)}</t></si>`).join('')}</sst>`;
+
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Page 1" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+
+  const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>`;
+
+  const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
+
+  const blob = createZipBlob(
+    [
+      { name: '[Content_Types].xml', content: contentTypesXml },
+      { name: '_rels/.rels', content: rootRelsXml },
+      { name: 'xl/workbook.xml', content: workbookXml },
+      { name: 'xl/_rels/workbook.xml.rels', content: workbookRelsXml },
+      { name: 'xl/theme/theme1.xml', content: REFERENCE_EXCEL_THEME_XML },
+      { name: 'xl/styles.xml', content: REFERENCE_EXCEL_STYLES_XML },
+      { name: 'xl/sharedStrings.xml', content: sharedStringsXml },
+      { name: 'xl/worksheets/sheet1.xml', content: sheetXml }
+    ],
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  );
+
+  triggerBlobDownload(blob, filename);
+}
+
+// Alias so both Excel buttons produce the exact reference format
+export const downloadExcelPassengersList = downloadExcelManifest;
 
 /**
  * Word Export matching reference file: IATA-Manifest-7212 KHI IKA 27OCT26.docx
@@ -409,19 +536,15 @@ export function downloadWordManifest(segment, passengers = []) {
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 </Relationships>`;
 
-  const blob = createZipBlob([
-    { name: '[Content_Types].xml', content: contentTypesXml },
-    { name: '_rels/.rels', content: relsXml },
-    { name: 'word/_rels/document.xml.rels', content: wordRelsXml },
-    { name: 'word/document.xml', content: documentXml }
-  ]);
+  const blob = createZipBlob(
+    [
+      { name: '[Content_Types].xml', content: contentTypesXml },
+      { name: '_rels/.rels', content: relsXml },
+      { name: 'word/_rels/document.xml.rels', content: wordRelsXml },
+      { name: 'word/document.xml', content: documentXml }
+    ],
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  );
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  triggerBlobDownload(blob, filename);
 }
