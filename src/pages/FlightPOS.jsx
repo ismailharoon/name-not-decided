@@ -16,10 +16,16 @@ import {
   Utensils,
   Users,
   Calculator,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { formatCurrencyPKR, formatDateTime, formatShortDate } from '../utils/exporters';
+
+const DEFAULT_MULTI_LEGS = [
+  { id: 'leg-1', fromIata: 'KHI', toIata: 'IKA', departDate: '' },
+  { id: 'leg-2', fromIata: 'MHD', toIata: 'KHI', departDate: '' }
+];
 
 export default function FlightPOS() {
   const { segments, subAgents, airports, createBooking, addToast } = usePortal();
@@ -30,6 +36,9 @@ export default function FlightPOS() {
   const [toIata, setToIata] = useState('ALL');
   const [departDate, setDepartDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+
+  // Multi City legs state
+  const [multiCityLegs, setMultiCityLegs] = useState(DEFAULT_MULTI_LEGS);
 
   const [adultsCount, setAdultsCount] = useState(1);
   const [childrenCount, setChildrenCount] = useState(0);
@@ -83,6 +92,60 @@ export default function FlightPOS() {
     setToIata(fromIata);
   };
 
+  // Multi City leg handlers
+  const updateMultiLeg = (index, field, value) => {
+    setMultiCityLegs((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const swapMultiLegAirports = (index) => {
+    setMultiCityLegs((prev) => {
+      const next = [...prev];
+      const leg = next[index];
+      next[index] = { ...leg, fromIata: leg.toIata, toIata: leg.fromIata };
+      return next;
+    });
+  };
+
+  const addMultiLeg = () => {
+    setMultiCityLegs((prev) => {
+      if (prev.length >= 6) return prev;
+      const lastLeg = prev[prev.length - 1];
+      const nextFrom = lastLeg?.toIata && lastLeg.toIata !== 'ALL' ? lastLeg.toIata : 'KHI';
+      const nextTo = nextFrom === 'KHI' ? 'IKA' : 'KHI';
+      return [
+        ...prev,
+        {
+          id: `leg-${Date.now()}`,
+          fromIata: nextFrom,
+          toIata: nextTo,
+          departDate: ''
+        }
+      ];
+    });
+  };
+
+  const removeMultiLeg = (index) => {
+    setMultiCityLegs((prev) => (prev.length <= 2 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  // Helper to check which Multi City leg(s) a segment matches
+  const getMatchingMultiLegIndices = (seg) => {
+    const matched = [];
+    multiCityLegs.forEach((leg, idx) => {
+      const matchFrom = leg.fromIata === 'ALL' || seg.DepartureIata === leg.fromIata;
+      const matchTo = leg.toIata === 'ALL' || seg.ArrivalIata === leg.toIata;
+      const matchDate = !leg.departDate || (seg.DepartureDate || '').startsWith(leg.departDate);
+      if (matchFrom && matchTo && matchDate) {
+        matched.push(idx + 1);
+      }
+    });
+    return matched;
+  };
+
   const matchingSegments = useMemo(() => {
     return (segments || []).filter((seg) => {
       if (
@@ -93,10 +156,13 @@ export default function FlightPOS() {
       }
 
       if (tripType === 'Multi City') {
-        if (fromIata !== 'ALL' && seg.DepartureIata !== fromIata) return false;
-        if (toIata !== 'ALL' && seg.ArrivalIata !== toIata) return false;
-        if (departDate && !(seg.DepartureDate || '').startsWith(departDate)) return false;
-        return true;
+        return multiCityLegs.some((leg) => {
+          const matchFrom = leg.fromIata === 'ALL' || seg.DepartureIata === leg.fromIata;
+          const matchTo = leg.toIata === 'ALL' || seg.ArrivalIata === leg.toIata;
+          const matchDate =
+            !leg.departDate || (seg.DepartureDate || '').startsWith(leg.departDate);
+          return matchFrom && matchTo && matchDate;
+        });
       }
 
       if (tripType === 'Round Trip') {
@@ -120,7 +186,7 @@ export default function FlightPOS() {
       if (departDate && !(seg.DepartureDate || '').startsWith(departDate)) return false;
       return true;
     });
-  }, [segments, fromIata, toIata, departDate, returnDate, cabinClass, tripType]);
+  }, [segments, fromIata, toIata, departDate, returnDate, cabinClass, tripType, multiCityLegs]);
 
   const selectedSegments = useMemo(
     () =>
@@ -210,6 +276,7 @@ export default function FlightPOS() {
       if (tripType === 'Round Trip') {
         return prev.length >= 2 ? [prev[1], segId] : [...prev, segId];
       }
+      // Multi City: allow selecting multiple flight legs in sequence
       return [...prev, segId];
     });
 
@@ -228,9 +295,12 @@ export default function FlightPOS() {
   const handleSearchClick = (e) => {
     if (e) e.preventDefault();
     if (matchingSegments.length === 0) {
-      addToast('No flight segments matched your filter. Try "All Cities" or clear the date.', 'warning');
+      addToast(
+        'No flight segments matched your filter. Click "Show All Segments" to view all flights.',
+        'warning'
+      );
     } else {
-      addToast(`Found ${matchingSegments.length} available flight segment(s).`, 'success');
+      addToast(`Found ${matchingSegments.length} matching flight segment(s).`, 'success');
     }
   };
 
@@ -240,6 +310,9 @@ export default function FlightPOS() {
     setDepartDate('');
     setReturnDate('');
     setCabinClass('All');
+    setMultiCityLegs((prev) =>
+      prev.map((leg) => ({ ...leg, fromIata: 'ALL', toIata: 'ALL', departDate: '' }))
+    );
   };
 
   const updatePassengerField = (idx, field, val) => {
@@ -377,7 +450,9 @@ export default function FlightPOS() {
             })}
           </div>
           <p className="text-[11px] text-white/70 mt-2">
-            Search & book directly across your active flight segments
+            {tripType === 'Multi City'
+              ? 'Multi-City Search: Add multiple sectors (e.g. KHI → IKA, MHD → KHI) and select flights for each leg'
+              : 'Search & book directly across your active flight segments'}
           </p>
         </div>
 
@@ -386,144 +461,292 @@ export default function FlightPOS() {
           onSubmit={handleSearchClick}
           className="relative z-10 bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100 max-w-4xl mx-auto space-y-3.5 text-slate-800"
         >
-          {/* ROW 1: FROM & TO AIRPORT BOXES WITH CENTER SWAP BUTTON */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 relative">
-            {/* FROM BOX */}
-            <div className="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B3664] bg-slate-50/50 transition">
+          {tripType === 'Multi City' ? (
+            /* MULTI CITY LEGS BUILDER */
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  FROM
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#1B3664]">
+                  Multi-City Flight Sectors ({multiCityLegs.length} Legs)
                 </span>
-                <span className="text-[10px] text-[#1B3664] font-medium">Departure</span>
-              </div>
-              <div className="mt-1 flex items-baseline gap-2.5">
-                <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
-                  {fromIata === 'ALL' ? 'ANY' : fromIata}
-                </span>
-                <select
-                  value={fromIata}
-                  onChange={(e) => setFromIata(e.target.value)}
-                  className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
-                >
-                  <option value="ALL">All Departure Cities (Show All)</option>
-                  {airportOptions.map((a) => (
-                    <option key={a.code} value={a.code}>
-                      {a.code} — {a.city} ({a.name})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1 truncate">
-                {fromAirportObj
-                  ? `${fromAirportObj.name} • ${fromAirportObj.city}`
-                  : 'All departure airports'}
-              </div>
-            </div>
-
-            {/* SWAP BUTTON IN CENTER */}
-            <button
-              type="button"
-              onClick={handleSwapAirports}
-              title="Swap From & To Airports"
-              className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-[#1B3664] text-[#1B3664] hover:bg-[#1B3664] hover:text-white items-center justify-center shadow-xs transition cursor-pointer"
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5" />
-            </button>
-
-            {/* TO BOX */}
-            <div className="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B3664] bg-slate-50/50 transition">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  TO
-                </span>
-                <span className="text-[10px] text-[#1B3664] font-medium">Arrival</span>
-              </div>
-              <div className="mt-1 flex items-baseline gap-2.5">
-                <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
-                  {toIata === 'ALL' ? 'ANY' : toIata}
-                </span>
-                <select
-                  value={toIata}
-                  onChange={(e) => setToIata(e.target.value)}
-                  className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
-                >
-                  <option value="ALL">All Arrival Cities (Show All)</option>
-                  {airportOptions.map((a) => (
-                    <option key={a.code} value={a.code}>
-                      {a.code} — {a.city} ({a.name})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1 truncate">
-                {toAirportObj
-                  ? `${toAirportObj.name} • ${toAirportObj.city}`
-                  : 'All arrival airports'}
-              </div>
-            </div>
-          </div>
-
-          {/* ROW 2: DEPART DATE & RETURN DATE */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            <div className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#1B3664] flex items-center justify-between bg-white transition">
-              <div className="flex items-center gap-2.5 flex-1">
-                <Calendar className="w-4 h-4 text-[#1B3664] shrink-0" />
-                <div className="flex-1">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Depart {departDate ? '' : '(Any Date)'}
-                  </div>
-                  <input
-                    type="date"
-                    value={departDate}
-                    onChange={(e) => setDepartDate(e.target.value)}
-                    className="w-full text-xs font-medium text-slate-800 focus:outline-none bg-transparent cursor-pointer"
-                  />
-                </div>
-              </div>
-              {departDate && (
                 <button
                   type="button"
-                  onClick={() => setDepartDate('')}
-                  className="text-[11px] text-slate-400 hover:text-red-600 px-1.5"
+                  onClick={handleResetFilters}
+                  className="text-[11px] font-medium text-slate-500 hover:text-[#1B3664] cursor-pointer"
                 >
-                  Clear
+                  Show All Cities on All Legs
+                </button>
+              </div>
+
+              {multiCityLegs.map((leg, idx) => {
+                const depObj = airportOptions.find((a) => a.code === leg.fromIata);
+                const arrObj = airportOptions.find((a) => a.code === leg.toIata);
+                return (
+                  <div
+                    key={leg.id}
+                    className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#1B3664] text-white text-[10px] font-semibold uppercase tracking-wider">
+                        <Plane className="w-3 h-3" />
+                        Flight Leg {idx + 1}
+                      </span>
+                      {multiCityLegs.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMultiLeg(idx)}
+                          className="inline-flex items-center gap-1 text-[11px] text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove Leg</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+                      {/* FROM */}
+                      <div className="md:col-span-4 p-2.5 rounded-lg bg-white border border-slate-200">
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold uppercase">
+                          <span>From (Departure)</span>
+                          <span className="text-[#1B3664] font-mono">
+                            {leg.fromIata === 'ALL' ? 'ANY' : leg.fromIata}
+                          </span>
+                        </div>
+                        <select
+                          value={leg.fromIata}
+                          onChange={(e) => updateMultiLeg(idx, 'fromIata', e.target.value)}
+                          className="w-full mt-1 text-xs font-semibold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
+                        >
+                          <option value="ALL">All Cities (Any)</option>
+                          {airportOptions.map((a) => (
+                            <option key={a.code} value={a.code}>
+                              {a.city} ({a.code}) — {a.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {depObj ? `${depObj.name}, ${depObj.city}` : 'Any departure city'}
+                        </div>
+                      </div>
+
+                      {/* SWAP */}
+                      <div className="md:col-span-1 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => swapMultiLegAirports(idx)}
+                          title="Swap From & To"
+                          className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-[#1B3664] text-[#1B3664] hover:bg-[#1B3664] hover:text-white flex items-center justify-center transition cursor-pointer"
+                        >
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* TO */}
+                      <div className="md:col-span-4 p-2.5 rounded-lg bg-white border border-slate-200">
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold uppercase">
+                          <span>To (Arrival)</span>
+                          <span className="text-[#1B3664] font-mono">
+                            {leg.toIata === 'ALL' ? 'ANY' : leg.toIata}
+                          </span>
+                        </div>
+                        <select
+                          value={leg.toIata}
+                          onChange={(e) => updateMultiLeg(idx, 'toIata', e.target.value)}
+                          className="w-full mt-1 text-xs font-semibold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
+                        >
+                          <option value="ALL">All Cities (Any)</option>
+                          {airportOptions.map((a) => (
+                            <option key={a.code} value={a.code}>
+                              {a.city} ({a.code}) — {a.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {arrObj ? `${arrObj.name}, ${arrObj.city}` : 'Any arrival city'}
+                        </div>
+                      </div>
+
+                      {/* DEPART DATE */}
+                      <div className="md:col-span-3 p-2.5 rounded-lg bg-white border border-slate-200">
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold uppercase">
+                          <span>Depart Date</span>
+                          {leg.departDate && (
+                            <button
+                              type="button"
+                              onClick={() => updateMultiLeg(idx, 'departDate', '')}
+                              className="text-[10px] text-red-500 hover:underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="date"
+                          value={leg.departDate}
+                          onChange={(e) => updateMultiLeg(idx, 'departDate', e.target.value)}
+                          className="w-full mt-1 text-xs font-medium text-slate-800 bg-transparent focus:outline-none cursor-pointer"
+                        />
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {leg.departDate ? formatShortDate(leg.departDate) : 'Any Available Date'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {multiCityLegs.length < 6 && (
+                <button
+                  type="button"
+                  onClick={addMultiLeg}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-dashed border-[#1B3664]/40 text-[#1B3664] hover:bg-slate-50 text-xs font-semibold transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Another Flight Leg</span>
                 </button>
               )}
             </div>
-
-            <div
-              className={`px-3.5 py-2.5 rounded-xl border flex items-center justify-between transition ${
-                tripType === 'Round Trip'
-                  ? 'border-slate-200 hover:border-[#1B3664] bg-white'
-                  : 'border-slate-100 bg-slate-50 opacity-60'
-              }`}
-            >
-              <div className="flex items-center gap-2.5 flex-1">
-                <Calendar className="w-4 h-4 text-[#1B3664] shrink-0" />
-                <div className="flex-1">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Return {tripType !== 'Round Trip' && '(Round Trip Only)'}
+          ) : (
+            /* ONE WAY & ROUND TRIP: ROW 1 (FROM & TO) + ROW 2 (DATES) */
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 relative">
+                {/* FROM BOX */}
+                <div className="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B3664] bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      FROM
+                    </span>
+                    <span className="text-[10px] text-[#1B3664] font-medium">Departure</span>
                   </div>
-                  <input
-                    type="date"
-                    disabled={tripType !== 'Round Trip'}
-                    value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full text-xs font-medium text-slate-800 focus:outline-none bg-transparent disabled:cursor-not-allowed"
-                  />
+                  <div className="mt-1 flex items-baseline gap-2.5">
+                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
+                      {fromIata === 'ALL' ? 'ANY' : fromIata}
+                    </span>
+                    <select
+                      value={fromIata}
+                      onChange={(e) => setFromIata(e.target.value)}
+                      className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
+                    >
+                      <option value="ALL">All Departure Cities (Show All)</option>
+                      {airportOptions.map((a) => (
+                        <option key={a.code} value={a.code}>
+                          {a.code} — {a.city} ({a.name})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1 truncate">
+                    {fromAirportObj
+                      ? `${fromAirportObj.name} • ${fromAirportObj.city}`
+                      : 'All departure airports'}
+                  </div>
                 </div>
-              </div>
-              {returnDate && tripType === 'Round Trip' && (
+
+                {/* SWAP BUTTON IN CENTER */}
                 <button
                   type="button"
-                  onClick={() => setReturnDate('')}
-                  className="text-[11px] text-slate-400 hover:text-red-600 px-1.5"
+                  onClick={handleSwapAirports}
+                  title="Swap From & To Airports"
+                  className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-[#1B3664] text-[#1B3664] hover:bg-[#1B3664] hover:text-white items-center justify-center shadow-xs transition cursor-pointer"
                 >
-                  Clear
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
                 </button>
-              )}
-            </div>
-          </div>
+
+                {/* TO BOX */}
+                <div className="p-3.5 rounded-xl border border-slate-200 hover:border-[#1B3664] bg-slate-50/50 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      TO
+                    </span>
+                    <span className="text-[10px] text-[#1B3664] font-medium">Arrival</span>
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-2.5">
+                    <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
+                      {toIata === 'ALL' ? 'ANY' : toIata}
+                    </span>
+                    <select
+                      value={toIata}
+                      onChange={(e) => setToIata(e.target.value)}
+                      className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
+                    >
+                      <option value="ALL">All Arrival Cities (Show All)</option>
+                      {airportOptions.map((a) => (
+                        <option key={a.code} value={a.code}>
+                          {a.code} — {a.city} ({a.name})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1 truncate">
+                    {toAirportObj
+                      ? `${toAirportObj.name} • ${toAirportObj.city}`
+                      : 'All arrival airports'}
+                  </div>
+                </div>
+              </div>
+
+              {/* ROW 2: DEPART DATE & RETURN DATE */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#1B3664] flex items-center justify-between bg-white transition">
+                  <div className="flex items-center gap-2.5 flex-1">
+                    <Calendar className="w-4 h-4 text-[#1B3664] shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                        Depart {departDate ? '' : '(Any Date)'}
+                      </div>
+                      <input
+                        type="date"
+                        value={departDate}
+                        onChange={(e) => setDepartDate(e.target.value)}
+                        className="w-full text-xs font-medium text-slate-800 focus:outline-none bg-transparent cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  {departDate && (
+                    <button
+                      type="button"
+                      onClick={() => setDepartDate('')}
+                      className="text-[11px] text-slate-400 hover:text-red-600 px-1.5"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  className={`px-3.5 py-2.5 rounded-xl border flex items-center justify-between transition ${
+                    tripType === 'Round Trip'
+                      ? 'border-slate-200 hover:border-[#1B3664] bg-white'
+                      : 'border-slate-100 bg-slate-50 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 flex-1">
+                    <Calendar className="w-4 h-4 text-[#1B3664] shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                        Return {tripType !== 'Round Trip' && '(Round Trip Only)'}
+                      </div>
+                      <input
+                        type="date"
+                        disabled={tripType !== 'Round Trip'}
+                        value={returnDate}
+                        onChange={(e) => setReturnDate(e.target.value)}
+                        className="w-full text-xs font-medium text-slate-800 focus:outline-none bg-transparent disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                  {returnDate && tripType === 'Round Trip' && (
+                    <button
+                      type="button"
+                      onClick={() => setReturnDate('')}
+                      className="text-[11px] text-slate-400 hover:text-red-600 px-1.5"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* ROW 3: PASSENGERS STEPPER BOX & CABIN CLASS + SUB-AGENT BOX */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -694,7 +917,9 @@ export default function FlightPOS() {
             className="w-full py-3 rounded-xl bg-[#1B3664] hover:bg-[#0F172A] text-white font-display font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
           >
             <Search className="w-4 h-4" />
-            <span>Search Flights ({matchingSegments.length} Available)</span>
+            <span>
+              Search {tripType === 'Multi City' ? 'Multi-City ' : ''}Flights ({matchingSegments.length} Available)
+            </span>
           </button>
         </form>
       </div>
@@ -709,21 +934,59 @@ export default function FlightPOS() {
                 Available Flight Segments ({matchingSegments.length})
               </h3>
               <p className="text-[11px] text-white/70">
-                Click &ldquo;Select Flight&rdquo; on any segment below to open passenger booking
+                {tripType === 'Multi City'
+                  ? 'Select multiple flight segments below to combine them into a single Multi-City PNR booking'
+                  : tripType === 'Round Trip'
+                  ? 'Select your Outbound and Return flight segments below'
+                  : 'Click "Select Flight" on any segment below to open passenger booking'}
               </p>
             </div>
           </div>
 
-          {(fromIata !== 'ALL' || toIata !== 'ALL' || departDate || cabinClass !== 'All') && (
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white text-white hover:text-[#1D314F] text-xs font-medium transition cursor-pointer"
+          >
+            Show All Segments ({segments.length})
+          </button>
+        </div>
+
+        {/* Selected Multi-Segment Itinerary Bar */}
+        {selectedSegments.length > 0 && (
+          <div className="bg-slate-100 border-b border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-semibold text-[#1B3664]">
+                Selected Itinerary ({selectedSegments.length} {selectedSegments.length === 1 ? 'Leg' : 'Legs'}):
+              </span>
+              {selectedSegments.map((s, idx) => (
+                <span
+                  key={s.AirGroupSegmentID}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1B3664] text-white font-mono text-[11px]"
+                >
+                  <span>
+                    Leg {idx + 1}: {s.FlightNumber} ({s.DepartureIata} &rarr; {s.ArrivalIata})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSelectSegment(s)}
+                    className="hover:text-red-300 cursor-pointer"
+                    title="Remove this leg"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
             <button
               type="button"
-              onClick={handleResetFilters}
-              className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white text-white hover:text-[#1D314F] text-xs font-medium transition cursor-pointer"
+              onClick={() => setSelectedSegmentIds([])}
+              className="text-[11px] text-red-600 hover:underline font-medium cursor-pointer"
             >
-              Show All Segments ({segments.length})
+              Clear Selection
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="p-4 space-y-2.5">
           {segments.length === 0 ? (
@@ -746,8 +1009,7 @@ export default function FlightPOS() {
           ) : matchingSegments.length === 0 ? (
             <div className="py-8 text-center space-y-2.5">
               <div className="text-xs font-semibold text-slate-700">
-                No segments matched your filter ({fromIata} &rarr; {toIata}
-                {departDate ? ` on ${departDate}` : ''}).
+                No segments matched your current filter.
               </div>
               <button
                 type="button"
@@ -760,6 +1022,9 @@ export default function FlightPOS() {
           ) : (
             matchingSegments.map((seg) => {
               const isSelected = selectedSegmentIds.includes(seg.AirGroupSegmentID);
+              const selectedLegOrder = selectedSegmentIds.indexOf(seg.AirGroupSegmentID) + 1;
+              const matchedLegNumbers =
+                tripType === 'Multi City' ? getMatchingMultiLegIndices(seg) : [];
               const seatsLeft = Number(seg.SeatsLeft ?? seg.TotalSeats) || 0;
               const estTotalForSeg =
                 Number(adultsCount) * (Number(seg.AdultPrice) || 0) +
@@ -785,7 +1050,7 @@ export default function FlightPOS() {
                   }`}
                 >
                   {/* Airline & Flight Badge */}
-                  <div className="flex items-center gap-3 min-w-[180px]">
+                  <div className="flex items-center gap-3 min-w-[190px]">
                     <div
                       className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-semibold text-xs shrink-0 ${
                         isSelected ? 'bg-[#1B3664] text-white' : 'bg-slate-900 text-white'
@@ -794,11 +1059,16 @@ export default function FlightPOS() {
                       <span>{carrierPrefix}</span>
                     </div>
                     <div>
-                      <div className="font-mono font-semibold text-sm text-slate-900 flex items-center gap-2">
+                      <div className="font-mono font-semibold text-sm text-slate-900 flex flex-wrap items-center gap-1.5">
                         <span>{seg.FlightNumber}</span>
                         <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-slate-100 text-[#1B3664] font-medium">
                           {seg.FlightClass || 'Economy'} ({seg.FlightClassCode || 'Y'})
                         </span>
+                        {tripType === 'Multi City' && matchedLegNumbers.length > 0 && (
+                          <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#1B3664]/10 text-[#1B3664] font-semibold">
+                            Matches Leg {matchedLegNumbers.join(', ')}
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-slate-500">
                         {seg.OperatingAirlineName || 'Taban Airlines'} • {seg.AirCraft || 'A320'}
@@ -881,10 +1151,16 @@ export default function FlightPOS() {
                       {isSelected ? (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Selected</span>
+                          <span>
+                            {tripType === 'Multi City' || tripType === 'Round Trip'
+                              ? `Selected (Leg ${selectedLegOrder})`
+                              : 'Selected'}
+                          </span>
                         </>
                       ) : (
-                        <span>Select Flight</span>
+                        <span>
+                          {tripType === 'Multi City' ? '+ Select Flight Leg' : 'Select Flight'}
+                        </span>
                       )}
                     </button>
                   </div>
@@ -906,13 +1182,17 @@ export default function FlightPOS() {
               <h3 className="font-display font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 <span>
-                  Passenger Manifest & Booking ({passengers.length} Pax)
+                  Passenger Manifest & Booking ({passengers.length} Pax • {selectedSegments.length}{' '}
+                  {selectedSegments.length === 1 ? 'Sector' : 'Sectors'})
                 </span>
               </h3>
               <p className="text-[11px] text-white/80 mt-0.5">
                 Sector(s):{' '}
                 {selectedSegments
-                  .map((s) => `${s.FlightNumber} (${s.DepartureIata} → ${s.ArrivalIata} on ${formatShortDate(s.DepartureDate)})`)
+                  .map(
+                    (s, idx) =>
+                      `Leg ${idx + 1}: ${s.FlightNumber} (${s.DepartureIata} → ${s.ArrivalIata} on ${formatShortDate(s.DepartureDate)})`
+                  )
                   .join('  +  ')}
               </p>
             </div>
