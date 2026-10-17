@@ -152,15 +152,15 @@ export default function Layout({ children }) {
         {!sidebarCollapsed && (
           <div className="mx-4 mt-4 p-3.5 rounded-xl bg-white/5 border border-[#EE8200]/30 flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-[#EE8200] flex items-center justify-center font-bold text-sm text-white shrink-0">
-              {(user?.LoginID || 'AT').slice(0, 2).toUpperCase()}
+              {(user?.LoginID || 'TE').slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-bold text-white truncate">
-                {user?.FullName || 'Atta'}
+                {user?.FullName || 'Test Admin'}
               </div>
               <div className="text-[11px] text-white/65 truncate flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#EE8200] inline-block" />
-                {user?.AccountType || 'Administrator'} • @{user?.LoginID || 'Atta'}
+                {user?.AccountType || 'Administrator'} • @{user?.LoginID || 'test'}
               </div>
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function Layout({ children }) {
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-[#EE8200] text-white hover:bg-[#d47100] transition"
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            {!sidebarCollapsed && <span>Sign Out ({user?.LoginID || 'Atta'})</span>}
+            {!sidebarCollapsed && <span>Sign Out ({user?.LoginID || 'test'})</span>}
           </button>
         </div>
       </aside>
@@ -440,11 +440,11 @@ export default function Layout({ children }) {
                 className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl border border-neutral-200 bg-white hover:bg-orange-50/40 transition"
               >
                 <div className="w-8 h-8 rounded-lg bg-[#EE8200] text-white flex items-center justify-center font-bold text-xs">
-                  {(user?.LoginID || 'AT').slice(0, 2).toUpperCase()}
+                  {(user?.LoginID || 'TE').slice(0, 2).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">
                   <div className="text-xs font-bold text-[#0B0A09] leading-none">
-                    {user?.LoginID || 'Atta'}
+                    {user?.LoginID || 'test'}
                   </div>
                   <div className="text-[10px] text-[#EE8200] font-semibold mt-0.5">
                     {user?.AccountType || 'Administrator'}
@@ -454,7 +454,7 @@ export default function Layout({ children }) {
               {openDropdown === 'profile' && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden z-50">
                   <div className="p-4 bg-[#0B0A09] text-white">
-                    <div className="font-bold text-sm">{user?.FullName || 'Atta'}</div>
+                    <div className="font-bold text-sm">{user?.FullName || 'Test Admin'}</div>
                     <div className="text-xs text-white/75">{user?.Email || 'admin@portal.com'}</div>
                     <div className="mt-2 inline-block px-2 py-0.5 rounded bg-[#EE8200] text-white text-[10px] font-mono font-bold">
                       {user?.SubCompanyName || 'Admin Portal'}

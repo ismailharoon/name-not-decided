@@ -119,7 +119,13 @@ export function PortalProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('ota_portal_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (parsed?.LoginID?.toLowerCase() === 'atta') {
+        localStorage.removeItem('ota_portal_user');
+        return null;
+      }
+      return parsed;
     } catch {
       return null;
     }
@@ -176,13 +182,13 @@ export function PortalProvider({ children }) {
 
     if (
       !matchedUser &&
-      String(loginId).trim().toLowerCase() === 'atta' &&
-      password === 'GhC@*589'
+      String(loginId).trim().toLowerCase() === 'test' &&
+      password === 'test123'
     ) {
       matchedUser = {
         UserID: 'USR-ADMIN',
-        LoginID: 'Atta',
-        FullName: 'Atta',
+        LoginID: 'test',
+        FullName: 'Test Admin',
         Email: 'admin@portal.com',
         Designation: 'Administrator',
         AccountType: 'Administrator',
