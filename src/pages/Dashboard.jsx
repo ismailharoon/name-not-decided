@@ -22,7 +22,7 @@ import { formatCurrencyPKR, formatShortDate } from '../utils/exporters';
 import TicketPrintModal from '../components/TicketPrintModal';
 
 export default function Dashboard() {
-  const { user, isSubAgent, stats, bookings, segments, subAgents } = usePortal();
+  const { user, isSubAgent, stats, bookings, segments, subAgents, cancelBooking } = usePortal();
   const navigate = useNavigate();
   const [printBooking, setPrintBooking] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
@@ -32,7 +32,8 @@ export default function Dashboard() {
     Approved: bookings.filter((b) => b.ApprovalStatus === 'Approved').length,
     Issued: bookings.filter((b) => b.ApprovalStatus === 'Ticket Issued').length,
     Rejected: bookings.filter((b) => b.ApprovalStatus === 'Rejected').length,
-    Void: bookings.filter((b) => b.ApprovalStatus === 'Ticket Void').length
+    Void: bookings.filter((b) => b.ApprovalStatus === 'Ticket Void').length,
+    Cancelled: bookings.filter((b) => b.ApprovalStatus === 'Cancelled').length
   };
 
   // --- SUB-AGENT DASHBOARD (Only their own POS bookings & stats) ---
@@ -187,13 +188,18 @@ export default function Dashboard() {
                       <th className="py-2.5 px-3 text-center">Pax</th>
                       <th className="py-2.5 px-3">Amount</th>
                       <th className="py-2.5 px-3">Status</th>
-                      <th className="py-2.5 px-3 text-right">Ticket</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {bookings.map((b) => {
                       const isExpanded = Boolean(expandedRows[b.AirGroupBookingID]);
                       const isIssued = b.ApprovalStatus === 'Ticket Issued';
+                      const canCancel =
+                        !isIssued &&
+                        b.ApprovalStatus !== 'Cancelled' &&
+                        b.ApprovalStatus !== 'Rejected' &&
+                        b.ApprovalStatus !== 'Ticket Void';
                       return (
                         <React.Fragment key={b.AirGroupBookingID}>
                           <tr className="hover:bg-slate-50 transition">
@@ -221,7 +227,10 @@ export default function Dashboard() {
                             <td className="py-2.5 px-3">
                               <div className="font-semibold text-slate-900">{b.FlightTitle}</div>
                               <div className="text-[10px] text-slate-500">
-                                {b.TripType} • Booked: {b.TimeStamp}
+                                {b.TripType} •{' '}
+                                {isIssued
+                                  ? `Issue Date: ${b.ApprovalDateTime || b.TimeStamp}`
+                                  : `Booking Date: ${b.TimeStamp}`}
                               </div>
                             </td>
                             <td className="py-2.5 px-3 text-center font-mono">
@@ -238,7 +247,8 @@ export default function Dashboard() {
                                     : b.ApprovalStatus === 'Approved'
                                     ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                     : b.ApprovalStatus === 'Rejected' ||
-                                      b.ApprovalStatus === 'Ticket Void'
+                                      b.ApprovalStatus === 'Ticket Void' ||
+                                      b.ApprovalStatus === 'Cancelled'
                                     ? 'bg-red-50 text-red-700 border border-red-200'
                                     : 'bg-amber-50 text-amber-800 border border-amber-200'
                                 }`}
@@ -247,13 +257,32 @@ export default function Dashboard() {
                               </span>
                             </td>
                             <td className="py-2.5 px-3 text-right">
-                              <button
-                                onClick={() => setPrintBooking(b)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white text-[11px] font-medium transition cursor-pointer"
-                              >
-                                <Printer className="w-3 h-3" />
-                                <span>{isIssued ? 'Print Ticket' : 'Print'}</span>
-                              </button>
+                              <div className="inline-flex items-center justify-end gap-1.5">
+                                {canCancel && (
+                                  <button
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          `Cancel booking PNR ${b.PNR}? This will release the seats and refund your credit balance.`
+                                        )
+                                      ) {
+                                        cancelBooking(b.AirGroupBookingID);
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-medium transition cursor-pointer"
+                                  >
+                                    <XCircle className="w-3 h-3" />
+                                    <span>Cancel</span>
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => setPrintBooking(b)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white text-[11px] font-medium transition cursor-pointer"
+                                >
+                                  <Printer className="w-3 h-3" />
+                                  <span>{isIssued ? 'Print Ticket' : 'Print'}</span>
+                                </button>
+                              </div>
                             </td>
                           </tr>
                           {isExpanded && (

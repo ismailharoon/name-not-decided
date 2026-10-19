@@ -30,15 +30,25 @@ const DEFAULT_MULTI_LEGS = [
 ];
 
 export default function FlightPOS() {
-  const { user, isSubAgent, bookings, segments, subAgents, airports, createBooking, addToast } =
-    usePortal();
+  const {
+    user,
+    isSubAgent,
+    bookings,
+    segments,
+    subAgents,
+    airports,
+    createBooking,
+    cancelBooking,
+    addToast
+  } = usePortal();
   const navigate = useNavigate();
 
   const [tripType, setTripType] = useState('One Way'); // 'Round Trip' | 'One Way' | 'Multi City'
-  const [fromIata, setFromIata] = useState('ALL');
-  const [toIata, setToIata] = useState('ALL');
+  const [fromIata, setFromIata] = useState('KHI');
+  const [toIata, setToIata] = useState('IKA');
   const [departDate, setDepartDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Multi City legs state
   const [multiCityLegs, setMultiCityLegs] = useState(DEFAULT_MULTI_LEGS);
@@ -302,25 +312,23 @@ export default function FlightPOS() {
 
   const handleSearchClick = (e) => {
     if (e) e.preventDefault();
+    setHasSearched(true);
     if (matchingSegments.length === 0) {
-      addToast(
-        'No flight segments matched your filter. Click "Show All Segments" to view all flights.',
-        'warning'
-      );
+      addToast('No flight segments matched your search criteria.', 'warning');
     } else {
       addToast(`Found ${matchingSegments.length} matching flight segment(s).`, 'success');
     }
   };
 
   const handleResetFilters = () => {
-    setFromIata('ALL');
-    setToIata('ALL');
+    setFromIata('KHI');
+    setToIata('IKA');
     setDepartDate('');
     setReturnDate('');
     setCabinClass('All');
-    setMultiCityLegs((prev) =>
-      prev.map((leg) => ({ ...leg, fromIata: 'ALL', toIata: 'ALL', departDate: '' }))
-    );
+    setHasSearched(false);
+    setSelectedSegmentIds([]);
+    setMultiCityLegs(DEFAULT_MULTI_LEGS);
   };
 
   const updatePassengerField = (idx, field, val) => {
@@ -353,6 +361,24 @@ export default function FlightPOS() {
     reader.readAsDataURL(file);
   };
 
+  const getSegmentUnitFares = (seg) => {
+    const isRT = tripType === 'Round Trip';
+    return {
+      adt:
+        isRT && Number(seg.ReturnAdultPrice) > 0
+          ? Number(seg.ReturnAdultPrice)
+          : Number(seg.AdultPrice) || 0,
+      cnn:
+        isRT && Number(seg.ReturnChildPrice) > 0
+          ? Number(seg.ReturnChildPrice)
+          : Number(seg.ChildPrice) || 0,
+      inf:
+        isRT && Number(seg.ReturnInfantPrice) > 0
+          ? Number(seg.ReturnInfantPrice)
+          : Number(seg.InfantPrice) || 0
+    };
+  };
+
   const fareBreakdown = useMemo(() => {
     const adt = Number(adultsCount) || 0;
     const cnn = Number(childrenCount) || 0;
@@ -363,9 +389,10 @@ export default function FlightPOS() {
     let infUnit = 0;
 
     selectedSegments.forEach((seg) => {
-      adtUnit += Number(seg.AdultPrice) || 0;
-      cnnUnit += Number(seg.ChildPrice) || 0;
-      infUnit += Number(seg.InfantPrice) || 0;
+      const fares = getSegmentUnitFares(seg);
+      adtUnit += fares.adt;
+      cnnUnit += fares.cnn;
+      infUnit += fares.inf;
     });
 
     const adtTotal = adt * adtUnit;
@@ -384,7 +411,8 @@ export default function FlightPOS() {
       infTotal,
       grandTotal: adtTotal + cnnTotal + infTotal
     };
-  }, [selectedSegments, adultsCount, childrenCount, infantsCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSegments, adultsCount, childrenCount, infantsCount, tripType]);
 
   const handleCreateBooking = async (e) => {
     e.preventDefault();
@@ -632,14 +660,13 @@ export default function FlightPOS() {
                   </div>
                   <div className="mt-1 flex items-baseline gap-2.5">
                     <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
-                      {fromIata === 'ALL' ? 'ANY' : fromIata}
+                      {fromIata}
                     </span>
                     <select
                       value={fromIata}
                       onChange={(e) => setFromIata(e.target.value)}
                       className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
                     >
-                      <option value="ALL">All Departure Cities (Show All)</option>
                       {airportOptions.map((a) => (
                         <option key={a.code} value={a.code}>
                           {a.code} — {a.city} ({a.name})
@@ -650,7 +677,7 @@ export default function FlightPOS() {
                   <div className="text-[11px] text-slate-500 mt-1 truncate">
                     {fromAirportObj
                       ? `${fromAirportObj.name} • ${fromAirportObj.city}`
-                      : 'All departure airports'}
+                      : 'Select departure airport'}
                   </div>
                 </div>
 
@@ -674,14 +701,13 @@ export default function FlightPOS() {
                   </div>
                   <div className="mt-1 flex items-baseline gap-2.5">
                     <span className="font-display font-bold text-2xl sm:text-3xl text-[#1B3664] tracking-tight">
-                      {toIata === 'ALL' ? 'ANY' : toIata}
+                      {toIata}
                     </span>
                     <select
                       value={toIata}
                       onChange={(e) => setToIata(e.target.value)}
                       className="flex-1 bg-transparent font-medium text-xs text-slate-800 focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5"
                     >
-                      <option value="ALL">All Arrival Cities (Show All)</option>
                       {airportOptions.map((a) => (
                         <option key={a.code} value={a.code}>
                           {a.code} — {a.city} ({a.name})
@@ -692,7 +718,7 @@ export default function FlightPOS() {
                   <div className="text-[11px] text-slate-500 mt-1 truncate">
                     {toAirportObj
                       ? `${toAirportObj.name} • ${toAirportObj.city}`
-                      : 'All arrival airports'}
+                      : 'Select arrival airport'}
                   </div>
                 </div>
               </div>
@@ -941,263 +967,245 @@ export default function FlightPOS() {
             className="w-full py-3 rounded-xl bg-[#1B3664] hover:bg-[#0F172A] text-white font-display font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
           >
             <Search className="w-4 h-4" />
-            <span>
-              Search {tripType === 'Multi City' ? 'Multi-City ' : ''}Flights ({matchingSegments.length} Available)
-            </span>
+            <span>Search {tripType === 'Multi City' ? 'Multi-City ' : ''}Flights</span>
           </button>
         </form>
       </div>
 
-      {/* FLIGHT SEGMENT SEARCH RESULTS */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="bg-[#1D314F] text-white px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <Plane className="w-4 h-4 text-white/80" />
-            <div>
-              <h3 className="font-display font-semibold text-xs uppercase tracking-wider">
-                Available Flight Segments ({matchingSegments.length})
-              </h3>
-              <p className="text-[11px] text-white/70">
-                {tripType === 'Multi City'
-                  ? 'Select multiple flight segments below to combine them into a single Multi-City PNR booking'
-                  : tripType === 'Round Trip'
-                  ? 'Select your Outbound and Return flight segments below'
-                  : 'Click "Select Flight" on any segment below to open passenger booking'}
-              </p>
+      {/* FLIGHT SEGMENT SEARCH RESULTS — ONLY DISPLAYED AFTER SEARCHING */}
+      {hasSearched && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="bg-[#1D314F] text-white px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <Plane className="w-4 h-4 text-white/80" />
+              <div>
+                <h3 className="font-display font-semibold text-xs uppercase tracking-wider">
+                  Search Results ({matchingSegments.length})
+                </h3>
+                <p className="text-[11px] text-white/70">
+                  {tripType === 'Multi City'
+                    ? 'Select multiple flight segments below to combine them into a single Multi-City PNR booking'
+                    : tripType === 'Round Trip'
+                    ? 'Select your Outbound and Return flight segments below (Return Ticket fares applied)'
+                    : 'Click "Select Flight" on any segment below to open passenger booking'}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={handleResetFilters}
-            className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white text-white hover:text-[#1D314F] text-xs font-medium transition cursor-pointer"
-          >
-            Show All Segments ({segments.length})
-          </button>
-        </div>
-
-        {/* Selected Multi-Segment Itinerary Bar */}
-        {selectedSegments.length > 0 && (
-          <div className="bg-slate-100 border-b border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-semibold text-[#1B3664]">
-                Selected Itinerary ({selectedSegments.length} {selectedSegments.length === 1 ? 'Leg' : 'Legs'}):
-              </span>
-              {selectedSegments.map((s, idx) => (
-                <span
-                  key={s.AirGroupSegmentID}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1B3664] text-white font-mono text-[11px]"
-                >
-                  <span>
-                    Leg {idx + 1}: {s.FlightNumber} ({s.DepartureIata} &rarr; {s.ArrivalIata})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleSelectSegment(s)}
-                    className="hover:text-red-300 cursor-pointer"
-                    title="Remove this leg"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
             <button
               type="button"
-              onClick={() => setSelectedSegmentIds([])}
-              className="text-[11px] text-red-600 hover:underline font-medium cursor-pointer"
+              onClick={handleResetFilters}
+              className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white text-white hover:text-[#1D314F] text-xs font-medium transition cursor-pointer"
             >
-              Clear Selection
+              Clear Search
             </button>
           </div>
-        )}
 
-        <div className="p-4 space-y-2.5">
-          {segments.length === 0 ? (
-            <div className="py-10 text-center space-y-2.5">
-              <div className="text-xs font-semibold text-slate-700">
-                No flight segments have been added yet.
-              </div>
-              {!isSubAgent && (
-                <>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Add a flight segment in <b>Segment Management</b> and it will appear here for instant search and booking.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/SegmentManagement')}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition cursor-pointer"
+          {/* Selected Multi-Segment Itinerary Bar */}
+          {selectedSegments.length > 0 && (
+            <div className="bg-slate-100 border-b border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-semibold text-[#1B3664]">
+                  Selected Itinerary ({selectedSegments.length}{' '}
+                  {selectedSegments.length === 1 ? 'Leg' : 'Legs'}):
+                </span>
+                {selectedSegments.map((s, idx) => (
+                  <span
+                    key={s.AirGroupSegmentID}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1B3664] text-white font-mono text-[11px]"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Go to Segment Management</span>
-                  </button>
-                </>
-              )}
-            </div>
-          ) : matchingSegments.length === 0 ? (
-            <div className="py-8 text-center space-y-2.5">
-              <div className="text-xs font-semibold text-slate-700">
-                No segments matched your current filter.
+                    <span>
+                      Leg {idx + 1}: {s.FlightNumber} ({s.DepartureIata} &rarr; {s.ArrivalIata})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSelectSegment(s)}
+                      className="hover:text-red-300 cursor-pointer"
+                      title="Remove this leg"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
               </div>
               <button
                 type="button"
-                onClick={handleResetFilters}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1B3664] text-white text-xs font-medium hover:bg-[#0F172A] transition cursor-pointer"
+                onClick={() => setSelectedSegmentIds([])}
+                className="text-[11px] text-red-600 hover:underline font-medium cursor-pointer"
               >
-                <span>Show All {segments.length} Available Segment(s)</span>
+                Clear Selection
               </button>
             </div>
-          ) : (
-            matchingSegments.map((seg) => {
-              const isSelected = selectedSegmentIds.includes(seg.AirGroupSegmentID);
-              const selectedLegOrder = selectedSegmentIds.indexOf(seg.AirGroupSegmentID) + 1;
-              const matchedLegNumbers =
-                tripType === 'Multi City' ? getMatchingMultiLegIndices(seg) : [];
-              const seatsLeft = Number(seg.SeatsLeft ?? seg.TotalSeats) || 0;
-              const estTotalForSeg =
-                Number(adultsCount) * (Number(seg.AdultPrice) || 0) +
-                Number(childrenCount) * (Number(seg.ChildPrice) || 0) +
-                Number(infantsCount) * (Number(seg.InfantPrice) || 0);
+          )}
 
-              const adtBag = seg.BaggageADT ?? seg.BaggageCountADT ?? '20';
-              const cnnBag = seg.BaggageCNN ?? seg.BaggageCountCNN ?? '20';
-              const infBag = seg.BaggageINF ?? seg.BaggageCountINF ?? '0';
-              const carrierPrefix =
-                seg.OperatingAirline ||
-                seg.MarketingAirline ||
-                (seg.FlightNumber ? seg.FlightNumber.split(/[\s-]+/)[0] : 'FL');
+          <div className="p-4 space-y-2.5">
+            {matchingSegments.length === 0 ? (
+              <div className="py-8 text-center space-y-2">
+                <div className="text-xs font-semibold text-slate-700">
+                  No flights found matching your search criteria.
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Try changing the departure/arrival cities or clearing the date filter and searching again.
+                </p>
+              </div>
+            ) : (
+              matchingSegments.map((seg) => {
+                const isSelected = selectedSegmentIds.includes(seg.AirGroupSegmentID);
+                const selectedLegOrder = selectedSegmentIds.indexOf(seg.AirGroupSegmentID) + 1;
+                const matchedLegNumbers =
+                  tripType === 'Multi City' ? getMatchingMultiLegIndices(seg) : [];
+                const seatsLeft = Number(seg.SeatsLeft ?? seg.TotalSeats) || 0;
+                const unitFares = getSegmentUnitFares(seg);
+                const estTotalForSeg =
+                  Number(adultsCount) * unitFares.adt +
+                  Number(childrenCount) * unitFares.cnn +
+                  Number(infantsCount) * unitFares.inf;
 
-              return (
-                <div
-                  key={seg.AirGroupSegmentID}
-                  onClick={() => handleToggleSelectSegment(seg)}
-                  className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 ${
-                    isSelected
-                      ? 'border-[#1B3664] bg-slate-50 shadow-xs'
-                      : 'border-slate-200 hover:border-[#1B3664]/60 bg-white'
-                  }`}
-                >
-                  {/* Airline & Flight Badge */}
-                  <div className="flex items-center gap-3 min-w-[190px]">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-semibold text-xs shrink-0 ${
-                        isSelected ? 'bg-[#1B3664] text-white' : 'bg-slate-900 text-white'
-                      }`}
-                    >
-                      <span>{carrierPrefix}</span>
+                const adtBag = seg.BaggageADT ?? seg.BaggageCountADT ?? '20';
+                const cnnBag = seg.BaggageCNN ?? seg.BaggageCountCNN ?? '20';
+                const infBag = seg.BaggageINF ?? seg.BaggageCountINF ?? '0';
+                const carrierPrefix =
+                  seg.OperatingAirline ||
+                  seg.MarketingAirline ||
+                  (seg.FlightNumber ? seg.FlightNumber.split(/[\s-]+/)[0] : 'FL');
+
+                return (
+                  <div
+                    key={seg.AirGroupSegmentID}
+                    onClick={() => handleToggleSelectSegment(seg)}
+                    className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 ${
+                      isSelected
+                        ? 'border-[#1B3664] bg-slate-50 shadow-xs'
+                        : 'border-slate-200 hover:border-[#1B3664]/60 bg-white'
+                    }`}
+                  >
+                    {/* Airline & Flight Badge */}
+                    <div className="flex items-center gap-3 min-w-[190px]">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-semibold text-xs shrink-0 ${
+                          isSelected ? 'bg-[#1B3664] text-white' : 'bg-slate-900 text-white'
+                        }`}
+                      >
+                        <span>{carrierPrefix}</span>
+                      </div>
+                      <div>
+                        <div className="font-mono font-semibold text-sm text-slate-900 flex flex-wrap items-center gap-1.5">
+                          <span>{seg.FlightNumber}</span>
+                          <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-slate-100 text-[#1B3664] font-medium">
+                            {seg.FlightClass || 'Economy'} ({seg.FlightClassCode || 'Y'})
+                          </span>
+                          {tripType === 'Multi City' && matchedLegNumbers.length > 0 && (
+                            <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#1B3664]/10 text-[#1B3664] font-semibold">
+                              Matches Leg {matchedLegNumbers.join(', ')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {seg.OperatingAirlineName || 'Taban Airlines'} • {seg.AirCraft || 'A320'}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-600">
+                          <span className="inline-flex items-center gap-1">
+                            <Luggage className="w-3 h-3 text-[#1B3664]" />
+                            ADT={adtBag}, CNN={cnnBag}, INF={infBag}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Utensils className="w-3 h-3 text-[#1B3664]" />
+                            Meal: {seg.Meal || 'Yes'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-mono font-semibold text-sm text-slate-900 flex flex-wrap items-center gap-1.5">
-                        <span>{seg.FlightNumber}</span>
-                        <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-slate-100 text-[#1B3664] font-medium">
-                          {seg.FlightClass || 'Economy'} ({seg.FlightClassCode || 'Y'})
+
+                    {/* Route & Schedule Timeline */}
+                    <div className="flex items-center justify-between sm:justify-center gap-4 sm:gap-7 flex-1 border-y lg:border-y-0 border-slate-100 py-2.5 lg:py-0">
+                      <div className="text-left">
+                        <div className="font-display font-bold text-lg text-slate-900">
+                          {seg.DepartureIata}
+                        </div>
+                        <div className="text-xs font-medium text-slate-600">
+                          {seg.DepartureCity}
+                        </div>
+                        <div className="text-[11px] font-mono text-[#1B3664] mt-0.5">
+                          {formatDateTime(seg.DepartureDate)}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-center px-2">
+                        <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[#1B3664]" />
+                          {seg.FlightTime || 'Direct'}
                         </span>
-                        {tripType === 'Multi City' && matchedLegNumbers.length > 0 && (
-                          <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-[#1B3664]/10 text-[#1B3664] font-semibold">
-                            Matches Leg {matchedLegNumbers.join(', ')}
+                        <div className="w-20 sm:w-28 h-px bg-slate-300 my-1.5 relative">
+                          <Plane className="w-3 h-3 text-[#1B3664] absolute -top-1.5 right-0" />
+                        </div>
+                        <span className="text-[10px] font-semibold text-emerald-700">
+                          {seatsLeft} Seats Left
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="font-display font-bold text-lg text-slate-900">
+                          {seg.ArrivalIata}
+                        </div>
+                        <div className="text-xs font-medium text-slate-600">{seg.ArrivalCity}</div>
+                        <div className="text-[11px] font-mono text-slate-500 mt-0.5">
+                          {formatDateTime(seg.ArrivalDate)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing & Select Button */}
+                    <div className="flex sm:flex-row lg:flex-col items-center lg:items-end justify-between gap-2 min-w-[180px]">
+                      <div className="text-left lg:text-right">
+                        <div className="text-[11px] text-slate-500">
+                          {tripType === 'Round Trip' ? 'Return Adult' : 'Adult'}:{' '}
+                          <b className="font-mono text-slate-800">
+                            {formatCurrencyPKR(unitFares.adt)}
+                          </b>
+                        </div>
+                        <div className="font-mono font-bold text-base text-[#1B3664]">
+                          {formatCurrencyPKR(estTotalForSeg)}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          Leg Total ({adultsCount}A, {childrenCount}C, {infantsCount}I)
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleSelectSegment(seg);
+                        }}
+                        className={`px-3.5 py-2 rounded-lg font-medium text-xs flex items-center gap-1.5 transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#0F172A] text-white'
+                            : 'bg-[#1B3664] hover:bg-[#0F172A] text-white'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>
+                              {tripType === 'Multi City' || tripType === 'Round Trip'
+                                ? `Selected (Leg ${selectedLegOrder})`
+                                : 'Selected'}
+                            </span>
+                          </>
+                        ) : (
+                          <span>
+                            {tripType === 'Multi City' ? '+ Select Flight Leg' : 'Select Flight'}
                           </span>
                         )}
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        {seg.OperatingAirlineName || 'Taban Airlines'} • {seg.AirCraft || 'A320'}
-                      </div>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-600">
-                        <span className="inline-flex items-center gap-1">
-                          <Luggage className="w-3 h-3 text-[#1B3664]" />
-                          ADT={adtBag}, CNN={cnnBag}, INF={infBag}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Utensils className="w-3 h-3 text-[#1B3664]" />
-                          Meal: {seg.Meal || 'Yes'}
-                        </span>
-                      </div>
+                      </button>
                     </div>
                   </div>
-
-                  {/* Route & Schedule Timeline */}
-                  <div className="flex items-center justify-between sm:justify-center gap-4 sm:gap-7 flex-1 border-y lg:border-y-0 border-slate-100 py-2.5 lg:py-0">
-                    <div className="text-left">
-                      <div className="font-display font-bold text-lg text-slate-900">
-                        {seg.DepartureIata}
-                      </div>
-                      <div className="text-xs font-medium text-slate-600">{seg.DepartureCity}</div>
-                      <div className="text-[11px] font-mono text-[#1B3664] mt-0.5">
-                        {formatDateTime(seg.DepartureDate)}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-center px-2">
-                      <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[#1B3664]" />
-                        {seg.FlightTime || 'Direct'}
-                      </span>
-                      <div className="w-20 sm:w-28 h-px bg-slate-300 my-1.5 relative">
-                        <Plane className="w-3 h-3 text-[#1B3664] absolute -top-1.5 right-0" />
-                      </div>
-                      <span className="text-[10px] font-semibold text-emerald-700">
-                        {seatsLeft} Seats Left
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="font-display font-bold text-lg text-slate-900">
-                        {seg.ArrivalIata}
-                      </div>
-                      <div className="text-xs font-medium text-slate-600">{seg.ArrivalCity}</div>
-                      <div className="text-[11px] font-mono text-slate-500 mt-0.5">
-                        {formatDateTime(seg.ArrivalDate)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pricing & Select Button */}
-                  <div className="flex sm:flex-row lg:flex-col items-center lg:items-end justify-between gap-2 min-w-[180px]">
-                    <div className="text-left lg:text-right">
-                      <div className="text-[11px] text-slate-500">
-                        Adult: <b className="font-mono text-slate-800">{formatCurrencyPKR(seg.AdultPrice)}</b>
-                      </div>
-                      <div className="font-mono font-bold text-base text-[#1B3664]">
-                        {formatCurrencyPKR(estTotalForSeg)}
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        Total ({adultsCount}A, {childrenCount}C, {infantsCount}I)
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleSelectSegment(seg);
-                      }}
-                      className={`px-3.5 py-2 rounded-lg font-medium text-xs flex items-center gap-1.5 transition cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#0F172A] text-white'
-                          : 'bg-[#1B3664] hover:bg-[#0F172A] text-white'
-                      }`}
-                    >
-                      {isSelected ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>
-                            {tripType === 'Multi City' || tripType === 'Round Trip'
-                              ? `Selected (Leg ${selectedLegOrder})`
-                              : 'Selected'}
-                          </span>
-                        </>
-                      ) : (
-                        <span>
-                          {tripType === 'Multi City' ? '+ Select Flight Leg' : 'Select Flight'}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* PASSENGER MANIFEST & INSTANT BOOKING SECTION */}
       {selectedSegments.length > 0 && (
@@ -1437,7 +1445,7 @@ export default function FlightPOS() {
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
                     <Calculator className="w-3.5 h-3.5 text-slate-300" />
-                    Fare Calculation
+                    Fare Calculation {tripType === 'Round Trip' ? '(Return Fares)' : ''}
                   </span>
                   <span className="text-[11px] font-mono text-white/70">
                     {selectedSegments.length} Sector(s)
@@ -1501,7 +1509,7 @@ export default function FlightPOS() {
           </div>
           {bookings.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-500">
-              You have not booked any tickets yet. Select a flight above to create your first booking.
+              You have not booked any tickets yet. Search for a flight above to create your first booking.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1513,13 +1521,18 @@ export default function FlightPOS() {
                     <th className="py-2.5 px-3 text-center">Passengers</th>
                     <th className="py-2.5 px-3">Total Amount</th>
                     <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3">Booked At</th>
-                    <th className="py-2.5 px-4 text-right">Action</th>
+                    <th className="py-2.5 px-3">Booking / Issue Date</th>
+                    <th className="py-2.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {bookings.map((b) => {
                     const isIssued = b.ApprovalStatus === 'Ticket Issued';
+                    const canCancel =
+                      !isIssued &&
+                      b.ApprovalStatus !== 'Cancelled' &&
+                      b.ApprovalStatus !== 'Rejected' &&
+                      b.ApprovalStatus !== 'Ticket Void';
                     return (
                       <tr key={b.AirGroupBookingID} className="hover:bg-slate-50 transition">
                         <td className="py-2.5 px-3">
@@ -1544,7 +1557,8 @@ export default function FlightPOS() {
                                 : b.ApprovalStatus === 'Approved'
                                 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                 : b.ApprovalStatus === 'Rejected' ||
-                                  b.ApprovalStatus === 'Ticket Void'
+                                  b.ApprovalStatus === 'Ticket Void' ||
+                                  b.ApprovalStatus === 'Cancelled'
                                 ? 'bg-red-50 text-red-700 border border-red-200'
                                 : 'bg-amber-50 text-amber-800 border border-amber-200'
                             }`}
@@ -1552,16 +1566,43 @@ export default function FlightPOS() {
                             {b.ApprovalStatus}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-[11px] text-slate-500">{b.TimeStamp}</td>
+                        <td className="py-2.5 px-3">
+                          <div className="text-[10px] font-semibold uppercase text-slate-400">
+                            {isIssued ? 'Issue Date' : 'Booking Date'}
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-700">
+                            {isIssued ? b.ApprovalDateTime || b.TimeStamp : b.TimeStamp}
+                          </div>
+                        </td>
                         <td className="py-2.5 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setPrintBooking(b)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white text-[11px] font-medium transition cursor-pointer"
-                          >
-                            <Printer className="w-3 h-3" />
-                            <span>{isIssued ? 'Print Ticket' : 'Print Details'}</span>
-                          </button>
+                          <div className="inline-flex items-center justify-end gap-1.5">
+                            {canCancel && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      `Cancel booking PNR ${b.PNR}? This will release the seats and refund your credit balance.`
+                                    )
+                                  ) {
+                                    cancelBooking(b.AirGroupBookingID);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-medium transition cursor-pointer"
+                              >
+                                <X className="w-3 h-3" />
+                                <span>Cancel Booking</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setPrintBooking(b)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1B3664] hover:bg-[#0F172A] text-white text-[11px] font-medium transition cursor-pointer"
+                            >
+                              <Printer className="w-3 h-3" />
+                              <span>{isIssued ? 'Print Ticket' : 'Print Details'}</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

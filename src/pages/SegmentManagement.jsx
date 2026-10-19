@@ -58,6 +58,9 @@ const INITIAL_SEGMENT_FORM = {
   InfantPrice: 0,
   InfantBasicFare: 0,
   InfantTax: 0,
+  ReturnAdultPrice: 0,
+  ReturnChildPrice: 0,
+  ReturnInfantPrice: 0,
   AdultPriceSupplier: 0,
   AdultBasicFareSupplier: 0,
   AdultTaxSupplier: 0,
@@ -99,7 +102,10 @@ export default function SegmentManagement() {
       ...seg,
       BaggageADT: seg.BaggageADT ?? seg.BaggageCountADT ?? '20',
       BaggageCNN: seg.BaggageCNN ?? seg.BaggageCountCNN ?? '20',
-      BaggageINF: seg.BaggageINF ?? seg.BaggageCountINF ?? '0'
+      BaggageINF: seg.BaggageINF ?? seg.BaggageCountINF ?? '0',
+      ReturnAdultPrice: seg.ReturnAdultPrice ?? 0,
+      ReturnChildPrice: seg.ReturnChildPrice ?? 0,
+      ReturnInfantPrice: seg.ReturnInfantPrice ?? 0
     });
     setShowEditor(true);
   };
@@ -170,7 +176,13 @@ export default function SegmentManagement() {
       .map((f) => f.AirGroupID);
 
     const relevantBookings = bookings.filter((b) => {
-      if (b.ApprovalStatus === 'Rejected' || b.ApprovalStatus === 'Ticket Void') return false;
+      if (
+        b.ApprovalStatus === 'Rejected' ||
+        b.ApprovalStatus === 'Ticket Void' ||
+        b.ApprovalStatus === 'Cancelled'
+      ) {
+        return false;
+      }
       if (Array.isArray(b.SegmentIDs) && b.SegmentIDs.includes(seg.AirGroupSegmentID)) return true;
       if (b.AirGroupSegmentID === seg.AirGroupSegmentID) return true;
       if (groupIds.includes(b.AirGroupID)) return true;
@@ -291,7 +303,10 @@ export default function SegmentManagement() {
                       </td>
                       <td className="py-3 px-3 font-mono text-[11px]">
                         <div className="font-semibold text-[#1B3664]">
-                          Pax: {formatCurrencyPKR(seg.AdultPrice)}
+                          1-Way: {formatCurrencyPKR(seg.AdultPrice)}
+                        </div>
+                        <div className="font-semibold text-emerald-700">
+                          Return: {formatCurrencyPKR(Number(seg.ReturnAdultPrice) > 0 ? seg.ReturnAdultPrice : seg.AdultPrice)}
                         </div>
                         <div className="text-slate-500">
                           Sup: {formatCurrencyPKR(seg.AdultPriceSupplier)}
@@ -687,11 +702,11 @@ export default function SegmentManagement() {
                 </div>
               </div>
 
-              {/* Row 4: Customer & Supplier Fares */}
+              {/* Row 4: Customer (One-Way & Return) & Supplier Fares */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
                 <div>
                   <label className="block font-medium text-[#1B3664] mb-1">
-                    Adult Price (Customer PKR)
+                    One-Way Adult Price (PKR)
                   </label>
                   <input
                     type="number"
@@ -702,7 +717,7 @@ export default function SegmentManagement() {
                 </div>
                 <div>
                   <label className="block font-medium text-[#1B3664] mb-1">
-                    Child Price (Customer PKR)
+                    One-Way Child Price (PKR)
                   </label>
                   <input
                     type="number"
@@ -713,13 +728,50 @@ export default function SegmentManagement() {
                 </div>
                 <div>
                   <label className="block font-medium text-[#1B3664] mb-1">
-                    Infant Price (Customer PKR)
+                    One-Way Infant Price (PKR)
                   </label>
                   <input
                     type="number"
                     value={form.InfantPrice}
                     onChange={(e) => setForm({ ...form, InfantPrice: Number(e.target.value) })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono focus:border-[#1B3664] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-emerald-700 mb-1">
+                    Return Ticket Adult Price (PKR)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.ReturnAdultPrice}
+                    onChange={(e) => setForm({ ...form, ReturnAdultPrice: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-lg border border-emerald-300 bg-white font-mono focus:border-emerald-600 focus:outline-none"
+                    placeholder="Price for this leg in Return Trip"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-emerald-700 mb-1">
+                    Return Ticket Child Price (PKR)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.ReturnChildPrice}
+                    onChange={(e) => setForm({ ...form, ReturnChildPrice: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-lg border border-emerald-300 bg-white font-mono focus:border-emerald-600 focus:outline-none"
+                    placeholder="Price for this leg in Return Trip"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-emerald-700 mb-1">
+                    Return Ticket Infant Price (PKR)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.ReturnInfantPrice}
+                    onChange={(e) => setForm({ ...form, ReturnInfantPrice: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-lg border border-emerald-300 bg-white font-mono focus:border-emerald-600 focus:outline-none"
+                    placeholder="Price for this leg in Return Trip"
                   />
                 </div>
 

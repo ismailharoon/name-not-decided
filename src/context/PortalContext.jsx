@@ -58,7 +58,13 @@ function computeEnriched(db) {
   // Calculate booked seats per segment across both direct segment bookings and group flight bookings
   const segments = rawSegments.map((s) => {
     const segBookings = rawBookings.filter((b) => {
-      if (b.ApprovalStatus === 'Rejected' || b.ApprovalStatus === 'Ticket Void') return false;
+      if (
+        b.ApprovalStatus === 'Rejected' ||
+        b.ApprovalStatus === 'Ticket Void' ||
+        b.ApprovalStatus === 'Cancelled'
+      ) {
+        return false;
+      }
       if (Array.isArray(b.SegmentIDs) && b.SegmentIDs.includes(s.AirGroupSegmentID)) return true;
       if (b.AirGroupSegmentID === s.AirGroupSegmentID) return true;
       const fl = flightsById[b.AirGroupID];
@@ -88,7 +94,10 @@ function computeEnriched(db) {
   const flights = rawFlights.map((f) => {
     const groupBookings = rawBookings.filter((b) => b.AirGroupID === f.AirGroupID);
     const activeBookings = groupBookings.filter(
-      (b) => b.ApprovalStatus !== 'Rejected' && b.ApprovalStatus !== 'Ticket Void'
+      (b) =>
+        b.ApprovalStatus !== 'Rejected' &&
+        b.ApprovalStatus !== 'Ticket Void' &&
+        b.ApprovalStatus !== 'Cancelled'
     );
     const bookedSeats = activeBookings.reduce(
       (sum, b) => sum + (Number(b.AdultCount) || 0) + (Number(b.ChildCount) || 0),
@@ -153,7 +162,10 @@ function computeEnriched(db) {
     0
   );
   const validSalesBookings = bookings.filter(
-    (b) => b.ApprovalStatus !== 'Rejected' && b.ApprovalStatus !== 'Ticket Void'
+    (b) =>
+      b.ApprovalStatus !== 'Rejected' &&
+      b.ApprovalStatus !== 'Ticket Void' &&
+      b.ApprovalStatus !== 'Cancelled'
   );
   const totalSales = validSalesBookings.reduce((acc, b) => acc + (Number(b.TotalPrice) || 0), 0);
 
@@ -432,12 +444,23 @@ export function PortalProvider({ children }) {
     const infants = Passengers.filter((p) => p.PassengerType === 'Infant').length;
 
     let totalPrice = 0;
+    const isRoundTrip = TripType === 'Round Trip';
     if (selectedSegments.length > 0) {
       selectedSegments.forEach((seg) => {
-        totalPrice +=
-          adults * (Number(seg.AdultPrice) || 0) +
-          children * (Number(seg.ChildPrice) || 0) +
-          infants * (Number(seg.InfantPrice) || 0);
+        const adultFare =
+          isRoundTrip && Number(seg.ReturnAdultPrice) > 0
+            ? Number(seg.ReturnAdultPrice)
+            : Number(seg.AdultPrice) || 0;
+        const childFare =
+          isRoundTrip && Number(seg.ReturnChildPrice) > 0
+            ? Number(seg.ReturnChildPrice)
+            : Number(seg.ChildPrice) || 0;
+        const infantFare =
+          isRoundTrip && Number(seg.ReturnInfantPrice) > 0
+            ? Number(seg.ReturnInfantPrice)
+            : Number(seg.InfantPrice) || 0;
+
+        totalPrice += adults * adultFare + children * childFare + infants * infantFare;
       });
     } else if (flight) {
       totalPrice =
@@ -628,6 +651,28 @@ export function PortalProvider({ children }) {
       return draft;
     });
     addToast('Booking Void Successfully.', 'warning');
+  };
+
+  const cancelBooking = async (id) => {
+    const loginId = user?.LoginID || 'agent';
+    updateLocalDb((draft) => {
+      const booking = draft.bookings.find((b) => b.AirGroupBookingID === id);
+      if (booking && booking.ApprovalStatus !== 'Ticket Issued' && booking.ApprovalStatus !== 'Cancelled') {
+        booking.ApprovalStatus = 'Cancelled';
+        booking.VoidLoginID = loginId;
+        booking.VoidDateTime = formatNow();
+        booking.VoidReason = 'Cancelled by Agent before Ticket Issuance';
+        if (booking.SubCompanyID && booking.SubCompanyID !== 'DIRECT') {
+          const ag = draft.subAgents.find((a) => a.SubCompanyID === booking.SubCompanyID);
+          if (ag) {
+            ag.CreditLimitBalance =
+              (Number(ag.CreditLimitBalance) || 0) + (Number(booking.TotalPrice) || 0);
+          }
+        }
+      }
+      return draft;
+    });
+    addToast(`Booking ${id} cancelled successfully.`, 'warning');
   };
 
   const deleteBooking = async (id) => {
@@ -884,7 +929,10 @@ export function PortalProvider({ children }) {
   const visibleStats = React.useMemo(() => {
     if (!isSubAgent) return enriched.stats;
     const validOwnBookings = visibleBookings.filter(
-      (b) => b.ApprovalStatus !== 'Rejected' && b.ApprovalStatus !== 'Ticket Void'
+      (b) =>
+        b.ApprovalStatus !== 'Rejected' &&
+        b.ApprovalStatus !== 'Ticket Void' &&
+        b.ApprovalStatus !== 'Cancelled'
     );
     const ownSales = validOwnBookings.reduce((acc, b) => acc + (Number(b.TotalPrice) || 0), 0);
     return {
@@ -926,6 +974,7 @@ export function PortalProvider({ children }) {
         rejectBooking,
         issueTicket,
         voidBooking,
+        cancelBooking,
         deleteBooking,
         updatePassenger,
         deletePassenger,

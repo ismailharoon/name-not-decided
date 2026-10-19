@@ -30,7 +30,8 @@ const STATUS_TABS = [
   { key: 'Approved', label: 'Approved' },
   { key: 'Rejected', label: 'Rejected' },
   { key: 'Ticket Issued', label: 'Issued' },
-  { key: 'Ticket Void', label: 'Void' }
+  { key: 'Ticket Void', label: 'Void' },
+  { key: 'Cancelled', label: 'Cancelled' }
 ];
 
 export default function FlightBookings() {
@@ -71,7 +72,8 @@ export default function FlightBookings() {
       Approved: 0,
       Rejected: 0,
       'Ticket Issued': 0,
-      'Ticket Void': 0
+      'Ticket Void': 0,
+      Cancelled: 0
     };
     bookings.forEach((b) => {
       if (map[b.ApprovalStatus] !== undefined) {
@@ -130,10 +132,11 @@ export default function FlightBookings() {
           </span>
         );
       case 'Rejected':
+      case 'Cancelled':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-red-50 text-red-800 border border-red-200">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            Rejected
+            {status}
           </span>
         );
       case 'Ticket Void':
@@ -384,14 +387,16 @@ export default function FlightBookings() {
                               By <span className="font-medium">{booking.ApprovalLoginID}</span> ({booking.ApprovalDateTime})
                             </div>
                           )}
-                          {booking.ApprovalStatus === 'Ticket Void' && booking.VoidReason && (
-                            <div
-                              className="text-[10px] text-red-700 font-medium mt-1 max-w-[180px] truncate"
-                              title={booking.VoidReason}
-                            >
-                              Void: {booking.VoidReason}
-                            </div>
-                          )}
+                          {(booking.ApprovalStatus === 'Ticket Void' ||
+                            booking.ApprovalStatus === 'Cancelled') &&
+                            booking.VoidReason && (
+                              <div
+                                className="text-[10px] text-red-700 font-medium mt-1 max-w-[180px] truncate"
+                                title={booking.VoidReason}
+                              >
+                                {booking.VoidReason}
+                              </div>
+                            )}
                         </td>
 
                         <td className="py-3 px-3 text-center">
@@ -422,7 +427,9 @@ export default function FlightBookings() {
                             </div>
                           )}
                           <div className="text-[10px] text-slate-400 mt-0.5">
-                            Booked: {booking.TimeStamp}
+                            {isIssued
+                              ? `Issue Date: ${booking.ApprovalDateTime || booking.TimeStamp}`
+                              : `Booking Date: ${booking.TimeStamp}`}
                           </div>
                         </td>
 

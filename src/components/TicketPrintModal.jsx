@@ -191,9 +191,11 @@ export default function TicketPrintModal({ booking, onClose }) {
               </div>
 
               <div style={{ display: 'flex', marginBottom: '8px' }}>
-                <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>ISSUE DATE</span>
+                <span style={{ width: '260px', fontWeight: 600, color: '#64748b' }}>
+                  {isIssued ? 'ISSUE DATE' : 'BOOKING DATE'}
+                </span>
                 <span style={{ fontWeight: 600, color: '#334155' }}>
-                  {booking.ApprovalDateTime || booking.TimeStamp}
+                  {isIssued ? (booking.ApprovalDateTime || booking.TimeStamp) : booking.TimeStamp}
                 </span>
               </div>
 
